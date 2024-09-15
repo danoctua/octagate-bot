@@ -21,6 +21,25 @@ async def remove_previous_callbacks(
     )
 
 
+async def delete_message(
+    context: ContextTypes.DEFAULT_TYPE, chat_id: int, message_id: int
+):
+    try:
+        await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+    except BadRequest:
+        logger.warning(
+            "Can't delete message %d for chat %d. Probably it's already deleted.",
+            message_id,
+            chat_id,
+        )
+    except TimedOut:
+        logger.error(
+            "Can't delete a message %s from the chat %d because of timeout. Trying once again",
+            message_id,
+            chat_id,
+        )
+
+
 async def edit_or_send_message(
     context: ContextTypes.DEFAULT_TYPE,
     chat_id: int,

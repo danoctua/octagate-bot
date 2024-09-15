@@ -1,5 +1,5 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-# 8club guard bot
+# 8 club Guard Telegram bot
 ## Installation
 To install and run the Telegram Bot, follow these steps:
 1. Make sure you have Docker installed on your machine.
@@ -11,7 +11,6 @@ To install and run the Telegram Bot, follow these steps:
 Once the bot is up and running, users can interact with it on Telegram. The bot will provide instructions on how to play the game and match users with each other to play the prisoner dilemma game.
 ## Makefile Commands
 - `make build`: Build the Docker container.
-- `make compile-translations`: Compile translations after changes were introduced.
 - `make down`: Stop and remove the Docker containers.
 - `make restart`: Restart the Docker containers to apply changes in the code.
 - `make run`: Start the Docker containers.
