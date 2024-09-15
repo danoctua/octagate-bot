@@ -127,4 +127,4 @@ class WalletService(BaseService):
                 wallet.owner.address.to_raw(), int(wallet.balance), rating
             )
             self.link_user_jetton_wallet(wallet.owner.address.to_raw())
-            self.db_session.commit()
+        self.db_session.commit()
