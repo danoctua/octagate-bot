@@ -12,9 +12,7 @@ from core.settings import Config
 logger = logging.getLogger(__name__)
 
 
-async def error_handler(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> None:
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Log the error and send a telegram message to notify the developer."""
     # Log the error before we do anything else, so we can see it even if something breaks.
     logger.error("Exception while handling an update:", exc_info=context.error)

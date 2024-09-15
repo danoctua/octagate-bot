@@ -3,7 +3,10 @@ __all__ = ["handlers"]
 from telegram.ext import CallbackQueryHandler
 
 from core.handlers.callback.start import main_callback_handler
-from core.handlers.callback.wallet import connect_wallet_handler, disconnect_wallet_handler
+from core.handlers.callback.wallet import (
+    connect_wallet_handler,
+    disconnect_wallet_handler,
+)
 
 handlers = [
     CallbackQueryHandler(

@@ -1,8 +1,8 @@
-import redis
 from pytonconnect import TonConnect
 from pytonconnect.storage import IStorage
 
 from core.settings import Config
+from core.utils.cache import redis_client
 
 
 def get_connector(chat_id: int) -> TonConnect:
@@ -19,11 +19,11 @@ class TCRStorage(IStorage):
         return str(self.chat_id) + key
 
     async def set_item(self, key: str, value: str):
-        await client.set(name=self._get_key(key), value=value)
+        await redis_client.set(name=self._get_key(key), value=value)
 
     async def get_item(self, key: str, default_value: str = None):
-        value = await client.get(name=self._get_key(key))
+        value = await redis_client.get(name=self._get_key(key))
         return value.decode() if value else default_value
 
     async def remove_item(self, key: str):
-        await client.delete(self._get_key(key))
+        await redis_client.delete(self._get_key(key))

@@ -11,32 +11,32 @@ from core.settings import Config
 
 
 MAIN_BUTTON_REPLY_MARKUP = InlineKeyboardMarkup.from_button(
-    InlineKeyboardButton(
-        text='Main',
-        callback_data='main'
-    )
+    InlineKeyboardButton(text="Main", callback_data="main")
 )
 
 
 logger = logging.getLogger(__name__)
 
 
-async def connected_wallet_welcome_renderer(update: Update, context: ContextTypes.DEFAULT_TYPE, user: User) -> None:
+async def connected_wallet_welcome_renderer(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, user: User
+) -> None:
     is_holder = user.wallet.jetton_wallet is not None
-    reply_markup = InlineKeyboardMarkup.from_column([
-        InlineKeyboardButton(
-            text="Disconnect wallet",
-            callback_data="disconnect"
-        )
-    ])
+    reply_markup = InlineKeyboardMarkup.from_column(
+        [InlineKeyboardButton(text="Disconnect wallet", callback_data="disconnect")]
+    )
     if is_holder:
         text = "You are $ANON holder!"
 
         if user.wallet.jetton_wallet.is_whale:
-            chat_admins = await context.bot.get_chat_administrators(chat_id=Config.TARGET_COMMON_CHAT_ID)
+            chat_admins = await context.bot.get_chat_administrators(
+                chat_id=Config.TARGET_COMMON_CHAT_ID
+            )
             chat_admins_ids = [admin.user.id for admin in chat_admins]
             if update.effective_user.id not in chat_admins_ids:
-                logger.debug("Promoting user `%d` to admin in the chat", update.effective_user.id)
+                logger.debug(
+                    "Promoting user `%d` to admin in the chat", update.effective_user.id
+                )
                 await context.bot.promote_chat_member(
                     chat_id=Config.TARGET_COMMON_CHAT_ID,
                     user_id=update.effective_user.id,
@@ -72,20 +72,19 @@ async def start_renderer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         user_service = UserService(db_session)
         user = user_service.get_or_create(telegram_user=update.effective_user)
         if user.wallet:
-            return await connected_wallet_welcome_renderer(
-                update, context, user
-            )
+            return await connected_wallet_welcome_renderer(update, context, user)
         else:
             wallets_list = TonConnect.get_wallets()
-            reply_markup = InlineKeyboardMarkup.from_column([
-                InlineKeyboardButton(
-                    text=wallet['name'],
-                    callback_data=f'connect:{wallet["name"]}'
-                )
-                for wallet in wallets_list
-            ])
+            reply_markup = InlineKeyboardMarkup.from_column(
+                [
+                    InlineKeyboardButton(
+                        text=wallet["name"], callback_data=f'connect:{wallet["name"]}'
+                    )
+                    for wallet in wallets_list
+                ]
+            )
             return await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text="Please select your wallet to connect:",
-                reply_markup=reply_markup
+                reply_markup=reply_markup,
             )

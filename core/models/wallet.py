@@ -19,9 +19,13 @@ class UserWallet(Base):
         DateTime(timezone=True), default=datetime.datetime.utcnow
     )
     updated_at = mapped_column(
-        DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
+        DateTime(timezone=True),
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
     )
-    jetton_wallet_address = mapped_column(ForeignKey("jetton_wallet.address"), nullable=True)
+    jetton_wallet_address = mapped_column(
+        ForeignKey("jetton_wallet.address"), nullable=True
+    )
     jetton_wallet = relationship("JettonWallet", backref="user_wallet", lazy="joined")
 
 
@@ -35,7 +39,9 @@ class JettonWallet(Base):
         DateTime(timezone=True), default=datetime.datetime.utcnow
     )
     updated_at = mapped_column(
-        DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
+        DateTime(timezone=True),
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
     )
 
     @property

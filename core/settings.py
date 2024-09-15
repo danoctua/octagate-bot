@@ -53,5 +53,8 @@ class Config:
     WHALE_RATING_THRESHOLD = int(os.getenv("WHALE_RATING_THRESHOLD") or 90)
     WHALE_BALANCE_THRESHOLD = int(os.getenv("WHALE_BALANCE_THRESHOLD") or 1_000_000)
 
-    TC_MANIFEST_URL = os.getenv("TC_MANIFEST_URL", "https://raw.githubusercontent.com/XaBbl4/pytonconnect/main/pytonconnect-manifest.json")
+    TC_MANIFEST_URL = os.getenv(
+        "TC_MANIFEST_URL",
+        "https://raw.githubusercontent.com/XaBbl4/pytonconnect/main/pytonconnect-manifest.json",
+    )
     TARGET_COMMON_CHAT_ID = os.getenv("TARGET_COMMON_CHAT_ID")

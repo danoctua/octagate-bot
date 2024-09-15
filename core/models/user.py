@@ -28,7 +28,7 @@ class User(Base):
         uselist=False,
         backref="user",
         lazy="joined",
-        primaryjoin="User.id == UserWallet.user_id"
+        primaryjoin="User.id == UserWallet.user_id",
     )
 
     @property
