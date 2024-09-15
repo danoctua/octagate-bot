@@ -1,0 +1,55 @@
+x-python-service:
+  &x-python-service
+  image: 'meta-python'
+  depends_on:
+    redis:
+      condition: service_healthy
+    mysql:
+      condition: service_healthy
+  env_file:
+    - .env
+  volumes:
+    - ./core:/app/core
+    - ./__init__.py/:/app/__init__.py
+    - /etc/letsencrypt:/etc/certbot:ro
+
+
+services:
+  telegram-bot:
+    <<: *x-python-service
+    build:
+      context: ../anon-whales
+      dockerfile: Dockerfile
+    ports:
+      - "434:433"
+    command: ["python3", "__init__.py"]
+
+  redis:
+    image: "redis:7.2.4-alpine"
+    ports:
+      - "6380:6379"
+    volumes:
+      - volume-queue:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mysql:
+    image: "mysql:8.3.0"
+    ports:
+      - "3307:3306"
+    env_file:
+      - .env
+    volumes:
+      - volume-data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin ping -hlocalhost -uroot -p${MYSQL_ROOT_PASSWORD}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  volume-data:
+  volume-queue:
