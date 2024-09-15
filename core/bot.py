@@ -54,9 +54,7 @@ class NotBot:
         )
 
     def configure_tasks(self):
-        self.application.job_queue.run_repeating(
-            fetch_jetton_holders, interval=60 * 10
-        )
+        self.application.job_queue.run_repeating(fetch_jetton_holders, interval=60 * 10)
         # self.application.job_queue.run_repeating(check_failed_payments, interval=35)
 
     def start_polling(self):

@@ -8,7 +8,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
 from core.constants import DEFAULT_CONNECT_TIMEOUT
-from core.renderers import connected_wallet_welcome_renderer, MAIN_BUTTON_REPLY_MARKUP, start_renderer
+from core.renderers import connected_wallet_welcome_renderer, MAIN_BUTTON_REPLY_MARKUP
 from core.services.db import DBService
 from core.services.storage import get_connector
 from core.services.user import UserService
@@ -18,7 +18,8 @@ logger = logging.Logger(__name__)
 
 
 async def connect_wallet_handler(
-    update: Update, context: ContextTypes.DEFAULT_TYPE,
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     await update.callback_query.answer()
     connector = get_connector(chat_id=update.effective_chat.id)
@@ -32,12 +33,12 @@ async def connect_wallet_handler(
             else:
                 return await context.bot.send_message(
                     chat_id=update.effective_chat.id,
-                    text="Wallet is already connected! There might be some error, however"
+                    text="Wallet is already connected! There might be some error, however",
                 )
 
-    wallet_name = update.callback_query.data.split(':')[1]
+    wallet_name = update.callback_query.data.split(":")[1]
     wallets_list = connector.get_wallets()
-    wallet = next(filter(lambda w: w['name'] == wallet_name, wallets_list), None)
+    wallet = next(filter(lambda w: w["name"] == wallet_name, wallets_list), None)
     if not wallet:
         return await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -47,12 +48,9 @@ async def connect_wallet_handler(
 
     generated_url = await connector.connect(wallet)
 
-    reply_markup = InlineKeyboardMarkup.from_column([
-        InlineKeyboardButton(
-            text='Connect',
-            url=generated_url
-        )
-    ])
+    reply_markup = InlineKeyboardMarkup.from_column(
+        [InlineKeyboardButton(text="Connect", url=generated_url)]
+    )
 
     img = qrcode.make(generated_url)
     stream = BytesIO()
@@ -60,8 +58,8 @@ async def connect_wallet_handler(
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo=stream.getvalue(),
-        caption='Connect wallet within 3 minutes',
-        reply_markup=reply_markup
+        caption="Connect wallet within 3 minutes",
+        reply_markup=reply_markup,
     )
 
     start_time = datetime.datetime.now()
@@ -74,10 +72,14 @@ async def connect_wallet_handler(
             if connector.account.address:
                 with DBService().db_session() as db_session:
                     user_service = UserService(db_session)
-                    user = user_service.get_or_create(telegram_user=update.effective_user)
+                    user = user_service.get_or_create(
+                        telegram_user=update.effective_user
+                    )
                     wallet_service = WalletService(db_session)
                     try:
-                        wallet_service.connect_user_wallet(user_id=user.id, wallet_address=connector.account.address)
+                        wallet_service.connect_user_wallet(
+                            user_id=user.id, wallet_address=connector.account.address
+                        )
                     except UserWalletExistError:
                         await connector.disconnect()
                         return await context.bot.send_message(
@@ -86,16 +88,22 @@ async def connect_wallet_handler(
                             reply_markup=MAIN_BUTTON_REPLY_MARKUP,
                         )
 
-                    wallet_service.link_user_jetton_wallet(wallet_address=connector.account.address)
+                    wallet_service.link_user_jetton_wallet(
+                        wallet_address=connector.account.address
+                    )
                     db_session.commit()
                     await context.bot.send_message(
                         chat_id=update.effective_chat.id,
-                        text="Wallet connected successfully!"
+                        text="Wallet connected successfully!",
                     )
                     connector.pause_connection()
                     # This is required to refresh user with all related data
-                    user = user_service.get_or_create(telegram_user=update.effective_user)
-                    return await connected_wallet_welcome_renderer(update, context, user)
+                    user = user_service.get_or_create(
+                        telegram_user=update.effective_user
+                    )
+                    return await connected_wallet_welcome_renderer(
+                        update, context, user
+                    )
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -105,7 +113,8 @@ async def connect_wallet_handler(
 
 
 async def disconnect_wallet_handler(
-    update: Update, context: ContextTypes.DEFAULT_TYPE,
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     await update.callback_query.answer()
     connector = get_connector(chat_id=update.effective_chat.id)

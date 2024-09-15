@@ -6,7 +6,7 @@ from core.settings import Config
 DEFAULT_EXPIRATION_SECONDS = 10
 
 
-client = redis.asyncio.Redis(host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0)
+redis_client = redis.asyncio.Redis(host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0)
 
 
 def format_response_cache_key_value(
@@ -38,8 +38,8 @@ def format_request_cache_key_value(
 
 
 async def add_user_action_cache(key: str, value: bytes):
-    await client.setex(key, DEFAULT_EXPIRATION_SECONDS, value)
+    await redis_client.setex(key, DEFAULT_EXPIRATION_SECONDS, value)
 
 
 async def check_user_action_cache(key: str, value: bytes) -> bool:
-    return await client.getex(key) == value
+    return await redis_client.getex(key) == value
