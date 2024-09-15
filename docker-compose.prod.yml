@@ -16,7 +16,7 @@ services:
   telegram-bot:
     <<: *x-python-service
     build:
-      context: ../anon-whales
+      context: .
       dockerfile: Dockerfile
     ports:
       - "433:433"
