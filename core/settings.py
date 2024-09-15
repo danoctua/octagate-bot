@@ -55,6 +55,5 @@ class Config:
 
     TC_MANIFEST_URL = os.getenv(
         "TC_MANIFEST_URL",
-        "https://raw.githubusercontent.com/XaBbl4/pytonconnect/main/pytonconnect-manifest.json",
     )
     TARGET_COMMON_CHAT_ID = os.getenv("TARGET_COMMON_CHAT_ID")
