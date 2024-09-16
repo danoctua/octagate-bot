@@ -21,7 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "434:433"
+      - "433:433"
     command: ["python3", "__init__.py"]
 
   redis:
