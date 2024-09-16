@@ -1,8 +1,8 @@
 import logging
 
-from pytonapi.async_tonapi import AsyncTonapi
 from telegram.ext import ContextTypes
 
+from core.services.blockchain import BlockchainService
 from core.settings import Config
 from core.services.db import DBService
 from core.services.wallet import WalletService
@@ -15,8 +15,7 @@ async def fetch_jetton_holders(context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         logger.info("Fetching jetton holders")
         # Fetch jetton holders from the blockchain
-        tonapi = AsyncTonapi(api_key=Config.TON_API_KEY)
-        holders = await tonapi.jettons.get_all_holders(Config.TARGET_JETTON_MASTER)
+        holders = await BlockchainService().get_all_holders(Config.TARGET_JETTON_MASTER)
         logger.info(f"Found {holders.total} holders")
         with DBService().db_session() as db_session:
             wallet_service = WalletService(db_session)
