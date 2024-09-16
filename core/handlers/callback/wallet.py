@@ -90,6 +90,7 @@ async def connect_wallet_handler(
     start_time = datetime.datetime.now()
     for i in range(DEFAULT_CONNECT_TIMEOUT + 1):
         if (datetime.datetime.now() - start_time).seconds >= DEFAULT_CONNECT_TIMEOUT:
+            await connector.disconnect()
             break
         await asyncio.sleep(1)
 
@@ -142,7 +143,6 @@ async def connect_wallet_handler(
                         update, context, user
                     )
 
-    await connector.disconnect()
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Connection timeout!",
