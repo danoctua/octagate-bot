@@ -29,11 +29,11 @@ async def connected_wallet_welcome_renderer(
         text = "You are $ANON holder!"
 
         if user.wallet.jetton_wallet.is_whale:
-            chat_admins = await context.bot.get_chat_administrators(
-                chat_id=Config.TARGET_COMMON_CHAT_ID
-            )
-            chat_admins_ids = [admin.user.id for admin in chat_admins]
-            if update.effective_user.id not in chat_admins_ids:
+            # chat_admins = await context.bot.get_chat_administrators(
+            #     chat_id=Config.TARGET_COMMON_CHAT_ID
+            # )
+            # chat_admins_ids = [admin.user.id for admin in chat_admins]
+            if update.effective_user.id:
                 logger.info(
                     "Promoting user `%d` to admin in the chat", update.effective_user.id
                 )
@@ -42,7 +42,6 @@ async def connected_wallet_welcome_renderer(
                     user_id=update.effective_user.id,
                     can_post_messages=True,
                     can_manage_chat=True,
-                    can_manage_topics=True,
                 )
                 await context.bot.set_chat_administrator_custom_title(
                     chat_id=Config.TARGET_COMMON_CHAT_ID,
