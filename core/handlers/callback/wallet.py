@@ -90,7 +90,8 @@ async def connect_wallet_handler(
     start_time = datetime.datetime.now()
     for i in range(DEFAULT_CONNECT_TIMEOUT + 1):
         if (datetime.datetime.now() - start_time).seconds >= DEFAULT_CONNECT_TIMEOUT:
-            await connector.disconnect()
+            if connector.connected:
+                await connector.disconnect()
             break
         await asyncio.sleep(1)
 
