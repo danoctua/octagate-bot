@@ -34,7 +34,7 @@ async def connected_wallet_welcome_renderer(
             )
             chat_admins_ids = [admin.user.id for admin in chat_admins]
             if update.effective_user.id not in chat_admins_ids:
-                logger.debug(
+                logger.info(
                     "Promoting user `%d` to admin in the chat", update.effective_user.id
                 )
                 await context.bot.promote_chat_member(
@@ -49,7 +49,10 @@ async def connected_wallet_welcome_renderer(
                     custom_title=f"8x{user.wallet.jetton_wallet.rating}",
                 )
             else:
-                logger.debug("User is already an admin in the chat")
+                logger.info(
+                    "User `%d` is already an admin in the chat",
+                    update.effective_user.id,
+                )
             text += (
                 f"\n\nYou've been promoted to admins in the chat "
                 f"as you're whale #{user.wallet.jetton_wallet.rating}!"
