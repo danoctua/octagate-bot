@@ -142,6 +142,7 @@ async def connect_wallet_handler(
                         update, context, user
                     )
 
+    await connector.disconnect()
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Connection timeout!",
