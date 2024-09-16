@@ -23,6 +23,7 @@ class MyUpdateProcessor(BaseUpdateProcessor):
                     cache_key,
                     cache_value[:20].decode(),
                 )
+                coroutine.close()
                 return
 
             await add_user_action_cache(key=cache_key, value=cache_value)
