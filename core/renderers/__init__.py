@@ -40,6 +40,8 @@ async def connected_wallet_welcome_renderer(
                 await context.bot.promote_chat_member(
                     chat_id=Config.TARGET_COMMON_CHAT_ID,
                     user_id=update.effective_user.id,
+                    can_post_messages=False,
+                    can_manage_chat=False,
                     can_manage_topics=True,
                 )
                 await context.bot.set_chat_administrator_custom_title(
