@@ -7,7 +7,6 @@ from telegram.ext import ContextTypes
 from core.models.user import User
 from core.services.db import DBService
 from core.services.user import UserService
-from core.settings import Config
 
 
 MAIN_BUTTON_REPLY_MARKUP = InlineKeyboardMarkup.from_button(
@@ -25,40 +24,15 @@ async def connected_wallet_welcome_renderer(
     reply_markup = InlineKeyboardMarkup.from_column(
         [InlineKeyboardButton(text="Disconnect wallet", callback_data="disconnect")]
     )
+    text_lines = []
     if is_holder:
-        text = "You are $ANON holder!"
+        text_lines.append("You are $ANON holder!")
 
         if user.wallet.jetton_wallet.is_whale:
-            chat_admins = await context.bot.get_chat_administrators(
-                chat_id=Config.TARGET_COMMON_CHAT_ID
-            )
-            chat_admins_ids = [admin.user.id for admin in chat_admins]
-            if update.effective_user.id not in chat_admins_ids:
-                logger.info(
-                    "Promoting user `%d` to admin in the chat", update.effective_user.id
-                )
-                await context.bot.promote_chat_member(
-                    chat_id=Config.TARGET_COMMON_CHAT_ID,
-                    user_id=update.effective_user.id,
-                    can_manage_topics=True,
-                )
-                await context.bot.set_chat_administrator_custom_title(
-                    chat_id=Config.TARGET_COMMON_CHAT_ID,
-                    user_id=update.effective_user.id,
-                    custom_title=f"8x{user.wallet.jetton_wallet.rating}",
-                )
-            else:
-                logger.info(
-                    "User `%d` is already an admin in the chat",
-                    update.effective_user.id,
-                )
-            text += (
-                f"\n\nYou've been promoted to admins in the chat "
-                f"as you're whale #{user.wallet.jetton_wallet.rating}!"
-            )
+            text_lines.append(f"🐋 You are whale #{user.wallet.jetton_wallet.rating}!")
         return await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=text,
+            text="\n\n".join(text_lines),
             reply_markup=reply_markup,
         )
     else:
