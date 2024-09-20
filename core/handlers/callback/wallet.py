@@ -13,6 +13,7 @@ from core.services.db import DBService
 from core.services.storage import get_connector
 from core.services.user import UserService
 from core.services.wallet import WalletService, UserWalletExistError
+from core.utils.authorization import demote_user, promote_user
 from core.utils.bot import delete_message
 
 logger = logging.Logger(__name__)
@@ -120,6 +121,22 @@ async def connect_wallet_handler(
                             message_id=message.message_id,
                         )
                         return
+                    except Exception as e:
+                        logger.error(
+                            f"Error while connecting wallet: {e}", exc_info=True
+                        )
+                        await connector.disconnect()
+                        await context.bot.send_message(
+                            chat_id=update.effective_chat.id,
+                            text="Error while connecting wallet!",
+                            reply_markup=MAIN_BUTTON_REPLY_MARKUP,
+                        )
+                        await delete_message(
+                            context=context,
+                            chat_id=update.effective_chat.id,
+                            message_id=message.message_id,
+                        )
+                        return
 
                     wallet_service.link_user_jetton_wallet(
                         wallet_address=connector.account.address
@@ -135,6 +152,7 @@ async def connect_wallet_handler(
                         chat_id=update.effective_chat.id,
                         message_id=message.message_id,
                     )
+                    await promote_user(context=context, user=user)
                     connector.pause_connection()
                     # This is required to refresh user with all related data
                     user = user_service.get_or_create(
@@ -176,13 +194,15 @@ async def disconnect_wallet_handler(
         return
 
     logger.warning("Disconnecting wallet")
+    await demote_user(context=context, telegram_id=update.effective_user.id)
     await connector.disconnect()
-    logger.warning("Wallet disconnected")
+    logger.info("Wallet disconnected")
     with DBService().db_session() as db_session:
         user_service = UserService(db_session)
         user = user_service.get_or_create(telegram_user=update.effective_user)
         wallet_service = WalletService(db_session)
         wallet_service.disconnect_user_wallet(user_id=user.id)
+
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="Wallet disconnected successfully!",
