@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 class MyUpdateProcessor(BaseUpdateProcessor):
     async def do_process_update(self, update: Update, coroutine: Coroutine) -> None:
-        logger.warning(update)
         cache_key, cache_value = format_request_cache_key_value(update=update)
         if cache_key and cache_value:
             if await check_user_action_cache(key=cache_key, value=cache_value):
