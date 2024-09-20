@@ -75,6 +75,7 @@ async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
             logger.info(
                 "Processing batch of %d NFT items. Processed so far: %d",
                 len(batch.nft_items),
+                total_count,
             )
 
             with DBService().db_session() as db_session:
