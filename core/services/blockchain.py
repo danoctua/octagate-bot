@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class BlockchainService:
     def __init__(self):
-        self._tonapi = AsyncTonapi(api_key=Config.TON_API_KEY)
+        self._tonapi = AsyncTonapi(api_key=Config.TON_API_KEY, max_retries=10)
 
     async def get_all_jetton_holders(self, account_id: str) -> JettonHolders:
         """

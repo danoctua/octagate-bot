@@ -38,7 +38,7 @@ async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
         logger.info("Fetching NFT owners")
         # Fetch NFT owners from the blockchain
 
-        offset, limit = 0, 500
+        offset, limit = 0, 1000
         total_count = 0
         batch_count = 1
         previous_run_start: float | None = None
@@ -62,9 +62,20 @@ async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
                 continue
 
             if len(batch.nft_items) == 0:
+                # Total number of items in the collection
+                if total_count < 137_000:
+                    previous_run_start = time.time()
+                    logger.warning(
+                        "Returned 0 owners, but only %d fetched so far", total_count
+                    )
+                    continue
+
                 break
 
-            logger.info("Processing batch of %s NFT items", len(batch.nft_items))
+            logger.info(
+                "Processing batch of %d NFT items. Processed so far: %d",
+                len(batch.nft_items),
+            )
 
             with DBService().db_session() as db_session:
                 wallet_service = WalletService(db_session)
