@@ -97,7 +97,7 @@ async def connect_wallet_handler(
         await asyncio.sleep(1)
 
         if connector.connected:
-            if connector.account.address:
+            if connector.account.owner_address:
                 with DBService().db_session() as db_session:
                     user_service = UserService(db_session)
                     user = user_service.get_or_create(
@@ -106,7 +106,8 @@ async def connect_wallet_handler(
                     wallet_service = WalletService(db_session)
                     try:
                         wallet_service.connect_user_wallet(
-                            user_id=user.id, wallet_address=connector.account.address
+                            user_id=user.id,
+                            wallet_address=connector.account.owner_address,
                         )
                     except UserWalletExistError:
                         await connector.disconnect()
@@ -139,7 +140,7 @@ async def connect_wallet_handler(
                         return
 
                     wallet_service.link_user_jetton_wallet(
-                        wallet_address=connector.account.address
+                        wallet_address=connector.account.owner_address
                     )
                     db_session.commit()
 

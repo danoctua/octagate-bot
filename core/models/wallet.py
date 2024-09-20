@@ -24,7 +24,7 @@ class UserWallet(Base):
         onupdate=datetime.datetime.utcnow,
     )
     jetton_wallet_address = mapped_column(
-        ForeignKey("jetton_wallet.address"), nullable=True
+        ForeignKey("jetton_wallet.owner_address"), nullable=True
     )
     jetton_wallet = relationship("JettonWallet", backref="user_wallet", lazy="joined")
 
@@ -32,7 +32,7 @@ class UserWallet(Base):
 class JettonWallet(Base):
     __tablename__ = "jetton_wallet"
 
-    address = mapped_column(String(255), primary_key=True)
+    owner_address = mapped_column(String(255), primary_key=True)
     balance = mapped_column(BIGINT, default=0, nullable=False)
     rating = mapped_column(Integer, default=888888, nullable=False)
     created_at = mapped_column(
@@ -55,3 +55,19 @@ class JettonWallet(Base):
     def balance_friendly(self) -> str:
         amount = to_amount(self.balance, precision=0)
         return human_friendly_number(amount)
+
+
+class NftWallet(Base):
+    __tablename__ = "nft_wallet"
+
+    item_address = mapped_column(String(255), primary_key=True)
+    owner_address = mapped_column(String(255), nullable=False, index=True)
+    collection_address = mapped_column(String(255), nullable=False)
+    created_at = mapped_column(
+        DateTime(timezone=True), default=datetime.datetime.utcnow
+    )
+    updated_at = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+    )

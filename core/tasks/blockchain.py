@@ -1,5 +1,8 @@
+import asyncio
 import logging
+import time
 
+from pytonapi.exceptions import TONAPIInternalServerError
 from telegram.ext import ContextTypes
 
 from core.services.blockchain import BlockchainService
@@ -27,6 +30,53 @@ async def fetch_jetton_holders(context: ContextTypes.DEFAULT_TYPE) -> None:
         context.application.job_queue.run_once(sanity_admins_check, 0)
     except Exception:
         logger.exception("Failed to fetch jetton holders")
+        raise  # Reraise the exception to logs
+
+
+async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
+    try:
+        logger.info("Fetching NFT owners")
+        # Fetch NFT owners from the blockchain
+
+        offset, limit = 0, 500
+        total_count = 0
+        batch_count = 1
+        previous_run_start: float | None = None
+
+        while True:
+            if (
+                previous_run_start
+                and (to_wait := (time.time() - previous_run_start)) <= 2
+            ):
+                await asyncio.sleep(to_wait)
+
+            previous_run_start = time.time()
+
+            try:
+                batch = await BlockchainService().get_nft_items(
+                    Config.TARGET_NFT_COLLECTION_ADDRESS, offset, limit
+                )
+            except TONAPIInternalServerError:
+                logger.exception("Failed to fetch NFT items", exc_info=True)
+                previous_run_start = time.time()
+                continue
+
+            if len(batch.nft_items) == 0:
+                break
+
+            logger.info("Processing batch of %s NFT items", len(batch.nft_items))
+
+            with DBService().db_session() as db_session:
+                wallet_service = WalletService(db_session)
+                wallet_service.bulk_update_nft_wallets(batch)
+
+            offset += limit
+            total_count += len(batch.nft_items)
+            batch_count += 1
+
+        logger.info("NFT owners fetched and saved. Found %s owners", total_count)
+    except Exception:
+        logger.exception("Failed to fetch NFT owners")
         raise  # Reraise the exception to logs
 
 
