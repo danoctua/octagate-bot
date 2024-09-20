@@ -35,8 +35,9 @@ class UserService(BaseService):
             query = query.filter(User.telegram_id.in_(telegram_ids))
 
         query = query.options(
-            joinedload(User.wallet, isouter=True),
-            joinedload(UserWallet.jetton_wallet, isouter=True),
+            joinedload(User.wallet).options(
+                joinedload(UserWallet.jetton_wallet),
+            )
         )
 
         return query.all()
