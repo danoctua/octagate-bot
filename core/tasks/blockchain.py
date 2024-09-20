@@ -24,7 +24,7 @@ async def fetch_jetton_holders(context: ContextTypes.DEFAULT_TYPE) -> None:
             wallet_service = WalletService(db_session)
             wallet_service.bulk_update_jetton_holders(holders)
         logger.info("Jetton holders fetched and saved. Found %s holders", holders.total)
-        context.application.job_queue.run_once(sanity_admins_check)
+        context.application.job_queue.run_once(sanity_admins_check, 0)
     except Exception:
         logger.exception("Failed to fetch jetton holders")
         raise  # Reraise the exception to logs
