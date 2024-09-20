@@ -1,9 +1,11 @@
 from typing import Iterable
 
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import joinedload
 from telegram import User as TelegramUser
 
 from core.models.user import User
+from core.models.wallet import UserWallet
 from core.services.base import BaseService
 
 
@@ -17,14 +19,27 @@ class UserService(BaseService):
             .one()
         )
 
-    def get_all(self, telegram_ids: Iterable[int]) -> list[type[User]]:
-        return (
-            self.db_session.query(User)
-            .filter(
-                User.telegram_id.in_(telegram_ids),
-            )
-            .all()
+    def get_all(self, telegram_ids: Iterable[int] | None = None) -> list[type[User]]:
+        query = self.db_session.query(User)
+        if telegram_ids:
+            query = query.filter(User.telegram_id.in_(telegram_ids))
+
+        return query.all()
+
+    def get_all_prefetched(
+        self,
+        telegram_ids: Iterable[int] | None = None,
+    ) -> list[User]:
+        query = self.db_session.query(User)
+        if telegram_ids:
+            query = query.filter(User.telegram_id.in_(telegram_ids))
+
+        query = query.options(
+            joinedload(User.wallet, isouter=True),
+            joinedload(UserWallet.jetton_wallet, isouter=True),
         )
+
+        return query.all()
 
     def create(self, telegram_user: TelegramUser) -> User:
         new_user = User(
