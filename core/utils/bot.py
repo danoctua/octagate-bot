@@ -1,7 +1,7 @@
 import logging
 
 from telegram import Update, InlineKeyboardMarkup
-from telegram.error import BadRequest, TimedOut
+from telegram.error import BadRequest, TimedOut, TelegramError
 from telegram.ext import ContextTypes
 
 from core.constants import POOL_TIMEOUT
@@ -90,7 +90,7 @@ async def answer_callback_query(update: Update) -> None:
     if Config.ENABLE_CALLBACK_REPLIES and update.callback_query:
         try:
             await update.callback_query.answer()
-        except BaseException as exc:
+        except TelegramError as exc:
             # We can just ignore this if we're timing out on this request
             logger.debug("Can't answer callback query %s", exc)
             pass

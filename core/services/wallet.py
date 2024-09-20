@@ -1,8 +1,9 @@
 import logging
 
 from pytonapi.schema.jettons import JettonHolders
+from pytonapi.schema.nft import NftItems
 
-from core.models.wallet import UserWallet, JettonWallet
+from core.models.wallet import UserWallet, JettonWallet, NftWallet
 from core.services.base import BaseService
 
 
@@ -51,7 +52,7 @@ class WalletService(BaseService):
         )
         jetton_wallet = (
             self.db_session.query(JettonWallet)
-            .filter(JettonWallet.address == wallet_address)
+            .filter(JettonWallet.owner_address == wallet_address)
             .first()
         )
         if user_wallet and jetton_wallet:
@@ -75,7 +76,7 @@ class WalletService(BaseService):
         self, wallet_address: str, balance: int, rating: int
     ) -> None:
         new_wallet = JettonWallet(
-            address=wallet_address, balance=balance, rating=rating
+            owner_address=wallet_address, balance=balance, rating=rating
         )
         self.db_session.add(new_wallet)
         logger.debug(f"Added jetton wallet {wallet_address}")
@@ -85,7 +86,7 @@ class WalletService(BaseService):
     ) -> None:
         wallet = (
             self.db_session.query(JettonWallet)
-            .filter(JettonWallet.address == wallet_address)
+            .filter(JettonWallet.owner_address == wallet_address)
             .one()
         )
         if wallet.balance == balance and wallet.rating == rating:
@@ -99,7 +100,7 @@ class WalletService(BaseService):
     def jetton_wallet_exists(self, wallet_address: str) -> bool:
         return (
             self.db_session.query(JettonWallet)
-            .filter(JettonWallet.address == wallet_address)
+            .filter(JettonWallet.owner_address == wallet_address)
             .count()
             > 0
         )
@@ -107,7 +108,7 @@ class WalletService(BaseService):
     def get_jetton_wallet(self, wallet_address: str) -> JettonWallet:
         return (
             self.db_session.query(JettonWallet)
-            .filter(JettonWallet.address == wallet_address)
+            .filter(JettonWallet.owner_address == wallet_address)
             .one()
         )
 
@@ -127,4 +128,61 @@ class WalletService(BaseService):
                 wallet.owner.address.to_raw(), int(wallet.balance), rating
             )
             self.link_user_jetton_wallet(wallet.owner.address.to_raw())
+        self.db_session.commit()
+
+    def _add_nft_wallet(
+        self, item_address: str, owner_address: str, collection_address: str
+    ) -> None:
+        new_wallet = NftWallet(
+            item_address=item_address,
+            owner_address=owner_address,
+            collection_address=collection_address,
+        )
+        self.db_session.add(new_wallet)
+        logger.debug(f"Added NFT wallet {item_address}")
+
+    def get_nft_wallet(self, item_address: str) -> NftWallet:
+        return (
+            self.db_session.query(NftWallet)
+            .filter(NftWallet.item_address == item_address)
+            .one()
+        )
+
+    def _update_nft_wallet(
+        self, item_address: str, owner_address: str, collection_address: str
+    ) -> None:
+        wallet = self.get_nft_wallet(item_address)
+        if (
+            wallet.owner_address == owner_address
+            and wallet.collection_address == collection_address
+        ):
+            logger.debug(f"NFT wallet {item_address} has not changed")
+            return
+        wallet.owner_address = owner_address
+        wallet.collection_address = collection_address
+        self.db_session.add(wallet)
+        logger.debug(f"Updated NFT wallet {item_address}")
+
+    def nft_wallet_exists(self, item_address: str) -> bool:
+        return (
+            self.db_session.query(NftWallet)
+            .filter(NftWallet.item_address == item_address)
+            .count()
+            > 0
+        )
+
+    def bulk_update_nft_wallets(self, nft_items: NftItems) -> None:
+        for item in nft_items.nft_items:
+            if not self.nft_wallet_exists(item.address.to_raw()):
+                self._add_nft_wallet(
+                    item_address=item.address.to_raw(),
+                    owner_address=item.owner.address.to_raw(),
+                    collection_address=item.collection.address.to_raw(),
+                )
+            else:
+                self._update_nft_wallet(
+                    item_address=item.address.to_raw(),
+                    owner_address=item.owner.address.to_raw(),
+                    collection_address=item.collection.address.to_raw(),
+                )
         self.db_session.commit()

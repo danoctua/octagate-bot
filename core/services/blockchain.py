@@ -1,10 +1,16 @@
 import asyncio
+import logging
 import time
 
 from pytonapi import AsyncTonapi
+from pytonapi.exceptions import TONAPIInternalServerError
 from pytonapi.schema.jettons import JettonHolders, JettonHolder
+from pytonapi.schema.nft import NftItems
 
 from core.settings import Config
+
+
+logger = logging.getLogger(__name__)
 
 
 class BlockchainService:
@@ -22,6 +28,7 @@ class BlockchainService:
         jetton_holders: list[JettonHolder] = []
         offset, limit = 0, 1000
         previous_run_start: float | None = None
+        result: JettonHolders | None = None
 
         while True:
             if (
@@ -31,11 +38,17 @@ class BlockchainService:
                 await asyncio.sleep(to_wait)
 
             previous_run_start = time.time()
-            result = await self._tonapi.jettons.get_holders(
-                account_id=account_id,
-                limit=limit,
-                offset=offset,
-            )
+            try:
+                result = await self._tonapi.jettons.get_holders(
+                    account_id=account_id,
+                    limit=limit,
+                    offset=offset,
+                )
+            except TONAPIInternalServerError:
+                logger.exception("Failed to fetch jetton holders", exc_info=True)
+                previous_run_start = time.time()
+                continue
+
             if len(result.addresses) == 0:
                 break
 
@@ -43,3 +56,44 @@ class BlockchainService:
             offset += limit
 
         return JettonHolders(addresses=jetton_holders, total=result.total)
+
+    async def get_nft_items(self, account_id: str, offset: int, limit: int) -> NftItems:
+        """
+        Get NFT items.
+
+        :param account_id: Account ID
+        :param offset: offset
+        :param limit: limit
+        :return: list of NFT item addresses
+        """
+        result = await self._tonapi.nft.get_items_by_collection_address(
+            account_id=account_id,
+            limit=limit,
+            offset=offset,
+        )
+
+        return result
+
+    async def get_all_nft_items(self, account_id: str) -> NftItems:
+        """
+        Get all NFT items.
+
+        :param account_id: Account ID
+        :return: list of NFT item addresses
+        """
+        nft_items = []
+        offset, limit = 0, 1000
+
+        while True:
+            result = await self._tonapi.nft.get_items_by_collection_address(
+                account_id=account_id,
+                limit=limit,
+                offset=offset,
+            )
+            if len(result.items) == 0:
+                break
+
+            nft_items += result.nft_items
+            offset += limit
+
+        return NftItems(nft_items=nft_items, total=result.total)
