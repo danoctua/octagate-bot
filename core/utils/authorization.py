@@ -24,6 +24,23 @@ async def get_telegram_chat_member(
         return None
 
 
+async def get_telegram_chat_admins(
+    context: ContextTypes.DEFAULT_TYPE,
+) -> list[ChatMember]:
+    return await context.bot.get_chat_administrators(
+        chat_id=Config.TARGET_COMMON_CHAT_ID
+    )
+
+
+def get_user_from_chat_members(
+    chat_members: list[ChatMember], telegram_id: int
+) -> ChatMember | None:
+    for chat_member in chat_members:
+        if chat_member.user.id == telegram_id:
+            return chat_member
+    return None
+
+
 def is_telegram_chat_whale_admin(chat_member: ChatMember) -> bool:
     """
     Check if the chat member is a whale admin
@@ -41,8 +58,11 @@ def is_telegram_chat_whale_admin(chat_member: ChatMember) -> bool:
     return False
 
 
-async def promote_user(context: ContextTypes.DEFAULT_TYPE, user: User) -> None:
-    if not user.wallet.jetton_wallet:
+async def promote_user(
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+) -> None:
+    if not (user.wallet and user.wallet.jetton_wallet):
         return
 
     # If user is not a whale, no need to promote
@@ -53,7 +73,9 @@ async def promote_user(context: ContextTypes.DEFAULT_TYPE, user: User) -> None:
         context=context, telegram_id=user.telegram_id
     )
     if not chat_member:
-        raise ValueError(f"Failed to get chat member for {user.telegram_id}")
+        raise ValueError(f"Failed to get chat member for `{user.telegram_id}`")
+
+    logger.info(f"Promoting user `{user.telegram_id}` to admin")
 
     # If user is already an admin, no need to promote
     if is_telegram_chat_whale_admin(chat_member=chat_member):
@@ -87,6 +109,8 @@ async def demote_user(context: ContextTypes.DEFAULT_TYPE, telegram_id: int) -> N
 
     if not is_telegram_chat_whale_admin(chat_member=chat_member):
         return
+
+    logger.info(f"Demoting user `{telegram_id}` from admin")
 
     await context.bot.promote_chat_member(
         chat_id=Config.TARGET_COMMON_CHAT_ID,

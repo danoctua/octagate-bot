@@ -11,7 +11,7 @@ class BlockchainService:
     def __init__(self):
         self._tonapi = AsyncTonapi(api_key=Config.TON_API_KEY)
 
-    async def get_all_holders(self, account_id: str) -> JettonHolders:
+    async def get_all_jetton_holders(self, account_id: str) -> JettonHolders:
         """
         Get all jettons' holders.
         Adding some sleep to avoid hitting the rate limit.
