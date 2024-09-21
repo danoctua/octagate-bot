@@ -1,3 +1,4 @@
+from pytonapi.utils import userfriendly_to_raw
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatInviteLink
 from telegram.ext import ContextTypes
 
@@ -6,6 +7,7 @@ from core.renderers import MAIN_BUTTON_REPLY_MARKUP
 from core.services.chat import ChatService
 from core.services.db import DBService
 from core.services.user import UserService
+from core.services.wallet import WalletService
 from core.settings import Config
 from core.utils.authorization import get_telegram_chat_member
 from core.utils.bot import answer_callback_query, delete_message
@@ -18,9 +20,8 @@ async def join_club_handler(
 ) -> None:
     await answer_callback_query(update)
     with DBService().db_session() as db_session:
-        user = UserService(db_session).get_or_create(
-            telegram_user=update.effective_user
-        )
+        user_service = UserService(db_session)
+        user = user_service.get_or_create(telegram_user=update.effective_user)
         if await get_telegram_chat_member(context, user.telegram_id) is not None:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
@@ -31,6 +32,25 @@ async def join_club_handler(
                 context, update.effective_chat.id, update.effective_message.message_id
             )
             return
+
+        wallet_service = WalletService(db_session)
+        is_nft_holder = wallet_service.is_nft_holder(
+            owner_address=user.wallet.address,
+            collection_address=userfriendly_to_raw(
+                Config.TARGET_NFT_COLLECTION_ADDRESS
+            ),
+        )
+        if not user.is_eligible_club_member(is_nft_holder=is_nft_holder):
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="You are not eligible to join the club!",
+                reply_markup=MAIN_BUTTON_REPLY_MARKUP,
+            )
+            await delete_message(
+                context, update.effective_chat.id, update.effective_message.message_id
+            )
+            return
+
         invite_link = None
         if user.chat_user:
             if not user.chat_user.is_invite_link_expired:
@@ -48,7 +68,7 @@ async def join_club_handler(
             )
             invite_link = invite_link_response.invite_link
             chat_service = ChatService(db_session)
-            chat_service.create_chat_user(
+            chat_service.create_or_update_chat_user(
                 user_id=user.id,
                 invite_link=invite_link,
                 invite_link_expiry=expiry,

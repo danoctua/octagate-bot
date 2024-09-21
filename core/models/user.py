@@ -44,6 +44,13 @@ class User(Base):
     def full_name(self) -> str:
         return " ".join(filter(lambda x: x, [self.first_name, self.last_name]))
 
+    def is_eligible_club_member(self, is_nft_holder: bool) -> bool:
+        return is_nft_holder or (
+            self.wallet
+            and self.wallet.jetton_wallet
+            and self.wallet.jetton_wallet.is_whale
+        )
+
 
 class ChatUser(Base):
     __tablename__ = "chat_user"
