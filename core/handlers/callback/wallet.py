@@ -15,7 +15,7 @@ from core.services.storage import get_connector
 from core.services.user import UserService
 from core.services.wallet import WalletService, UserWalletExistError
 from core.settings import Config
-from core.utils.authorization import demote_user, promote_user
+from core.utils.authorization import demote_user, promote_user, get_telegram_chat_member
 from core.utils.bot import delete_message
 
 logger = logging.Logger(__name__)
@@ -214,10 +214,18 @@ async def disconnect_wallet_handler(
         )
         return
 
-    logger.warning("Disconnecting wallet")
     await demote_user(context=context, telegram_id=update.effective_user.id)
     await connector.disconnect()
-    logger.info("Wallet disconnected")
+    if await get_telegram_chat_member(context, update.effective_user.id) is not None:
+        logger.info(
+            "Banning user `%d` from group because of disconnecting wallet",
+            update.effective_user.id,
+        )
+        await context.bot.ban_chat_member(
+            chat_id=Config.TARGET_COMMON_CHAT_ID,
+            user_id=update.effective_user.id,
+            until_date=60,  # ban for a minute so that user can join again in a minute
+        )
     with DBService().db_session() as db_session:
         user_service = UserService(db_session)
         user = user_service.get_or_create(telegram_user=update.effective_user)
