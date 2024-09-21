@@ -70,7 +70,7 @@ async def join_club_handler(
             invite_link_response: ChatInviteLink = (
                 await context.bot.create_chat_invite_link(
                     chat_id=Config.TARGET_COMMON_CHAT_ID,
-                    expire_date=expiry,
+                    expire_date=expiry.replace(tzinfo=None),
                     name=f"Invite #{user.telegram_id}",
                     creates_join_request=True,
                 )

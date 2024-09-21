@@ -15,7 +15,6 @@ class ChatService(BaseService):
         return self.db_session.query(ChatUser).filter(ChatUser.user_id == user_id).one()
 
     def chat_user_exists(self, user_id: int) -> bool:
-        logger.info("Checking if chat user exists, %d", user_id)
         return (
             self.db_session.query(ChatUser).filter(ChatUser.user_id == user_id).count()
             > 0
