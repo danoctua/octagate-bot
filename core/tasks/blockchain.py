@@ -101,8 +101,7 @@ async def sanity_admins_check(context: ContextTypes.DEFAULT_TYPE) -> None:
             # Promote user if they are a whale and not an admin
             if user.wallet and user.wallet.jetton_wallet:
                 if user.wallet.jetton_wallet.is_whale:
-                    if user.telegram_id not in admin_ids:
-                        await promote_user(context, user=user)
+                    await promote_user(context, user=user)
                     continue
             # Demote user if they are an admin and not a whale
             if user.telegram_id in admin_ids:
