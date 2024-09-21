@@ -57,10 +57,10 @@ class NotBot:
 
     def configure_tasks(self):
         self.application.job_queue.run_repeating(
-            fetch_jetton_holders, interval=60 * 60, first=30 * 60
+            fetch_jetton_holders, interval=60 * 60, first=2
         )
         self.application.job_queue.run_repeating(
-            fetch_nft_owners, interval=60 * 60, first=2
+            fetch_nft_owners, interval=60 * 60, first=30 * 60
         )
 
     def start_polling(self):
