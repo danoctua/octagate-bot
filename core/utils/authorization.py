@@ -78,6 +78,8 @@ async def promote_user(
         )
         return
 
+    logger.info("Got chat member to promote: %s", chat_member)
+
     logger.info(f"Promoting user `{user.telegram_id}` to admin")
 
     # If user is already an admin, no need to promote
