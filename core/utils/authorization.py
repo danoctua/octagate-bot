@@ -15,10 +15,14 @@ async def get_telegram_chat_member(
     context: ContextTypes.DEFAULT_TYPE, telegram_id: int
 ) -> ChatMember | None:
     try:
-        return await context.bot.get_chat_member(
+        chat_member = await context.bot.get_chat_member(
             chat_id=Config.TARGET_COMMON_CHAT_ID,
             user_id=telegram_id,
         )
+        if chat_member is not None and chat_member.status in (ChatMember.LEFT,):
+            return None
+
+        return chat_member
     except TelegramError:
         logger.warning(f"Failed to get chat member for {telegram_id}")
         return None
@@ -72,11 +76,7 @@ async def promote_user(
     chat_member = await get_telegram_chat_member(
         context=context, telegram_id=user.telegram_id
     )
-    if not chat_member or chat_member.status in (
-        ChatMember.LEFT,
-        ChatMember.BANNED,
-        ChatMember.RESTRICTED,
-    ):
+    if not chat_member:
         logger.warning(
             f"Failed to promote user `{user.telegram_id}` to admin as chat member is not found"
         )

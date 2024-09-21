@@ -3,6 +3,7 @@ import logging
 import time
 
 from pytonapi.exceptions import TONAPIInternalServerError
+from telegram.error import TelegramError
 from telegram.ext import ContextTypes
 
 from core.services.blockchain import BlockchainService
@@ -98,12 +99,19 @@ async def sanity_admins_check(context: ContextTypes.DEFAULT_TYPE) -> None:
         user_service = UserService(db_session)
         users = user_service.get_all_prefetched()
         for user in users:
-            # Promote user if they are a whale and not an admin
-            if user.wallet and user.wallet.jetton_wallet:
-                if user.wallet.jetton_wallet.is_whale:
-                    await promote_user(context, user=user)
-                    continue
-            # Demote user if they are an admin and not a whale
-            if user.telegram_id in admin_ids:
-                await demote_user(context, telegram_id=user.telegram_id)
+            try:
+                # Promote user if they are a whale and not an admin
+                if user.wallet and user.wallet.jetton_wallet:
+                    if user.wallet.jetton_wallet.is_whale:
+                        await promote_user(context, user=user)
+                        continue
+                # Demote user if they are an admin and not a whale
+                if user.telegram_id in admin_ids:
+                    await demote_user(context, telegram_id=user.telegram_id)
+            except TelegramError:
+                logger.exception(
+                    "Failed to promote/demote user `%d`",
+                    user.telegram_id,
+                    exc_info=True,
+                )
     logger.info("Sanity of admins checked")
