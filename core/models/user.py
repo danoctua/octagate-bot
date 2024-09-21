@@ -16,7 +16,9 @@ class User(Base):
     username = mapped_column(String(255), index=True, nullable=True)
     first_name = mapped_column(String(255), nullable=False)
     last_name = mapped_column(String(255), nullable=True)
-    language = mapped_column(String(4), nullable=False, default=Config.DEFAULT_LANGUAGE)
+    language = mapped_column(
+        String(10), nullable=False, default=Config.DEFAULT_LANGUAGE
+    )
     is_blocked = mapped_column(Boolean, nullable=False, default=False)
 
     created_at = mapped_column(

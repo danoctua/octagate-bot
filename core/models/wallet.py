@@ -1,7 +1,7 @@
 import datetime
 
 from pytonapi.utils import to_amount
-from sqlalchemy import ForeignKey, String, DateTime, Integer
+from sqlalchemy import ForeignKey, String, DateTime, Integer, Index
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.orm import mapped_column, relationship
 
@@ -70,4 +70,12 @@ class NftWallet(Base):
         DateTime(timezone=True),
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow,
+    )
+
+    __table_args__ = (
+        Index(
+            "nft_wallet_owner_address_collection_address",
+            "owner_address",
+            "collection_address",
+        ),
     )

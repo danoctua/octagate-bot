@@ -12,7 +12,7 @@ from core.handlers.callback import handlers as callback_handlers
 from core.not_telegram_ext.limiter import NotAIORateLimiter
 from core.not_telegram_ext.processor import MyUpdateProcessor
 from core.settings import Config
-from core.tasks.blockchain import fetch_jetton_holders, fetch_nft_owners
+from core.tasks.blockchain import fetch_jetton_holders
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -57,9 +57,9 @@ class NotBot:
         self.application.job_queue.run_repeating(
             fetch_jetton_holders, interval=60 * 60, first=30 * 60
         )
-        self.application.job_queue.run_repeating(
-            fetch_nft_owners, interval=60 * 60, first=2
-        )
+        # self.application.job_queue.run_repeating(
+        #     fetch_nft_owners, interval=60 * 60, first=2
+        # )
 
     def start_polling(self):
         self.application.run_polling()
