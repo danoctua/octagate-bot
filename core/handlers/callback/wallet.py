@@ -13,6 +13,7 @@ from core.services.db import DBService
 from core.services.storage import get_connector
 from core.services.user import UserService
 from core.services.wallet import WalletService, UserWalletExistError
+from core.settings import Config
 from core.utils.authorization import demote_user, promote_user
 from core.utils.bot import delete_message
 
@@ -31,7 +32,14 @@ async def connect_wallet_handler(
             user_service = UserService(db_session)
             user = user_service.get_or_create(telegram_user=update.effective_user)
             if user.wallet:
-                await connected_wallet_welcome_renderer(update, context, user)
+                wallet_service = WalletService(db_session)
+                is_nft_holder = wallet_service.is_nft_holder(
+                    owner_address=user.wallet.address,
+                    collection_address=Config.TARGET_NFT_COLLECTION_ADDRESS,
+                )
+                await connected_wallet_welcome_renderer(
+                    update, context, user, is_nft_holder
+                )
                 await delete_message(
                     context=context,
                     chat_id=update.effective_chat.id,
@@ -159,8 +167,15 @@ async def connect_wallet_handler(
                     user = user_service.get_or_create(
                         telegram_user=update.effective_user
                     )
+                    is_nft_holder = wallet_service.is_nft_holder(
+                        owner_address=user.wallet.address,
+                        collection_address=Config.TARGET_NFT_COLLECTION_ADDRESS,
+                    )
                     return await connected_wallet_welcome_renderer(
-                        update, context, user
+                        update,
+                        context,
+                        user,
+                        is_nft_holder,
                     )
 
     await context.bot.send_message(

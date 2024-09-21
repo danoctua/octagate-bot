@@ -186,3 +186,14 @@ class WalletService(BaseService):
                     collection_address=item.collection.address.to_raw(),
                 )
         self.db_session.commit()
+
+    def is_nft_holder(self, owner_address: str, collection_address: str) -> bool:
+        return (
+            self.db_session.query(NftWallet)
+            .filter(
+                NftWallet.owner_address == owner_address,
+                NftWallet.collection_address == collection_address,
+            )
+            .count()
+            > 0
+        )

@@ -63,7 +63,7 @@ async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
 
             if len(batch.nft_items) == 0:
                 # Total number of items in the collection
-                if total_count < 137_000:
+                if total_count < 136_000:
                     previous_run_start = time.time()
                     logger.warning(
                         "Returned 0 owners, but only %d fetched so far", total_count
