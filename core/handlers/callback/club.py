@@ -1,3 +1,5 @@
+import logging
+
 from pytonapi.utils import userfriendly_to_raw
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatInviteLink
 from telegram.ext import ContextTypes
@@ -12,6 +14,9 @@ from core.settings import Config
 from core.utils.authorization import get_telegram_chat_member
 from core.utils.bot import answer_callback_query, delete_message
 from core.utils.date import generate_expire_date
+
+
+logger = logging.getLogger(__name__)
 
 
 async def join_club_handler(
@@ -57,6 +62,10 @@ async def join_club_handler(
                 invite_link = user.chat_user.invite_link
 
         if not invite_link:
+            logger.info(
+                "Creating a new invite link for user `%d` to join the club chat",
+                user.telegram_id,
+            )
             expiry = generate_expire_date(expire_in=DEFAULT_EXPIRY_TIMEOUT_MINUTES)
             invite_link_response: ChatInviteLink = (
                 await context.bot.create_chat_invite_link(
