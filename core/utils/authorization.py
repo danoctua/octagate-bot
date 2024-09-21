@@ -73,7 +73,10 @@ async def promote_user(
         context=context, telegram_id=user.telegram_id
     )
     if not chat_member:
-        raise ValueError(f"Failed to get chat member for `{user.telegram_id}`")
+        logger.warning(
+            f"Failed to promote user `{user.telegram_id}` to admin as chat member is not found"
+        )
+        return
 
     logger.info(f"Promoting user `{user.telegram_id}` to admin")
 

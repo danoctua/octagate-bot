@@ -39,7 +39,6 @@ async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
         # Fetch NFT owners from the blockchain
 
         offset, limit = 0, 1000
-        total_count = 0
         batch_count = 1
         previous_run_start: float | None = None
 
@@ -63,10 +62,10 @@ async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
 
             if len(batch.nft_items) == 0:
                 # Total number of items in the collection
-                if total_count < 136_000:
+                if offset < 136_000:
                     previous_run_start = time.time()
                     logger.warning(
-                        "Returned 0 owners, but only %d fetched so far", total_count
+                        "Returned 0 owners, but only %d fetched so far", offset
                     )
                     continue
 
@@ -75,18 +74,17 @@ async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
             logger.info(
                 "Processing batch of %d NFT items. Processed so far: %d",
                 len(batch.nft_items),
-                total_count,
+                offset,
             )
 
             with DBService().db_session() as db_session:
                 wallet_service = WalletService(db_session)
                 wallet_service.bulk_update_nft_wallets(batch)
 
-            offset += limit
-            total_count += len(batch.nft_items)
+            offset += len(batch.nft_items)
             batch_count += 1
 
-        logger.info("NFT owners fetched and saved. Found %s owners", total_count)
+        logger.info("NFT owners fetched and saved. Found %s items", offset)
     except Exception:
         logger.exception("Failed to fetch NFT owners")
         raise  # Reraise the exception to logs
