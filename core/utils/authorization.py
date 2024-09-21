@@ -85,6 +85,18 @@ async def promote_user(
     # If user is already an admin, no need to promote
     if chat_member.status in (ChatMember.ADMINISTRATOR, ChatMember.OWNER):
         logger.info(f"User `{user.telegram_id}` is already an admin")
+
+        if is_telegram_chat_whale_admin(chat_member=chat_member):
+            if chat_member.custom_title != f"8x{user.wallet.jetton_wallet.rating}":
+                logger.info(
+                    f"Updating admin title for user `{user.telegram_id}` to 8x{user.wallet.jetton_wallet.rating}"
+                )
+                await context.bot.set_chat_administrator_custom_title(
+                    chat_id=Config.TARGET_COMMON_CHAT_ID,
+                    user_id=user.telegram_id,
+                    custom_title=f"8x{user.wallet.jetton_wallet.rating}",
+                )
+
         return
 
     logger.info(f"Promoting user `{user.telegram_id}` to admin")
