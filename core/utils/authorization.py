@@ -62,6 +62,23 @@ def is_telegram_chat_whale_admin(chat_member: ChatMember) -> bool:
     return False
 
 
+def is_telegram_chat_admin(chat_member: ChatMember) -> bool:
+    """
+    Check if the chat member is an admin that should never be demoted or banned
+    :param chat_member: Chat member to check
+    :return: bool
+    """
+    if chat_member.status != ChatMember.ADMINISTRATOR or not isinstance(
+        chat_member, ChatMemberAdministrator
+    ):
+        return False
+
+    if not chat_member.custom_title or not chat_member.custom_title.startswith("8x"):
+        return True
+
+    return False
+
+
 async def promote_user(
     context: ContextTypes.DEFAULT_TYPE,
     user: User,
