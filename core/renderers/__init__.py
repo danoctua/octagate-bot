@@ -10,6 +10,7 @@ from core.services.db import DBService
 from core.services.user import UserService
 from core.services.wallet import WalletService
 from core.settings import Config
+from core.utils.authorization import get_telegram_chat_member
 
 MAIN_BUTTON_REPLY_MARKUP = InlineKeyboardMarkup.from_button(
     InlineKeyboardButton(text="Main", callback_data="main")
@@ -25,9 +26,9 @@ async def connected_wallet_welcome_renderer(
     user: User,
     is_nft_holder: bool = False,
 ) -> None:
-    reply_markup = InlineKeyboardMarkup.from_column(
-        [InlineKeyboardButton(text="Disconnect wallet", callback_data="disconnect")]
-    )
+    keyboard = [
+        InlineKeyboardButton(text="Disconnect wallet", callback_data="disconnect")
+    ]
     text_lines = [
         f"Connected wallet: {raw_to_userfriendly(user.wallet.address)}\n",
     ]
@@ -37,21 +38,30 @@ async def connected_wallet_welcome_renderer(
         text_lines.append("🤖 You are not Anonymous Number holder yet!")
 
     is_anon_holder = user.wallet.jetton_wallet is not None
+    is_whale = False
     if is_anon_holder:
         text_lines.append(
             f"🎱 You are $ANON holder #{user.wallet.jetton_wallet.rating}!"
         )
 
         if user.wallet.jetton_wallet.is_whale:
+            is_whale = True
             text_lines.append("🐋 You are $ANON whale!")
 
     else:
         text_lines.append("🎱 You are not $ANON holder yet!")
 
+    if (is_nft_holder or is_whale) and await get_telegram_chat_member(
+        context, user.telegram_id
+    ) is None:
+        keyboard.append(
+            InlineKeyboardButton(text="Join 8 club 🎱", callback_data="join-club")
+        )
+
     return await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="\n".join(text_lines),
-        reply_markup=reply_markup,
+        reply_markup=InlineKeyboardMarkup.from_column(keyboard),
     )
 
 
@@ -66,9 +76,6 @@ async def start_renderer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 collection_address=userfriendly_to_raw(
                     Config.TARGET_NFT_COLLECTION_ADDRESS
                 ),
-            )
-            logger.info(
-                "{is_nft_holder}, {user.wallet.address}, {Config.TARGET_NFT_COLLECTION_ADDRESS}"
             )
             return await connected_wallet_welcome_renderer(
                 update, context, user, is_nft_holder

@@ -232,4 +232,3 @@ async def disconnect_wallet_handler(
         await delete_message(
             context, update.effective_chat.id, update.effective_message.message_id
         )
-        return
