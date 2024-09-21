@@ -72,19 +72,22 @@ async def promote_user(
     chat_member = await get_telegram_chat_member(
         context=context, telegram_id=user.telegram_id
     )
-    if not chat_member:
+    if not chat_member or chat_member.status in (
+        ChatMember.LEFT,
+        ChatMember.BANNED,
+        ChatMember.RESTRICTED,
+    ):
         logger.warning(
             f"Failed to promote user `{user.telegram_id}` to admin as chat member is not found"
         )
         return
 
-    logger.info("Got chat member to promote: %s", chat_member)
+    # If user is already an admin, no need to promote
+    if chat_member.status in (ChatMember.ADMINISTRATOR, ChatMember.OWNER):
+        logger.info(f"User `{user.telegram_id}` is already an admin")
+        return
 
     logger.info(f"Promoting user `{user.telegram_id}` to admin")
-
-    # If user is already an admin, no need to promote
-    if is_telegram_chat_whale_admin(chat_member=chat_member):
-        return
 
     await context.bot.promote_chat_member(
         chat_id=Config.TARGET_COMMON_CHAT_ID,
