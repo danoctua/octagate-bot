@@ -38,22 +38,20 @@ async def connected_wallet_welcome_renderer(
         text_lines.append("🤖 You are not Anonymous Number holder yet!")
 
     is_anon_holder = user.wallet.jetton_wallet is not None
-    is_whale = False
     if is_anon_holder:
         text_lines.append(
             f"🎱 You are $ANON holder #{user.wallet.jetton_wallet.rating}!"
         )
 
         if user.wallet.jetton_wallet.is_whale:
-            is_whale = True
             text_lines.append("🐋 You are $ANON whale!")
 
     else:
         text_lines.append("🎱 You are not $ANON holder yet!")
 
-    if (is_nft_holder or is_whale) and await get_telegram_chat_member(
+    if await get_telegram_chat_member(
         context, user.telegram_id
-    ) is None:
+    ) is None and user.is_eligible_club_member(is_nft_holder=is_nft_holder):
         keyboard.append(
             InlineKeyboardButton(text="Join 8 club 🎱", callback_data="join-club")
         )
