@@ -1,6 +1,6 @@
 import logging
 
-from pytonapi.utils import raw_to_userfriendly
+from pytonapi.utils import raw_to_userfriendly, userfriendly_to_raw
 from pytonconnect import TonConnect
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
@@ -63,7 +63,12 @@ async def start_renderer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             wallet_service = WalletService(db_session)
             is_nft_holder = wallet_service.is_nft_holder(
                 owner_address=user.wallet.address,
-                collection_address=Config.TARGET_NFT_COLLECTION_ADDRESS,
+                collection_address=userfriendly_to_raw(
+                    Config.TARGET_NFT_COLLECTION_ADDRESS
+                ),
+            )
+            logger.info(
+                "{is_nft_holder}, {user.wallet.address}, {Config.TARGET_NFT_COLLECTION_ADDRESS}"
             )
             return await connected_wallet_welcome_renderer(
                 update, context, user, is_nft_holder

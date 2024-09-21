@@ -9,6 +9,7 @@ from telegram.ext import (
 from core.handlers import handlers as message_handlers
 from core.handlers.command import handlers as command_handlers
 from core.handlers.callback import handlers as callback_handlers
+from core.handlers.error import error_handler
 from core.not_telegram_ext.limiter import NotAIORateLimiter
 from core.not_telegram_ext.processor import MyUpdateProcessor
 from core.settings import Config
@@ -52,6 +53,7 @@ class NotBot:
                 *callback_handlers,
             ]
         )
+        self.application.add_error_handler(error_handler)
 
     def configure_tasks(self):
         self.application.job_queue.run_repeating(

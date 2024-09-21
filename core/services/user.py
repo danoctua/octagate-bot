@@ -16,6 +16,11 @@ class UserService(BaseService):
             .filter(
                 User.telegram_id == telegram_id,
             )
+            .options(
+                joinedload(User.wallet).options(
+                    joinedload(UserWallet.jetton_wallet),
+                )
+            )
             .one()
         )
 
