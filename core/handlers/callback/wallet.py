@@ -238,6 +238,11 @@ async def disconnect_wallet_handler(
                 user_id=update.effective_user.id,
                 until_date=60,  # ban for a minute so that user can join again in a minute
             )
+    else:
+        logger.info(
+            "Failed to ban user `%d` from group because user is not a chat member",
+            update.effective_user.id,
+        )
     with DBService().db_session() as db_session:
         user_service = UserService(db_session)
         user = user_service.get_or_create(telegram_user=update.effective_user)
