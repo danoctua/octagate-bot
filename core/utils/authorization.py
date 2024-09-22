@@ -68,9 +68,10 @@ def is_telegram_chat_admin(chat_member: ChatMember) -> bool:
     :param chat_member: Chat member to check
     :return: bool
     """
-    if chat_member.status != ChatMember.ADMINISTRATOR or not isinstance(
-        chat_member, ChatMemberAdministrator
-    ):
+    if chat_member.status not in (
+        ChatMember.ADMINISTRATOR,
+        ChatMember.OWNER,
+    ) or not isinstance(chat_member, ChatMemberAdministrator):
         return False
 
     if not chat_member.custom_title or not chat_member.custom_title.startswith("8x"):
