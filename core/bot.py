@@ -13,7 +13,7 @@ from core.handlers.error import error_handler
 from core.not_telegram_ext.limiter import NotAIORateLimiter
 from core.not_telegram_ext.processor import MyUpdateProcessor
 from core.settings import Config
-from core.tasks.blockchain import sanity_chat_members_check
+from core.tasks.blockchain import fetch_jetton_holders, fetch_nft_owners
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -57,14 +57,11 @@ class NotBot:
 
     def configure_tasks(self):
         self.application.job_queue.run_repeating(
-            sanity_chat_members_check, interval=60 * 60, first=2
+            fetch_jetton_holders, interval=60 * 60, first=2
         )
-        # self.application.job_queue.run_repeating(
-        #     fetch_jetton_holders, interval=60 * 60, first=2
-        # )
-        # self.application.job_queue.run_repeating(
-        #     fetch_nft_owners, interval=60 * 60, first=30 * 60
-        # )
+        self.application.job_queue.run_repeating(
+            fetch_nft_owners, interval=60 * 60, first=30 * 60
+        )
 
     def start_polling(self):
         self.application.run_polling()
