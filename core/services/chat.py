@@ -39,6 +39,7 @@ class ChatService(BaseService):
             {
                 "invite_link": invite_link,
                 "invite_link_expiry": invite_link_expiry,
+                "invite_link_activated": False,
             }
         )
         self.db_session.commit()
