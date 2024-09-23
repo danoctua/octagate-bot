@@ -48,7 +48,8 @@ class ChatService(BaseService):
     ) -> None:
         if self.chat_user_exists(user_id):
             self.update_chat_user(user_id, invite_link, invite_link_expiry)
-        self.create_chat_user(user_id, invite_link, invite_link_expiry)
+        else:
+            self.create_chat_user(user_id, invite_link, invite_link_expiry)
 
     def mark_invite_link_activated(self, invite_link: str) -> None:
         self.db_session.query(ChatUser).filter(
