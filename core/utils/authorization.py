@@ -117,6 +117,10 @@ async def promote_user(
 
         return
 
+    if chat_member.status == ChatMember.RESTRICTED:
+        logger.info(f"User `{user.telegram_id}` is restricted")
+        return
+
     logger.info(f"Promoting user `{user.telegram_id}` to admin")
 
     await context.bot.promote_chat_member(
