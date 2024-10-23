@@ -16,8 +16,8 @@ class ChatService(BaseService):
 
     def chat_user_exists(self, user_id: int) -> bool:
         return (
-            self.db_session.query(ChatUser).filter(ChatUser.user_id == user_id).count()
-            > 0
+            self.db_session.query(ChatUser).filter(ChatUser.user_id == user_id).first()
+            is not None
         )
 
     def create_chat_user(
