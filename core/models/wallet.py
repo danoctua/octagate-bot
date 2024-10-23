@@ -52,6 +52,10 @@ class JettonWallet(Base):
         )
 
     @property
+    def is_eligible_to_join_club(self) -> bool:
+        return to_amount(self.balance) >= Config.CLUB_BALANCE_THRESHOLD
+
+    @property
     def balance_friendly(self) -> str:
         amount = to_amount(self.balance, precision=0)
         return human_friendly_number(amount)

@@ -48,7 +48,7 @@ class User(Base):
         return is_nft_holder or (
             self.wallet
             and self.wallet.jetton_wallet
-            and self.wallet.jetton_wallet.is_whale
+            and self.wallet.jetton_wallet.is_eligible_to_join_club
         )
 
 
