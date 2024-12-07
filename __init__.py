@@ -4,6 +4,7 @@ from core.bot import bot
 from core.services.db import DBService
 from core.settings import Config
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

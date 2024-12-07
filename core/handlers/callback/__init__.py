@@ -7,6 +7,8 @@ from core.handlers.callback.start import main_callback_handler
 from core.handlers.callback.wallet import (
     connect_wallet_handler,
     disconnect_wallet_handler,
+    show_wallet_handler,
+    hide_wallet_handler,
 )
 
 handlers = [
@@ -25,5 +27,13 @@ handlers = [
     CallbackQueryHandler(
         join_club_handler,
         pattern="join-club",
+    ),
+    CallbackQueryHandler(
+        show_wallet_handler,
+        pattern="show-wallet",
+    ),
+    CallbackQueryHandler(
+        hide_wallet_handler,
+        pattern="hide-wallet",
     ),
 ]

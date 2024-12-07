@@ -257,3 +257,77 @@ async def disconnect_wallet_handler(
         await delete_message(
             context, update.effective_chat.id, update.effective_message.message_id
         )
+
+
+async def show_wallet_handler(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+) -> None:
+    await update.callback_query.answer()
+    logger.info(f"User {update.effective_user.id!r} is requesting to show wallet")
+    with DBService().db_session() as db_session:
+        user_service = UserService(db_session)
+        user = user_service.get_or_create(telegram_user=update.effective_user)
+        if user.wallet:
+            wallet_service = WalletService(db_session)
+            if user.wallet.hide_wallet:
+                wallet_service.show_user_wallet(user_id=user.id)
+                db_session.refresh(user)
+                await promote_user(context=context, user=user)
+                is_nft_holder = wallet_service.is_nft_holder(
+                    owner_address=user.wallet.address,
+                    collection_address=userfriendly_to_raw(
+                        Config.TARGET_NFT_COLLECTION_ADDRESS
+                    ),
+                )
+                return await connected_wallet_welcome_renderer(
+                    update,
+                    context,
+                    user,
+                    is_nft_holder,
+                    edit_mode=True,
+                )
+        else:
+            await context.bot.edit_message_text(
+                chat_id=update.effective_chat.id,
+                message_id=update.effective_message.message_id,
+                text="Wallet is not connected!",
+                reply_markup=MAIN_BUTTON_REPLY_MARKUP,
+            )
+
+
+async def hide_wallet_handler(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+) -> None:
+    await update.callback_query.answer()
+    logger.info(f"User {update.effective_user.id!r} is requesting to hide wallet")
+    with DBService().db_session() as db_session:
+        user_service = UserService(db_session)
+        user = user_service.get_or_create(telegram_user=update.effective_user)
+        if user.wallet:
+            wallet_service = WalletService(db_session)
+            if not user.wallet.hide_wallet:
+                wallet_service.hide_user_wallet(user_id=user.id)
+                db_session.refresh(user)
+                await promote_user(context=context, user=user)
+                is_nft_holder = wallet_service.is_nft_holder(
+                    owner_address=user.wallet.address,
+                    collection_address=userfriendly_to_raw(
+                        Config.TARGET_NFT_COLLECTION_ADDRESS
+                    ),
+                )
+                return await connected_wallet_welcome_renderer(
+                    update,
+                    context,
+                    user,
+                    is_nft_holder,
+                    edit_mode=True,
+                )
+        else:
+            await context.bot.edit_message_text(
+                chat_id=update.effective_chat.id,
+                message_id=update.effective_message.message_id,
+                text="Wallet is not connected!",
+                reply_markup=MAIN_BUTTON_REPLY_MARKUP,
+            )

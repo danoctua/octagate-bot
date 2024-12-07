@@ -3,6 +3,7 @@ import logging
 from pytonapi.schema.jettons import JettonHolders
 from pytonapi.schema.nft import NftItems
 
+from core.constants import DEFAULT_WALLET_RATING, DEFAULT_WALLET_BALANCE
 from core.models.wallet import UserWallet, JettonWallet, NftWallet
 from core.services.base import BaseService
 
@@ -72,6 +73,17 @@ class WalletService(BaseService):
             f"User wallet {wallet_address} or jetton wallet {wallet_address} not found"
         )
 
+    def get_all_jetton_wallets(self) -> list[str]:
+        return [
+            str(w[0])
+            for w in self.db_session.query(JettonWallet.owner_address)
+            .filter(
+                JettonWallet.rating < DEFAULT_WALLET_RATING,
+                JettonWallet.balance > DEFAULT_WALLET_BALANCE,
+            )
+            .all()
+        ]
+
     def _add_jetton_wallet(
         self, wallet_address: str, balance: int, rating: int
     ) -> None:
@@ -96,6 +108,16 @@ class WalletService(BaseService):
         wallet.rating = rating
         self.db_session.add(wallet)
         logger.debug(f"Updated jetton wallet {wallet_address}")
+
+    def _flush_jetton_wallets(self, wallet_addresses: set[str]) -> None:
+        self.db_session.query(JettonWallet).filter(
+            JettonWallet.owner_address.in_(wallet_addresses)
+        ).update(
+            {
+                "rating": DEFAULT_WALLET_RATING,
+                "balance": DEFAULT_WALLET_BALANCE,
+            }
+        )
 
     def jetton_wallet_exists(self, wallet_address: str) -> bool:
         return (
@@ -123,7 +145,16 @@ class WalletService(BaseService):
         self.db_session.flush()
 
     def bulk_update_jetton_holders(self, wallets: JettonHolders) -> None:
+        wallet_addresses = set(
+            wallet.owner.address.to_raw() for wallet in wallets.addresses
+        )
+        logger.info("Clean up non-existing jetton wallets")
+        missing_jetton_holders = set(self.get_all_jetton_wallets()) - wallet_addresses
+        logger.info(f"Found {len(missing_jetton_holders)} missing jetton wallets")
+        self._flush_jetton_wallets(missing_jetton_holders)
+        logger.info("Bulk update jetton wallets")
         for rating, wallet in enumerate(wallets.addresses, start=1):
+            logger.info(f"Rating: {rating}, Wallet: {wallet.owner.address.to_raw()}")
             self.add_or_update_jetton_wallet(
                 wallet.owner.address.to_raw(), int(wallet.balance), rating
             )
@@ -197,3 +228,25 @@ class WalletService(BaseService):
             .count()
             > 0
         )
+
+    def hide_user_wallet(self, user_id: int) -> bool:
+        user_wallet: type[UserWallet] = (
+            self.db_session.query(UserWallet)
+            .filter(UserWallet.user_id == user_id)
+            .one()
+        )
+        user_wallet.hide_wallet = True
+        self.db_session.add(user_wallet)
+        self.db_session.commit()
+        return True
+
+    def show_user_wallet(self, user_id: int) -> bool:
+        user_wallet: type[UserWallet] = (
+            self.db_session.query(UserWallet)
+            .filter(UserWallet.user_id == user_id)
+            .one()
+        )
+        user_wallet.hide_wallet = False
+        self.db_session.add(user_wallet)
+        self.db_session.commit()
+        return True

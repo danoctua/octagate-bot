@@ -25,6 +25,7 @@ async def connected_wallet_welcome_renderer(
     context: ContextTypes.DEFAULT_TYPE,
     user: User,
     is_nft_holder: bool = False,
+    edit_mode: bool = False,
 ) -> None:
     keyboard = [
         InlineKeyboardButton(text="Disconnect wallet", callback_data="disconnect")
@@ -37,7 +38,9 @@ async def connected_wallet_welcome_renderer(
     else:
         text_lines.append("🤖 You are not Anonymous Number holder yet!")
 
-    is_anon_holder = user.wallet.jetton_wallet is not None
+    is_anon_holder = (
+        user.wallet.jetton_wallet is not None and user.wallet.jetton_wallet.balance > 0
+    )
     if is_anon_holder:
         text_lines.append(
             f"🎱 You are $ANON holder #{user.wallet.jetton_wallet.rating}!"
@@ -46,21 +49,45 @@ async def connected_wallet_welcome_renderer(
         if user.wallet.jetton_wallet.is_whale:
             text_lines.append("🐋 You are $ANON whale!")
 
+        if user.wallet.hide_wallet:
+            text_lines.append("🔒 Wallet is hidden")
+
     else:
         text_lines.append("🎱 You are not $ANON holder yet!")
 
-    if await get_telegram_chat_member(
-        context, user.telegram_id
-    ) is None and user.is_eligible_club_member(is_nft_holder=is_nft_holder):
+    chat_member = await get_telegram_chat_member(context, user.telegram_id)
+
+    if chat_member is None and user.is_eligible_club_member(
+        is_nft_holder=is_nft_holder
+    ):
         keyboard.append(
             InlineKeyboardButton(text="Join 8 club 🎱", callback_data="join-club")
         )
 
-    return await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="\n".join(text_lines),
-        reply_markup=InlineKeyboardMarkup.from_column(keyboard),
-    )
+    if user.wallet:
+        keyboard.insert(
+            0,
+            InlineKeyboardButton(
+                text="Hide wallet" if not user.wallet.hide_wallet else "Show wallet",
+                callback_data="hide-wallet"
+                if not user.wallet.hide_wallet
+                else "show-wallet",
+            ),
+        )
+
+    if edit_mode:
+        return await context.bot.edit_message_text(
+            chat_id=update.effective_chat.id,
+            message_id=update.effective_message.message_id,
+            text="\n".join(text_lines),
+            reply_markup=InlineKeyboardMarkup.from_column(keyboard),
+        )
+    else:
+        return await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="\n".join(text_lines),
+            reply_markup=InlineKeyboardMarkup.from_column(keyboard),
+        )
 
 
 async def start_renderer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

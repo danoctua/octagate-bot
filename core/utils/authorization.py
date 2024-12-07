@@ -4,7 +4,9 @@ from telegram import ChatMember, ChatMemberAdministrator
 from telegram.error import TelegramError
 from telegram.ext import ContextTypes
 
+from core.constants import CUSTOM_TITLE_TEMPLATE
 from core.models.user import User
+from core.models.wallet import UserWallet
 from core.settings import Config
 
 
@@ -18,6 +20,12 @@ async def get_telegram_chat_member(
         chat_member = await context.bot.get_chat_member(
             chat_id=Config.TARGET_COMMON_CHAT_ID,
             user_id=telegram_id,
+        )
+        logger.info(
+            "Chat member for telegram ID %s and chat %s: %s",
+            telegram_id,
+            Config.TARGET_COMMON_CHAT_ID,
+            chat_member,
         )
         if chat_member is not None and chat_member.status in (ChatMember.LEFT,):
             return None
@@ -43,6 +51,13 @@ def get_user_from_chat_members(
         if chat_member.user.id == telegram_id:
             return chat_member
     return None
+
+
+def get_user_custom_title(user_wallet: UserWallet) -> str:
+    if user_wallet.hide_wallet:
+        return CUSTOM_TITLE_TEMPLATE.format(rank="XX")
+
+    return CUSTOM_TITLE_TEMPLATE.format(rank=user_wallet.jetton_wallet.rating)
 
 
 def is_telegram_chat_whale_admin(chat_member: ChatMember) -> bool:
@@ -105,14 +120,20 @@ async def promote_user(
         logger.info(f"User `{user.telegram_id}` is already an admin")
 
         if is_telegram_chat_whale_admin(chat_member=chat_member):
-            if chat_member.custom_title != f"8x{user.wallet.jetton_wallet.rating}":
+            custom_title = get_user_custom_title(user_wallet=user.wallet)
+            if chat_member.custom_title != custom_title:
                 logger.info(
-                    f"Updating admin title for user `{user.telegram_id}` to 8x{user.wallet.jetton_wallet.rating}"
+                    f"Updating admin title for user {user.telegram_id!r} to {custom_title!r}"
+                )
+                await context.bot.promote_chat_member(
+                    chat_id=Config.TARGET_COMMON_CHAT_ID,
+                    user_id=user.telegram_id,
+                    can_manage_topics=True,
                 )
                 await context.bot.set_chat_administrator_custom_title(
                     chat_id=Config.TARGET_COMMON_CHAT_ID,
                     user_id=user.telegram_id,
-                    custom_title=f"8x{user.wallet.jetton_wallet.rating}",
+                    custom_title=custom_title,
                 )
 
         return
@@ -128,10 +149,11 @@ async def promote_user(
         user_id=user.telegram_id,
         can_manage_topics=True,
     )
+    custom_title = get_user_custom_title(user_wallet=user.wallet)
     await context.bot.set_chat_administrator_custom_title(
         chat_id=Config.TARGET_COMMON_CHAT_ID,
         user_id=user.telegram_id,
-        custom_title=f"8x{user.wallet.jetton_wallet.rating}",
+        custom_title=custom_title,
     )
     await context.bot.send_message(
         chat_id=user.telegram_id,

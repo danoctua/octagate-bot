@@ -1,10 +1,11 @@
 import datetime
 
 from pytonapi.utils import to_amount
-from sqlalchemy import ForeignKey, String, DateTime, Integer, Index
+from sqlalchemy import ForeignKey, String, DateTime, Integer, Index, Boolean
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.orm import mapped_column, relationship
 
+from core.constants import DEFAULT_WALLET_RATING, DEFAULT_WALLET_BALANCE
 from core.db import Base
 from core.settings import Config
 from core.utils.number import human_friendly_number
@@ -16,16 +17,18 @@ class UserWallet(Base):
     user_id = mapped_column(ForeignKey("user.id"), primary_key=True)
     address = mapped_column(String(255), unique=True, nullable=False)
     created_at = mapped_column(
-        DateTime(timezone=True), default=datetime.datetime.utcnow
+        DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC)
     )
     updated_at = mapped_column(
         DateTime(timezone=True),
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow,
+        default=datetime.datetime.now(datetime.UTC),
+        onupdate=datetime.datetime.now(datetime.UTC),
     )
     jetton_wallet_address = mapped_column(
-        ForeignKey("jetton_wallet.owner_address"), nullable=True
+        ForeignKey("jetton_wallet.owner_address"),
+        nullable=True,
     )
+    hide_wallet = mapped_column(Boolean, default=False, nullable=False)
     jetton_wallet = relationship("JettonWallet", backref="user_wallet", lazy="joined")
 
 
@@ -33,8 +36,8 @@ class JettonWallet(Base):
     __tablename__ = "jetton_wallet"
 
     owner_address = mapped_column(String(255), primary_key=True)
-    balance = mapped_column(BIGINT, default=0, nullable=False)
-    rating = mapped_column(Integer, default=888888, nullable=False)
+    balance = mapped_column(BIGINT, default=DEFAULT_WALLET_BALANCE, nullable=False)
+    rating = mapped_column(Integer, default=DEFAULT_WALLET_RATING, nullable=False)
     created_at = mapped_column(
         DateTime(timezone=True), default=datetime.datetime.utcnow
     )
