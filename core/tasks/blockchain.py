@@ -94,7 +94,7 @@ async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
             batch_count += 1
 
         logger.info("NFT owners fetched and saved. Found %s items", offset)
-        context.application.job_queue.run_once(sanity_chat_members_check, 0)
+        # context.application.job_queue.run_once(sanity_chat_members_check, 0)
     except Exception:
         logger.exception("Failed to fetch NFT owners")
         raise  # Reraise the exception to logs
