@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 import time
 
@@ -93,6 +94,7 @@ async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
             batch_count += 1
 
         logger.info("NFT owners fetched and saved. Found %s items", offset)
+        context.application.job_queue.run_once(sanity_chat_members_check, 0)
     except Exception:
         logger.exception("Failed to fetch NFT owners")
         raise  # Reraise the exception to logs
@@ -146,11 +148,14 @@ async def sanity_chat_members_check(context: ContextTypes.DEFAULT_TYPE) -> None:
                     await context.bot.ban_chat_member(
                         chat_id=Config.TARGET_COMMON_CHAT_ID,
                         user_id=user.telegram_id,
-                        until_date=60,  # ban for a minute so that user can join again in a minute
+                        until_date=(
+                            datetime.datetime.now() + datetime.timedelta(minutes=1)
+                        ),  # ban for a minute so that user can join again in a minute
                     )
                 else:
                     logger.debug(
-                        "User `%d` has no wallet connected. Skipping", user.telegram_id
+                        "User `%d` has no wallet connected and is not a member of the chat. Skipping",
+                        user.telegram_id,
                     )
                 continue
 

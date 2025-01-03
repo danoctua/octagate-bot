@@ -10,6 +10,7 @@ x-python-service:
     - .env
   volumes:
     - ./core:/app/core
+    - ./scripts:/app/scripts
     - ./__init__.py/:/app/__init__.py
     - /etc/letsencrypt:/etc/certbot:ro
 
