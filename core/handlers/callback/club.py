@@ -6,7 +6,7 @@ from telegram.ext import ContextTypes
 
 from core.constants import DEFAULT_EXPIRY_TIMEOUT_MINUTES
 from core.renderers import MAIN_BUTTON_REPLY_MARKUP
-from core.services.chat import ChatService
+from core.services.chat import TelegramChatService
 from core.services.db import DBService
 from core.services.user import UserService
 from core.services.wallet import WalletService
@@ -19,6 +19,7 @@ from core.utils.date import generate_expire_date
 logger = logging.getLogger(__name__)
 
 
+# TODO: GH-3 deprecate
 async def join_club_handler(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -76,7 +77,7 @@ async def join_club_handler(
                 )
             )
             invite_link = invite_link_response.invite_link
-            chat_service = ChatService(db_session)
+            chat_service = TelegramChatService(db_session)
             chat_service.create_or_update_chat_user(
                 user_id=user.id,
                 invite_link=invite_link,

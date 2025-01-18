@@ -15,6 +15,7 @@ class DBService:
 
     @staticmethod
     def create_tables() -> None:
+        logger.info("Creating tables...")
         Base.metadata.create_all(engine)
 
     @staticmethod

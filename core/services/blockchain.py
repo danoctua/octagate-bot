@@ -7,7 +7,7 @@ from typing import Any
 from pydantic import BaseModel
 from pytonapi import AsyncTonapi
 from pytonapi.exceptions import TONAPIInternalServerError
-from pytonapi.schema.jettons import JettonHolders, JettonsBalances
+from pytonapi.schema.jettons import JettonHolders, JettonsBalances, JettonInfo
 from pytonapi.schema.nft import NftItems
 
 from core.settings import Config
@@ -135,3 +135,12 @@ class BlockchainService:
             attribute_name="nft_items",
         ):
             yield batch
+
+    async def get_jetton_info(self, address: str) -> JettonInfo:
+        """
+        Get token details.
+
+        :param address: Token address
+        :return: Token details
+        """
+        return await self._tonapi.jettons.get_info(account_id=address)

@@ -4,7 +4,7 @@ from pytonapi.utils import userfriendly_to_raw
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from core.services.chat import ChatService
+from core.services.chat import TelegramChatService
 from core.services.db import DBService
 from core.services.user import UserService
 from core.services.wallet import WalletService
@@ -23,7 +23,7 @@ async def chat_join_request_callback(
         user = UserService(db_session).get_or_create(
             telegram_user=update.effective_user
         )
-        chat_service = ChatService(db_session)
+        chat_service = TelegramChatService(db_session)
         if not chat_service.validate_invite_link(
             user_id=user.id,
             invite_link=invite_link_request.invite_link,
