@@ -18,6 +18,7 @@ class User(Base):
         String(10), nullable=False, default=Config.DEFAULT_LANGUAGE
     )
     is_blocked = mapped_column(Boolean, nullable=False, default=False)
+    is_admin = mapped_column(Boolean, nullable=False, default=False)
 
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

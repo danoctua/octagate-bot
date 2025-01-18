@@ -162,8 +162,8 @@ cython_debug/
 #.idea/
 
 secrets/
-core/static/jettons
-core/static/nfts
-core/static/chats
-core/static/avatars
+core/static/jettons/*
+core/static/nfts/*
+core/static/chats/*
+core/static/avatars/*
 *.session

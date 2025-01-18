@@ -10,6 +10,7 @@ setup(
         "console_scripts": [
             "load-jetton = core.cli.load_jetton:main",
             "load-nft-collection = core.cli.load_nft_collection:main",
+            "load-telegram-chat = core.cli.load_telegram_chat:main",
         ],
     },
     classifiers=[
