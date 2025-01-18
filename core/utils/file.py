@@ -1,10 +1,14 @@
+import logging
 import re
 
 from httpx import Client, Response
+from pytonapi.schema.nft import ImagePreview
 
 from core.constants import STATIC_PATH
 
 client = Client()
+
+logger = logging.getLogger(__name__)
 
 
 CONTENT_DISPOSITION_FILENAME_REGEX = re.compile(r'filename="(.+)"')
@@ -43,6 +47,13 @@ def download_media(
 ) -> str:
     """
     Download media from URL.
+
+    :param url: URL to download media from.
+    :param name: Name of the file that will be used. Should not include the extension.
+    :param subdirectory: Subdirectory to save the file in.
+    :param default_extension: Default extension to use if the extension cannot be guessed.
+
+    :return: Name of the downloaded file.
     """
     root_path = STATIC_PATH / (subdirectory or "")
 
@@ -52,3 +63,18 @@ def download_media(
         file.write(response.content)
 
     return file_name
+
+
+def pick_best_preview(previews: list[ImagePreview]) -> ImagePreview:
+    """
+    Pick the best image preview from a list of previews.
+    """
+    try:
+        return max(
+            previews,
+            key=lambda preview: preview.resolution.split("x")[0]
+            * preview.resolution.split("x")[1],
+        )
+    except (TypeError, ValueError):
+        logger.warning("Could not pick the best preview. Returning the last one")
+        return previews[-1]

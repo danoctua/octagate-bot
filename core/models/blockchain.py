@@ -1,19 +1,20 @@
-from sqlalchemy import String, Boolean, DateTime, func, BigInteger
+from sqlalchemy import String, Boolean, DateTime, func, BigInteger, ForeignKey
 from sqlalchemy.dialects.mysql import TEXT
 from sqlalchemy.orm import mapped_column
 
 from core.db import Base
+from core.models.fields import BLOCKCHAIN_ADDRESS_RAW
 
 
 class Jetton(Base):
     __tablename__ = "jetton"
 
-    address = mapped_column(String(255), primary_key=True)
+    address = mapped_column(BLOCKCHAIN_ADDRESS_RAW, primary_key=True)
     name = mapped_column(String(255), nullable=False)
     description = mapped_column(TEXT, nullable=True)
     symbol = mapped_column(String(255), nullable=False)
     total_supply = mapped_column(BigInteger, nullable=False)
-    logo_path = mapped_column(String(290), nullable=True)
+    logo_path = mapped_column(String(290), nullable=False)
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -21,8 +22,34 @@ class Jetton(Base):
 class NFTCollection(Base):
     __tablename__ = "nft_collection"
 
-    address = mapped_column(String(255), primary_key=True)
+    address = mapped_column(BLOCKCHAIN_ADDRESS_RAW, primary_key=True)
     name = mapped_column(String(255), nullable=False)
     description = mapped_column(TEXT, nullable=True)
+    logo_path = mapped_column(String(290), nullable=False)
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class NftItem(Base):
+    __tablename__ = "nft_item"
+
+    address = mapped_column(BLOCKCHAIN_ADDRESS_RAW, primary_key=True)
+    owner_address = mapped_column(
+        ForeignKey("user_wallet.address", ondelete="CASCADE"),
+        nullable=False,
+    )
+    collection_address = mapped_column(
+        ForeignKey("nft_collection.address", ondelete="CASCADE"),
+        nullable=False,
+    )
+    created_at = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )

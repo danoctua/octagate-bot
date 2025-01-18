@@ -9,6 +9,7 @@ setup(
     entry_points={
         "console_scripts": [
             "load-jetton = core.cli.load_jetton:main",
+            "load-nft-collection = core.cli.load_nft_collection:main",
         ],
     },
     classifiers=[
