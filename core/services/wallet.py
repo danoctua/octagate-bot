@@ -144,17 +144,19 @@ class WalletService(BaseService):
 
         self.db_session.flush()
 
-    def bulk_update_jetton_holders(self, wallets: JettonHolders) -> None:
-        wallet_addresses = set(
-            wallet.owner.address.to_raw() for wallet in wallets.addresses
-        )
-        logger.info("Clean up non-existing jetton wallets")
-        missing_jetton_holders = set(self.get_all_jetton_wallets()) - wallet_addresses
-        logger.info(f"Found {len(missing_jetton_holders)} missing jetton wallets")
-        self._flush_jetton_wallets(missing_jetton_holders)
+    def bulk_update_jetton_holders(
+        self, wallets: JettonHolders, current_offset: int = 1
+    ) -> None:
+        # wallet_addresses = set(
+        #     wallet.owner.address.to_raw() for wallet in wallets.addresses
+        # )
+        # logger.info("Clean up non-existing jetton wallets")
+        # missing_jetton_holders = set(self.get_all_jetton_wallets()) - wallet_addresses
+        # logger.info(f"Found {len(missing_jetton_holders)} missing jetton wallets")
+        # self._flush_jetton_wallets(missing_jetton_holders)
         logger.info("Bulk update jetton wallets")
-        for rating, wallet in enumerate(wallets.addresses, start=1):
-            logger.info(f"Rating: {rating}, Wallet: {wallet.owner.address.to_raw()}")
+        for rating, wallet in enumerate(wallets.addresses, start=current_offset):
+            logger.debug(f"Rating: {rating}, Wallet: {wallet.owner.address.to_raw()}")
             self.add_or_update_jetton_wallet(
                 wallet.owner.address.to_raw(), int(wallet.balance), rating
             )

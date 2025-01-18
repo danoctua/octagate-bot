@@ -1,9 +1,6 @@
-import asyncio
 import datetime
 import logging
-import time
 
-from pytonapi.exceptions import TONAPIInternalServerError
 from pytonapi.utils import userfriendly_to_raw
 from telegram.error import TelegramError
 from telegram.ext import ContextTypes
@@ -25,79 +22,28 @@ logger = logging.getLogger(__name__)
 
 
 async def fetch_jetton_holders(context: ContextTypes.DEFAULT_TYPE) -> None:
-    try:
-        logger.info("Fetching jetton holders")
-        # Fetch jetton holders from the blockchain
-        holders = await BlockchainService().get_all_jetton_holders(
+    with DBService().db_session() as db_session:
+        wallet_service = WalletService(db_session)
+        blockchain_service = BlockchainService()
+        current_offset = 1
+        async for batch in blockchain_service.get_all_jetton_holders(
             Config.TARGET_JETTON_MASTER
-        )
-        logger.info(f"Found {holders.total} holders")
-        with DBService().db_session() as db_session:
-            wallet_service = WalletService(db_session)
-            wallet_service.bulk_update_jetton_holders(holders)
-        logger.info("Jetton holders fetched and saved. Found %s holders", holders.total)
-        context.application.job_queue.run_once(sanity_admins_check, 0)
-    except Exception:
-        logger.exception("Failed to fetch jetton holders")
-        raise  # Reraise the exception to logs
+        ):
+            wallet_service.bulk_update_jetton_holders(
+                batch, current_offset=current_offset
+            )
+            current_offset += len(batch.addresses)
 
 
 async def fetch_nft_owners(context: ContextTypes.DEFAULT_TYPE) -> None:
-    try:
-        logger.info("Fetching NFT owners")
-        # Fetch NFT owners from the blockchain
+    blockchain_service = BlockchainService()
 
-        offset, limit = 0, 1000
-        batch_count = 1
-        previous_run_start: float | None = None
-
-        while True:
-            if (
-                previous_run_start
-                and (to_wait := (time.time() - previous_run_start)) <= 2
-            ):
-                await asyncio.sleep(to_wait)
-
-            previous_run_start = time.time()
-
-            try:
-                batch = await BlockchainService().get_nft_items(
-                    Config.TARGET_NFT_COLLECTION_ADDRESS, offset, limit
-                )
-            except TONAPIInternalServerError:
-                logger.exception("Failed to fetch NFT items", exc_info=True)
-                previous_run_start = time.time()
-                continue
-
-            if len(batch.nft_items) == 0:
-                # Total number of items in the collection
-                if offset < 136_000:
-                    previous_run_start = time.time()
-                    logger.warning(
-                        "Returned 0 owners, but only %d fetched so far", offset
-                    )
-                    continue
-
-                break
-
-            logger.info(
-                "Processing batch of %d NFT items. Processed so far: %d",
-                len(batch.nft_items),
-                offset,
-            )
-
-            with DBService().db_session() as db_session:
-                wallet_service = WalletService(db_session)
-                wallet_service.bulk_update_nft_wallets(batch)
-
-            offset += len(batch.nft_items)
-            batch_count += 1
-
-        logger.info("NFT owners fetched and saved. Found %s items", offset)
-        # context.application.job_queue.run_once(sanity_chat_members_check, 0)
-    except Exception:
-        logger.exception("Failed to fetch NFT owners")
-        raise  # Reraise the exception to logs
+    with DBService().db_session() as db_session:
+        wallet_service = WalletService(db_session)
+        async for batch in blockchain_service.get_all_nft_items(
+            Config.TARGET_NFT_COLLECTION_ADDRESS
+        ):
+            wallet_service.bulk_update_nft_wallets(batch)
 
 
 async def sanity_admins_check(context: ContextTypes.DEFAULT_TYPE) -> None:

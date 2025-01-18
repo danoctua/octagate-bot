@@ -1,3 +1,7 @@
+_configure_redis_password:
+	docker compose run --rm redis redis-cli -a $(REDIS_PASSWORD) CONFIG SET requirepass $(REDIS_PASSWORD)
+
+
 build:
 	docker compose build
 
@@ -15,3 +19,6 @@ setup:
 
 stop:
 	docker compose stop
+
+
+include .env

@@ -1,10 +1,13 @@
 import asyncio
 import logging
 import time
+from collections.abc import Callable, Awaitable, Generator, AsyncGenerator
+from typing import Any
 
+from pydantic import BaseModel
 from pytonapi import AsyncTonapi
 from pytonapi.exceptions import TONAPIInternalServerError
-from pytonapi.schema.jettons import JettonHolders, JettonHolder
+from pytonapi.schema.jettons import JettonHolders, JettonsBalances
 from pytonapi.schema.nft import NftItems
 
 from core.settings import Config
@@ -13,24 +16,28 @@ from core.settings import Config
 logger = logging.getLogger(__name__)
 
 
+DEFAULT_TONAPI_OFFSET = 0
+DEFAULT_TONAPI_LIMIT = 1000
+
+
 class BlockchainService:
     def __init__(self):
         self._tonapi = AsyncTonapi(api_key=Config.TON_API_KEY, max_retries=10)
 
-    async def get_all_jetton_holders(self, account_id: str) -> JettonHolders:
-        """
-        Get all jettons' holders.
-        Adding some sleep to avoid hitting the rate limit.
-
-        :param account_id: Account ID
-        :return: :class:`JettonHolders`
-        """
-        jetton_holders: list[JettonHolder] = []
-        offset, limit = 0, 1000
+    @classmethod
+    async def _get_all_paginated(
+        cls,
+        *,
+        method: Callable[..., Awaitable[Any]],
+        offset: int = DEFAULT_TONAPI_OFFSET,
+        limit: int = DEFAULT_TONAPI_LIMIT,
+        attribute_name: str = "items",
+        **kwargs,
+    ) -> AsyncGenerator[BaseModel, None, None]:
+        current_offset = offset
         previous_run_start: float | None = None
-        result: JettonHolders | None = None
-
         while True:
+            # This is to avoid hitting the rate limit in free tier
             if (
                 previous_run_start
                 and (to_wait := (time.time() - previous_run_start)) <= 1
@@ -39,61 +46,92 @@ class BlockchainService:
 
             previous_run_start = time.time()
             try:
-                result = await self._tonapi.jettons.get_holders(
-                    account_id=account_id,
+                logger.info(
+                    "Fetching records from %s with offset %s and limit %s",
+                    method.__name__,
+                    current_offset,
+                    limit,
+                )
+                records_dto = await method(
+                    **kwargs,
+                    offset=current_offset,
                     limit=limit,
-                    offset=offset,
                 )
             except TONAPIInternalServerError:
-                logger.exception("Failed to fetch jetton holders", exc_info=True)
+                logger.exception("Failed to fetch records", exc_info=True)
                 previous_run_start = time.time()
                 continue
 
-            if len(result.addresses) == 0:
+            yield records_dto
+
+            # Not all methods return total count
+            total_count = len(getattr(records_dto, attribute_name))
+
+            if not total_count:
+                logger.info("No more records to fetch. Exiting")
                 break
 
-            jetton_holders += result.addresses
-            offset += limit
+            logger.info("Fetched %s records", total_count)
+            current_offset += total_count
 
-        return JettonHolders(addresses=jetton_holders, total=result.total)
-
-    async def get_nft_items(self, account_id: str, offset: int, limit: int) -> NftItems:
+    async def get_all_jetton_holders(
+        self, account_id: str
+    ) -> Generator[JettonHolders, None, None]:
         """
-        Get NFT items.
+        Get all jettons' holders.
 
         :param account_id: Account ID
-        :param offset: offset
-        :param limit: limit
+        :return: :class:`JettonHolders`
+        """
+        async for batch in self._get_all_paginated(
+            method=self._tonapi.jettons.get_holders,
+            account_id=account_id,
+            attribute_name="addresses",
+        ):
+            yield batch
+
+    async def get_all_jetton_balances(self, account_id: str) -> JettonsBalances:
+        """
+        Get all jettons' balances.
+        :param account_id: Account ID (wallet address)
+        :return:
+        """
+        jetton_balances = await self._tonapi.accounts.get_jettons_balances(
+            account_id=account_id,
+        )
+        return jetton_balances
+
+    async def get_all_nft_items_for_user(
+        self, wallet_address: str, collection_address: str
+    ) -> AsyncGenerator[NftItems, None, None]:
+        """
+        Get all NFT items for user.
+
+        :param wallet_address: Wallet address
+        :param collection_address: Collection address
         :return: list of NFT item addresses
         """
-        result = await self._tonapi.nft.get_items_by_collection_address(
-            account_id=account_id,
-            limit=limit,
-            offset=offset,
-        )
+        async for batch in self._get_all_paginated(
+            method=self._tonapi.accounts.get_nfts,
+            account_id=wallet_address,
+            collection=collection_address,
+            attribute_name="nft_items",
+        ):
+            yield batch
 
-        return result
-
-    async def get_all_nft_items(self, account_id: str) -> NftItems:
+    async def get_all_nft_items(
+        self, collection_address: str
+    ) -> AsyncGenerator[NftItems, None, None]:
         """
         Get all NFT items.
 
-        :param account_id: Account ID
+        :param collection_address: Account ID (collection address)
         :return: list of NFT item addresses
         """
-        nft_items = []
-        offset, limit = 0, 1000
 
-        while True:
-            result = await self._tonapi.nft.get_items_by_collection_address(
-                account_id=account_id,
-                limit=limit,
-                offset=offset,
-            )
-            if len(result.items) == 0:
-                break
-
-            nft_items += result.nft_items
-            offset += limit
-
-        return NftItems(nft_items=nft_items, total=result.total)
+        async for batch in self._get_all_paginated(
+            method=self._tonapi.nft.get_items_by_collection_address,
+            account_id=collection_address,
+            attribute_name="nft_items",
+        ):
+            yield batch

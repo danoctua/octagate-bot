@@ -13,6 +13,8 @@ x-python-service:
     - ./scripts:/app/scripts
     - ./__init__.py/:/app/__init__.py
     - /etc/letsencrypt:/etc/certbot:ro
+  networks:
+    - internal
 
 
 services:
@@ -25,6 +27,18 @@ services:
       - "433:433"
     command: ["python3", "__init__.py"]
 
+  transaction-lookup:
+    build:
+      context: transaction-lookup
+      dockerfile: build/Dockerfile.worker
+    env_file:
+      - transaction-lookup/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+
   redis:
     image: "redis:7.2.4-alpine"
     ports:
@@ -36,6 +50,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - internal
 
   mysql:
     image: "mysql:8.3.0"
@@ -50,7 +66,13 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - internal
 
 volumes:
   volume-data:
   volume-queue:
+
+
+networks:
+  internal:
