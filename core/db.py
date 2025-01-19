@@ -5,6 +5,6 @@ from core.settings import Config
 
 
 # Database setup
-DATABASE_URL = Config.MYSQL_CONNECTION_STRING
+DATABASE_URL = Config.DB_CONNECTION_STRING
 engine = create_engine(DATABASE_URL, pool_size=300)
 Base = declarative_base()
