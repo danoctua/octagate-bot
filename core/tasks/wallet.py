@@ -4,11 +4,16 @@ import logging
 from pytonapi.schema.jettons import JettonsBalances
 from pytonapi.schema.nft import NftItems
 
-from core.celery_app import app
+from core.celery_app import (
+    app,
+    CELERY_WALLET_FETCH_QUEUE_NAME,
+    CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME,
+)
 from core.services.blockchain import BlockchainService
 from core.services.db import DBService
 from core.services.jetton import JettonService
 from core.services.nft import NftCollectionService, NftItemService
+from core.services.redis import RedisService
 from core.services.wallet import WalletService
 
 
@@ -28,6 +33,7 @@ async def get_all_nfts_per_user(
 
 @app.task(
     name="fetch-wallet-details",
+    queue=CELERY_WALLET_FETCH_QUEUE_NAME,
 )
 def fetch_wallet_details(address: str) -> None:
     blockchain_service = BlockchainService()
@@ -55,3 +61,14 @@ def fetch_wallet_details(address: str) -> None:
         nft_service = NftItemService(db_session)
         nft_service.bulk_create_or_update(nft_items, whitelisted_nfts)
         logger.info(f"NFT items for {address!r} fetched.")
+
+
+@app.task(
+    name="load-noticed-wallets",
+    queue=CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME,
+)
+def load_noticed_wallets():
+    redis_service = RedisService(external=True)
+    noticed_wallets = redis_service.get_unique_stream_items()
+    for wallet in noticed_wallets:
+        fetch_wallet_details.apply_async(args=(wallet,))

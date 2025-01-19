@@ -7,7 +7,11 @@ DEFAULT_API_BASE_URL = "https://api.telegram.org/bot"
 class Config:
     REDIS_HOST = os.getenv("REDIS_HOST")
     REDIS_PORT = os.getenv("REDIS_PORT")
-    REDIS_QUEUE_NAME = os.getenv("REDIS_QUEUE_NAME")
+    REDIS_DB = os.getenv("REDIS_DB")
+    REDIS_TRANSACTION_DB = os.getenv("REDIS_TRANSACTION_DB")
+    REDIS_USERNAME = os.getenv("REDIS_USERNAME")
+    REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+    REDIS_TRANSACTION_STREAM_NAME = os.getenv("REDIS_TRANSACTION_STREAM_NAME")
 
     MYSQL_HOST = os.getenv("MYSQL_HOST")
     MYSQL_PORT = os.getenv("MYSQL_PORT")
@@ -31,7 +35,7 @@ class Config:
     SSL_CERT_PATH = os.getenv("SSL_CERT_PATH")
     SSL_KEY_PATH = os.getenv("SSL_KEY_PATH")
 
-    broker_url = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+    broker_url = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
 
     ADMIN_IDS = [
         int(admin_id) for admin_id in os.getenv("ADMIN_IDS", "").split(",") if admin_id
