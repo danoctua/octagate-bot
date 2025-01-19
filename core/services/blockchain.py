@@ -102,7 +102,7 @@ class BlockchainService:
         return jetton_balances
 
     async def get_all_nft_items_for_user(
-        self, wallet_address: str, collection_address: str
+        self, wallet_address: str, collection_address: str | None = None
     ) -> AsyncGenerator[NftItems, None, None]:
         """
         Get all NFT items for user.

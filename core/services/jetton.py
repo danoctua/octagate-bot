@@ -48,3 +48,6 @@ class JettonService(BaseService):
 
     def get(self, address: str) -> Jetton:
         return self.db_session.query(Jetton).filter(Jetton.address == address).one()
+
+    def get_whitelisted(self) -> list[Jetton]:
+        return self.db_session.query(Jetton).filter(Jetton.is_enabled.is_(True)).all()

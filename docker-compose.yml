@@ -27,6 +27,10 @@ services:
       - "433:433"
     command: ["python3", "__init__.py"]
 
+  worker:
+    <<: *x-python-service
+    command: ["celery", "-A", "core.celery_app:app", "worker", "--loglevel=info"]
+
   transaction-lookup:
     build:
       context: transaction-lookup
