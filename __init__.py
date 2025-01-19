@@ -6,6 +6,7 @@ from core.services.db import DBService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+# Set up logging
 
 
 if __name__ == "__main__":

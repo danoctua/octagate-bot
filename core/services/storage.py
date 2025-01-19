@@ -10,6 +10,7 @@ def get_connector(chat_id: int) -> TonConnect:
 
 
 class TCRStorage(IStorage):
+    # TODO deprecate after moving to FE-based storage for TON Connect
     """TON Connect Redis storage implementation."""
 
     def __init__(self, chat_id: int):

@@ -13,7 +13,7 @@ from core.services.blockchain import BlockchainService
 from core.services.db import DBService
 from core.services.jetton import JettonService
 from core.services.nft import NftCollectionService, NftItemService
-from core.services.redis import RedisService
+from core.services.superredis import RedisService
 from core.services.wallet import WalletService
 
 

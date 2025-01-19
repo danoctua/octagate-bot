@@ -1,14 +1,7 @@
-import logging
-
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 
 from core.settings import Config
-
-# Set up logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
 
 
 # Database setup
