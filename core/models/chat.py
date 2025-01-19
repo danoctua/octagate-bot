@@ -26,8 +26,12 @@ class TelegramChat(Base):
 class TelegramChatJetton(Base):
     __tablename__ = "telegram_chat_jetton"
 
-    jetton_address = mapped_column(ForeignKey("jetton.address"), primary_key=True)
-    chat_id = mapped_column(ForeignKey("telegram_chat.id"), primary_key=True)
+    jetton_address = mapped_column(
+        ForeignKey("jetton.address", ondelete="CASCADE"), primary_key=True
+    )
+    chat_id = mapped_column(
+        ForeignKey("telegram_chat.id", ondelete="CASCADE"), primary_key=True
+    )
     threshold = mapped_column(
         BigInteger, nullable=False, doc="Minimum amount of jettons to hold in nano"
     )
@@ -51,9 +55,11 @@ class TelegramChatNFTCollection(Base):
     __tablename__ = "telegram_chat_nft_collection"
 
     collection_address = mapped_column(
-        ForeignKey("nft_collection.address"), primary_key=True
+        ForeignKey("nft_collection.address", ondelete="CASCADE"), primary_key=True
     )
-    chat_id = mapped_column(ForeignKey("telegram_chat.id"), primary_key=True)
+    chat_id = mapped_column(
+        ForeignKey("telegram_chat.id", ondelete="CASCADE"), primary_key=True
+    )
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -74,8 +80,10 @@ class TelegramChatNFTCollection(Base):
 class TelegramChatUser(Base):
     __tablename__ = "telegram_chat_user"
 
-    user_id = mapped_column(ForeignKey("user.id"), primary_key=True)
-    chat_id = mapped_column(ForeignKey("telegram_chat.id"), primary_key=True)
+    user_id = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    chat_id = mapped_column(
+        ForeignKey("telegram_chat.id", ondelete="CASCADE"), primary_key=True
+    )
     is_admin = mapped_column(
         Boolean,
         nullable=False,
