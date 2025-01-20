@@ -1,18 +1,17 @@
 import logging
 
-from core.constants import POOL_TIMEOUT
-from telegram.ext import (
-    ApplicationBuilder,
-    Application,
-)
+from telegram.ext import Application, ApplicationBuilder
 
-from core.handlers import handlers as message_handlers
-from core.handlers.command import handlers as command_handlers
-from core.handlers.callback import handlers as callback_handlers
-from core.handlers.error import error_handler
-from core.not_telegram_ext.limiter import NotAIORateLimiter
-from core.not_telegram_ext.processor import MyUpdateProcessor
+from bot_ui.handlers import handlers as message_handlers
+from bot_ui.handlers.callback import handlers as callback_handlers
+from bot_ui.handlers.command import handlers as command_handlers
+from bot_ui.handlers.error import error_handler
+from bot_ui.not_telegram_ext.limiter import NotAIORateLimiter
+from bot_ui.not_telegram_ext.processor import MyUpdateProcessor
+from core.constants import POOL_TIMEOUT
 from core.settings import Config
+from core.services.db import DBService
+
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -67,3 +66,12 @@ class NotBot:
 
 
 bot = NotBot(token=Config.TELEGRAM_BOT_TOKEN)
+
+if __name__ == "__main__":
+    DBService.create_tables()
+    if Config.WEBHOOK_URL:
+        logger.info("Running webhook")
+        bot.run_webhook()
+    else:
+        logger.info("Running polling")
+        bot.start_polling()
