@@ -1,5 +1,6 @@
 import logging
 
+from telegram import Update
 from telegram.ext import Application, ApplicationBuilder
 
 from bot_ui.handlers import handlers as message_handlers
@@ -53,7 +54,7 @@ class NotBot:
         self.application.add_error_handler(error_handler)
 
     def start_polling(self):
-        self.application.run_polling()
+        self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
     def run_webhook(self):
         self.application.run_webhook(

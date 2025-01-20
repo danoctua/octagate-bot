@@ -101,6 +101,13 @@ class TelegramChatUserService(BaseService):
             .one()
         )
 
+    def get_all(self, user_id: int) -> list[TelegramChatUser]:
+        return (
+            self.db_session.query(TelegramChatUser)
+            .filter(TelegramChatUser.user_id == user_id)
+            .all()
+        )
+
     def find(self, chat_id: int, user_id: int) -> TelegramChatUser | None:
         try:
             return self.get(chat_id, user_id)

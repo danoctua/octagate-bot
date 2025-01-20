@@ -8,9 +8,8 @@ from core.services.chat import TelegramChatUserService
 from core.services.superredis import RedisService
 from core.services.supertelethon import TelethonService
 from core.services.wallet import WalletService, UserWalletExistError
-from core.settings import Config
 from core.tasks.wallet import fetch_wallet_details
-
+from core.utils.task import wait_for_task
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class WalletAction(BaseAction):
         super().__init__(db_session)
         self.wallet_service = WalletService(db_session)
 
-    def connect_wallet(self, user_id: int, wallet_address: str) -> None:
+    async def connect_wallet(self, user_id: int, wallet_address: str) -> None:
         try:
             self.wallet_service.connect_user_wallet(
                 user_id=user_id,
@@ -31,7 +30,8 @@ class WalletAction(BaseAction):
             raise exc
 
         # Run initial wallet data loading
-        fetch_wallet_details.apply_async(args=[wallet_address])
+        task_result = fetch_wallet_details.apply_async(args=[wallet_address])
+        await wait_for_task(task_result=task_result)
 
         redis_service = RedisService(external=True)
         redis_service.set(
@@ -44,24 +44,21 @@ class WalletAction(BaseAction):
     async def disconnect_wallet(self, telegram_id: int) -> None:
         user = self.user_service.get_by_telegram_id(telegram_id=telegram_id)
         telegram_chat_user_service = TelegramChatUserService(self.db_session)
-        chat_member = telegram_chat_user_service.get(
-            chat_id=Config.TARGET_COMMON_CHAT_ID, user_id=user.id
-        )
+        chats = telegram_chat_user_service.get_all(user_id=user.id)
         user_wallet_address = user.wallet.address
-        if not chat_member:
+        if not chats:
             logger.debug(
-                f"User {user.telegram_id!r} is not a chat member and can't be kicked"
+                f"User {user.telegram_id!r} is not a member of any chat and won't be kicked"
             )
         else:
             telethon_service = TelethonService()
             await telethon_service.start()
-            await telethon_service.kick_chat_member(
-                chat_id=Config.TARGET_COMMON_CHAT_ID,
-                telegram_user_id=user.telegram_id,
-            )
-            telegram_chat_user_service.delete(
-                chat_id=Config.TARGET_COMMON_CHAT_ID, user_id=user.id
-            )
+            for chat in chats:
+                await telethon_service.kick_chat_member(
+                    chat_id=chat.chat_id,
+                    telegram_user_id=user.telegram_id,
+                )
+                telegram_chat_user_service.delete(chat_id=chat.chat_id, user_id=user.id)
         logger.info(
             f"User {user.id!r} is disconnecting the wallet and was kicked from the group"
         )

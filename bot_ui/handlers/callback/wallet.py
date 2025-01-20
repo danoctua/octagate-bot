@@ -126,7 +126,7 @@ async def connect_wallet_handler(
                     )
                     wallet_action = WalletAction(db_session)
                     try:
-                        wallet_action.connect_wallet(
+                        await wallet_action.connect_wallet(
                             user_id=user.id,
                             wallet_address=connector.account.address,
                         )

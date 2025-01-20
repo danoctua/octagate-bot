@@ -71,7 +71,6 @@ async def chat_member_update_request_callback(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ):
-    print("NOOOOOOOOOOOOO")
     status_change = extract_member_status_change(update.chat_member)
     if not status_change:
         logger.info("No status change detected. Exit")
@@ -89,9 +88,11 @@ async def chat_member_update_request_callback(
             return
 
         if was_member and not is_member:
+            user_service = UserService(db_session)
+            user = user_service.get_by_telegram_id(update.effective_user.id)
             telegram_chat_user_service = TelegramChatUserService(db_session)
             telegram_chat_user_service.delete(
-                chat_id=update.effective_chat.id, user_id=update.effective_user.id
+                chat_id=update.effective_chat.id, user_id=user.id
             )
 
             logger.info(

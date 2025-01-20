@@ -18,11 +18,14 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_TONAPI_OFFSET = 0
 DEFAULT_TONAPI_LIMIT = 1000
+DEFAULT_TONAPI_MAX_RETRIES = 10
 
 
 class BlockchainService:
     def __init__(self):
-        self._tonapi = AsyncTonapi(api_key=Config.TON_API_KEY, max_retries=10)
+        self._tonapi = AsyncTonapi(
+            api_key=Config.TON_API_KEY, max_retries=DEFAULT_TONAPI_MAX_RETRIES
+        )
 
     @classmethod
     async def _get_all_paginated(
