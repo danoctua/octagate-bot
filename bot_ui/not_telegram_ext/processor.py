@@ -4,7 +4,7 @@ from typing import Coroutine
 from telegram import Update
 from telegram.ext import BaseUpdateProcessor
 
-from core.utils.cache import (
+from bot_ui.cache import (
     format_request_cache_key_value,
     check_user_action_cache,
     add_user_action_cache,

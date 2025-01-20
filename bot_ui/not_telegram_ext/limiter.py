@@ -3,7 +3,7 @@ from contextlib import nullcontext, suppress
 from functools import wraps
 from typing import Any, Callable, Coroutine, Dict, List, Optional, Union
 
-from core.utils.cache import (
+from bot_ui.cache import (
     format_response_cache_key_value,
     check_user_action_cache,
     add_user_action_cache,

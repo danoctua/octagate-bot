@@ -4,14 +4,14 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 from core.dtos.user import TelegramUserDTO
-from core.renderers import MAIN_BUTTON_REPLY_MARKUP
+from bot_ui.renderers import MAIN_BUTTON_REPLY_MARKUP
 from core.services.chat import TelegramChatService, TelegramChatUserService
 from core.services.db import DBService
 from core.services.nft import NftItemService
 from core.services.user import UserService
 from core.services.wallet import JettonWalletService
 from core.settings import Config
-from core.utils.bot import answer_callback_query, delete_message
+from bot_ui.utils import answer_callback_query, delete_message
 
 logger = logging.getLogger(__name__)
 

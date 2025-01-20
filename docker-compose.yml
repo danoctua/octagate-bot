@@ -9,9 +9,9 @@ x-python-service:
   env_file:
     - .env
   volumes:
+    - ./bot_ui:/app/bot_ui
     - ./core:/app/core
     - ./scripts:/app/scripts
-    - ./__init__.py/:/app/__init__.py
     - /etc/letsencrypt:/etc/certbot:ro
   networks:
     - internal
@@ -22,14 +22,14 @@ services:
     <<: *x-python-service
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: bot_ui/config/Dockerfile
     ports:
       - "433:433"
-    command: ["python3", "__init__.py"]
+    command: ["python3", "bot_ui/__init__.py"]
 
   worker:
     <<: *x-python-service
-    command: ["celery", "-A", "core.celery_app:app", "worker", "--loglevel=info"]
+    command: ["celery", "-A", "core.celery_app:app", "worker", "-Q", "wallet-fetch-queue,noticed-wallets-upload-queue", "--loglevel=info"]
 
   transaction-lookup:
     build:

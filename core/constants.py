@@ -9,6 +9,8 @@ DEFAULT_WALLET_BALANCE = 0
 
 CUSTOM_TITLE_TEMPLATE = "8x{rank}"
 
+DEFAULT_WALLET_TRACK_EXPIRATION = 60 * 60 * 24 * 365 * 10  # 10 years
+
 # ----------------- Paths ---------------------
 PACKAGE_ROOT = Path(__file__).parent
 PROJECT_ROOT = PACKAGE_ROOT.parent

@@ -3,11 +3,8 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from core.renderers import start_renderer
+from bot_ui.renderers import start_renderer
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
 logger = logging.Logger(__name__)
 
 

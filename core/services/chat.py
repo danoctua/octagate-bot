@@ -248,7 +248,7 @@ class TelegramChatUserService(BaseService):
         self.db_session.query(TelegramChatUser).filter(
             TelegramChatUser.chat_id == chat_id,
             TelegramChatUser.user_id == user_id,
-        ).delete(synchronize_session=True)
+        ).delete(synchronize_session="fetch")
         self.db_session.commit()
         logger.debug(f"Telegram Chat User {user_id!r} in chat {chat_id!r} deleted.")
 

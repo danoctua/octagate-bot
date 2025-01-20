@@ -64,4 +64,4 @@ class Config:
     TC_MANIFEST_URL = os.getenv(
         "TC_MANIFEST_URL",
     )
-    TARGET_COMMON_CHAT_ID = os.getenv("TARGET_COMMON_CHAT_ID")
+    TARGET_COMMON_CHAT_ID = int(os.getenv("TARGET_COMMON_CHAT_ID"))

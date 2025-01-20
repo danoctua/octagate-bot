@@ -2,9 +2,9 @@ __all__ = ["handlers"]
 
 from telegram.ext import CallbackQueryHandler
 
-from core.handlers.callback.club import join_club_handler
-from core.handlers.callback.start import main_callback_handler
-from core.handlers.callback.wallet import (
+from bot_ui.handlers.callback.club import join_club_handler
+from bot_ui.handlers.callback.start import main_callback_handler
+from bot_ui.handlers.callback.wallet import (
     connect_wallet_handler,
     disconnect_wallet_handler,
     show_wallet_handler,

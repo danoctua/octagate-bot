@@ -1,6 +1,6 @@
 from telegram.ext import CommandHandler, filters
 
-from core.handlers.command.start import start_handler
+from bot_ui.handlers.command.start import start_handler
 
 __all__ = ["handlers"]
 

@@ -23,8 +23,11 @@ class RedisService:
     def get(self, key: str) -> str:
         return self.client.get(key)
 
-    def set(self, key: str, value: str) -> None:
-        self.client.set(key, value)
+    def set(self, key: str, value: str, ex: int | None = None) -> None:
+        self.client.set(key, value, ex=ex)
+
+    def delete(self, key: str) -> str:
+        return self.client.delete(key)
 
     def get_stream_items(self):
         return self.client.xread({Config.REDIS_TRANSACTION_STREAM_NAME: "0-0"})

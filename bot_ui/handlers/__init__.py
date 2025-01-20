@@ -1,6 +1,6 @@
 from telegram.ext import ChatJoinRequestHandler, ChatMemberHandler
 
-from core.handlers.chat import (
+from bot_ui.handlers.chat import (
     chat_join_request_callback,
     chat_member_update_request_callback,
 )

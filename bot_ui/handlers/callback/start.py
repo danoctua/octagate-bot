@@ -1,8 +1,8 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from core.renderers import start_renderer
-from core.utils.bot import answer_callback_query, delete_message
+from bot_ui.renderers import start_renderer
+from bot_ui.utils import answer_callback_query, delete_message
 
 
 async def main_callback_handler(
