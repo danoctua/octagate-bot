@@ -18,6 +18,9 @@ class Jetton(Base):
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    def __repr__(self):
+        return f"<Jetton(address={self.address}, name={self.name})>"
+
 
 class NFTCollection(Base):
     __tablename__ = "nft_collection"
@@ -28,6 +31,9 @@ class NFTCollection(Base):
     logo_path = mapped_column(String(290), nullable=False)
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return f"<NFTCollection(address={self.address}, name={self.name})>"
 
 
 class NftItem(Base):
@@ -53,3 +59,6 @@ class NftItem(Base):
         onupdate=func.now(),
         nullable=False,
     )
+
+    def __repr__(self):
+        return f"<NftItem(address={self.address})>"

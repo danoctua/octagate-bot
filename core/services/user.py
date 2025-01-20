@@ -1,33 +1,30 @@
-import dataclasses
 from typing import Iterable, overload
 
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import joinedload
 from telegram import User as TelegramUser
 from telethon.tl.types import User as TelethonUser
 
+from core.dtos.user import TelegramUserDTO
 from core.models.user import User
 from core.services.base import BaseService
 
 
-@dataclasses.dataclass
-class TelegramUserDTO:
-    id: int
-    first_name: str
-    last_name: str
-    username: str
-    is_premium: bool
-    language_code: str
-
-
 class UserService(BaseService):
-    def get(self, telegram_id: int) -> User:
+    def get_by_telegram_id(self, telegram_id: int) -> User:
         return (
             self.db_session.query(User)
             .filter(
                 User.telegram_id == telegram_id,
             )
-            .options(joinedload(User.wallet))
+            .one()
+        )
+
+    def get(self, user_id: int) -> User:
+        return (
+            self.db_session.query(User)
+            .filter(
+                User.id == user_id,
+            )
             .one()
         )
 
@@ -45,8 +42,6 @@ class UserService(BaseService):
         query = self.db_session.query(User)
         if telegram_ids:
             query = query.filter(User.telegram_id.in_(telegram_ids))
-
-        query = query.options(joinedload(User.wallet))
 
         return query.all()
 
@@ -104,13 +99,13 @@ class UserService(BaseService):
             raise ValueError(f"Unsupported user type: {type(telegram_user)}")
 
         try:
-            user = self.get(telegram_user.id)
+            user = self.get_by_telegram_id(telegram_user.id)
             return self.update(user=user, telegram_user=telegram_user_dto)
         except NoResultFound:
             return self.create(telegram_user_dto)
 
     def get_or_create(self, telegram_user: TelegramUserDTO) -> User:
         try:
-            return self.get(telegram_user.id)
+            return self.get_by_telegram_id(telegram_user.id)
         except NoResultFound:
             return self.create(telegram_user)

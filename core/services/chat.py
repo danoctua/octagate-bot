@@ -1,13 +1,17 @@
 import logging
 from abc import ABC, abstractmethod
 
+from pytonapi.utils import to_amount
 from sqlalchemy.exc import NoResultFound
 from telethon.tl.types import Channel
 
 from core.dtos.chat import (
-    TelegramChatEligibilityRules,
-    TelegramChatJettonRule,
-    TelegramChatNFTCollectionRule,
+    TelegramChatEligibilityRulesDTO,
+    TelegramChatJettonRuleDTO,
+    TelegramChatNFTCollectionRuleDTO,
+    TelegramChatEligibilitySummaryDTO,
+    TelegramChatEligibilityItemDTO,
+    EligibilityCheckType,
 )
 from core.models.blockchain import NftItem
 from core.models.wallet import JettonWallet
@@ -97,6 +101,12 @@ class TelegramChatUserService(BaseService):
             .one()
         )
 
+    def find(self, chat_id: int, user_id: int) -> TelegramChatUser | None:
+        try:
+            return self.get(chat_id, user_id)
+        except NoResultFound:
+            return None
+
     def update(
         self, chat_user: TelegramChatUser, is_admin: bool, is_whale_admin: bool
     ) -> TelegramChatUser:
@@ -120,7 +130,7 @@ class TelegramChatUserService(BaseService):
             )
             return self.create(chat_id, user_id, is_admin, is_whale_admin)
 
-    def get_eligibility_rules(self, chat_id: int) -> TelegramChatEligibilityRules:
+    def get_eligibility_rules(self, chat_id: int) -> TelegramChatEligibilityRulesDTO:
         """
         Get eligibility rules for the chat based on the database records
         :param chat_id:
@@ -132,7 +142,7 @@ class TelegramChatUserService(BaseService):
             self.db_session
         )
         all_nft_collections = telegram_chat_nft_collection_service.get_all(chat_id)
-        return TelegramChatEligibilityRules(
+        return TelegramChatEligibilityRulesDTO(
             jettons=all_jetton_rules,
             nft_collections=all_nft_collections,
         )
@@ -140,55 +150,108 @@ class TelegramChatUserService(BaseService):
     @classmethod
     def is_user_eligible_chat_member(
         cls,
-        eligibility_rules: TelegramChatEligibilityRules,
+        eligibility_rules: TelegramChatEligibilityRulesDTO,
         user_jettons: list[JettonWallet],
         user_nft_items: list[NftItem],
-    ) -> bool:
+    ) -> TelegramChatEligibilitySummaryDTO:
         """
         The rule is to have all required jetton balance OR all NFT items from the required collections
 
         :param eligibility_rules: Rules for eligibility to join the chat
         :param user_jettons: Jetton balances of the user
         :param user_nft_items: NFT items of the user
-        :return: True if the user is eligible to join the chat, False otherwise
+        :return: Summary of eligibility check
         """
-        has_all_jettons_required = True
+        items = []
         user_jettons_by_master_address = {
             jetton_wallet.jetton_master_address: jetton_wallet
             for jetton_wallet in user_jettons
         }
-        for rule in eligibility_rules.jettons:
-            if not (
-                user_jetton_wallet := user_jettons_by_master_address.get(
-                    rule.jetton_address
+        # Check if the user has all required jetton balances
+        items.extend(
+            [
+                TelegramChatEligibilityItemDTO(
+                    category=EligibilityCheckType.JETTON,
+                    expected=to_amount(rule.threshold),
+                    title=rule.jetton.name,
+                    address_raw=rule.jetton.address,
+                    current=(
+                        to_amount(user_jetton_wallet.balance)
+                        if (
+                            user_jetton_wallet := user_jettons_by_master_address.get(
+                                rule.jetton_address
+                            )
+                        )
+                        else 0
+                    ),
                 )
-            ):
-                has_all_jettons_required = False
-                break
-
-            if not user_jetton_wallet.balance >= rule.threshold:
-                has_all_jettons_required = False
-                break
-
-        if has_all_jettons_required:
-            return True
-
-        user_nft_items_by_collection_address = {
-            nft_item.collection_address: nft_item for nft_item in user_nft_items
-        }
-        return all(
-            nft_item.collection_address in user_nft_items_by_collection_address
-            for nft_item in eligibility_rules.nft_collections
+                for rule in eligibility_rules.jettons
+            ]
         )
+        # Check if the user has all required NFT items
+        items.extend(
+            [
+                TelegramChatEligibilityItemDTO(
+                    category=EligibilityCheckType.NFT_COLLECTION,
+                    expected=1,
+                    title=rule.nft_collection.name,
+                    address_raw=rule.nft_collection.address,
+                    current=(
+                        len(
+                            [
+                                nft_item.collection_address == rule.collection_address
+                                for nft_item in user_nft_items
+                            ]
+                        )
+                    ),
+                )
+                for rule in eligibility_rules.nft_collections
+            ]
+        )
+        return TelegramChatEligibilitySummaryDTO(items=items)
+
+    def is_chat_member(self, chat_id: int, user_id: int) -> bool:
+        return (
+            self.db_session.query(TelegramChatUser)
+            .filter(
+                TelegramChatUser.chat_id == chat_id, TelegramChatUser.user_id == user_id
+            )
+            .count()
+            > 0
+        )
+
+    def promote_whale_admin(self, chat_id: int, user_id: int) -> None:
+        chat_user = self.get(chat_id, user_id)
+        chat_user.is_whale_admin = True
+        self.db_session.commit()
+        logger.debug(f"Telegram Chat User {chat_user!r} promoted to whale admin.")
+
+    def demote_whale_admin(self, chat_id: int, user_id: int) -> None:
+        chat_user = self.get(chat_id, user_id)
+        chat_user.is_whale_admin = False
+        self.db_session.commit()
+        logger.debug(f"Telegram Chat User {chat_user!r} demoted from whale admin.")
+
+    def promote_admin(self, chat_id: int, user_id: int) -> None:
+        chat_user = self.get(chat_id, user_id)
+        chat_user.is_admin = True
+        self.db_session.commit()
+        logger.debug(f"Telegram Chat User {chat_user!r} promoted to admin.")
+
+    def demote_admin(self, chat_id: int, user_id: int) -> None:
+        chat_user = self.get(chat_id, user_id)
+        chat_user.is_admin = False
+        self.db_session.commit()
+        logger.debug(f"Telegram Chat User {chat_user!r} demoted from admin.")
 
 
 TelegramChatRuleType = TelegramChatJetton | TelegramChatNFTCollection
-TelegramChatRuleDTOType = TelegramChatJettonRule | TelegramChatNFTCollectionRule
+TelegramChatRuleDTOType = TelegramChatJettonRuleDTO | TelegramChatNFTCollectionRuleDTO
 
 
 class TelegramChatRuleBaseService(BaseService, ABC):
     model: type[TelegramChatRuleType]
-    dto: type[TelegramChatJettonRule]
+    dto: type[TelegramChatJettonRuleDTO]
 
     def create(self, dto: TelegramChatRuleDTOType) -> TelegramChatRuleType:
         new_rule = self.model(**dto.model_dump())
@@ -228,7 +291,7 @@ class TelegramChatRuleBaseService(BaseService, ABC):
 
 class TelegramChatJettonService(TelegramChatRuleBaseService):
     model = TelegramChatJetton
-    dto = TelegramChatJettonRule
+    dto = TelegramChatJettonRuleDTO
 
     def update(
         self,
@@ -245,7 +308,7 @@ class TelegramChatJettonService(TelegramChatRuleBaseService):
         self.db_session.commit()
         logger.debug(f"Telegram Chat Jetton {telegram_chat_jetton!r} updated.")
 
-    def get(self, chat_id: int, jetton_address: str) -> type[TelegramChatJetton]:
+    def get(self, chat_id: int, jetton_address: str) -> TelegramChatJetton:
         return (
             self.db_session.query(TelegramChatJetton)
             .filter(
@@ -255,10 +318,16 @@ class TelegramChatJettonService(TelegramChatRuleBaseService):
             .one()
         )
 
+    @classmethod
+    def is_chat_whale(
+        cls, chat_jetton_rule: TelegramChatJetton, user_jetton_wallet: JettonWallet
+    ) -> bool:
+        return bool(user_jetton_wallet.balance >= chat_jetton_rule.whale_threshold)
+
 
 class TelegramChatNFTCollectionService(TelegramChatRuleBaseService):
     model = TelegramChatNFTCollection
-    dto = TelegramChatNFTCollectionRule
+    dto = TelegramChatNFTCollectionRuleDTO
 
     def get(self, chat_id: int, collection_address: str) -> TelegramChatNFTCollection:
         return (

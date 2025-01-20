@@ -1,16 +1,20 @@
 import logging
 
-from pytonapi.utils import raw_to_userfriendly, userfriendly_to_raw
+from pytonapi.utils import raw_to_userfriendly
 from pytonconnect import TonConnect
+from sqlalchemy.orm import Session
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
+from core.dtos.chat import TelegramChatEligibilitySummaryDTO
+from core.dtos.user import TelegramUserDTO
 from core.models.user import User
+from core.services.chat import TelegramChatUserService
 from core.services.db import DBService
+from core.services.nft import NftItemService
 from core.services.user import UserService
-from core.services.wallet import WalletService
+from core.services.wallet import JettonWalletService
 from core.settings import Config
-from core.utils.authorization import get_telegram_chat_member
 
 MAIN_BUTTON_REPLY_MARKUP = InlineKeyboardMarkup.from_button(
     InlineKeyboardButton(text="Main", callback_data="main")
@@ -20,11 +24,45 @@ MAIN_BUTTON_REPLY_MARKUP = InlineKeyboardMarkup.from_button(
 logger = logging.getLogger(__name__)
 
 
+async def connected_wallet_response(
+    db_session: Session,
+    user: User,
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+) -> None:
+    telegram_chat_user_service = TelegramChatUserService(db_session)
+    eligibility_rules = telegram_chat_user_service.get_eligibility_rules(
+        chat_id=Config.TARGET_COMMON_CHAT_ID
+    )
+    nft_item_service = NftItemService(db_session)
+    user_nft_items = nft_item_service.get_all(owner_address=user.wallet.address)
+    jetton_wallet_service = JettonWalletService(db_session)
+    user_jettons = jetton_wallet_service.get_all(owner_address=user.wallet.address)
+
+    eligibility_summary = telegram_chat_user_service.is_user_eligible_chat_member(
+        eligibility_rules=eligibility_rules,
+        user_jettons=user_jettons,
+        user_nft_items=user_nft_items,
+    )
+    is_chat_member = telegram_chat_user_service.is_chat_member(
+        chat_id=Config.TARGET_COMMON_CHAT_ID,
+        user_id=user.id,
+    )
+    await connected_wallet_welcome_renderer(
+        update,
+        context,
+        user=user,
+        eligibility_summary=eligibility_summary,
+        is_member=is_chat_member,
+    )
+
+
 async def connected_wallet_welcome_renderer(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     user: User,
-    is_nft_holder: bool = False,
+    eligibility_summary: TelegramChatEligibilitySummaryDTO,
+    is_member: bool = False,
     edit_mode: bool = False,
 ) -> None:
     keyboard = [
@@ -33,47 +71,28 @@ async def connected_wallet_welcome_renderer(
     text_lines = [
         f"Connected wallet: {raw_to_userfriendly(user.wallet.address)}\n",
     ]
-    if is_nft_holder:
-        text_lines.append("🥷 You are Anonymous Number holder!")
-    else:
-        text_lines.append("🤖 You are not Anonymous Number holder yet!")
 
-    is_anon_holder = (
-        user.wallet.jetton_wallet is not None and user.wallet.jetton_wallet.balance > 0
+    text_lines.extend(
+        [
+            f"{rule.title}: {rule.current}/{rule.expected} {'✅' if rule.is_eligible else '❌'}"
+            for rule in eligibility_summary.items
+        ]
     )
-    if is_anon_holder:
-        text_lines.append(
-            f"🎱 You are $ANON holder #{user.wallet.jetton_wallet.rating}!"
-        )
 
-        if user.wallet.jetton_wallet.is_whale:
-            text_lines.append("🐋 You are $ANON whale!")
-
-        if user.wallet.hide_wallet:
-            text_lines.append("🔒 Wallet is hidden")
-
-    else:
-        text_lines.append("🎱 You are not $ANON holder yet!")
-
-    chat_member = await get_telegram_chat_member(context, user.telegram_id)
-
-    if chat_member is None and user.is_eligible_club_member(
-        is_nft_holder=is_nft_holder
-    ):
+    if not is_member and eligibility_summary:
         keyboard.append(
             InlineKeyboardButton(text="Join 8 club 🎱", callback_data="join-club")
         )
 
-    if user.wallet:
-        keyboard.insert(
-            0,
-            InlineKeyboardButton(
-                text="Hide wallet" if not user.wallet.hide_wallet else "Show wallet",
-                callback_data="hide-wallet"
-                if not user.wallet.hide_wallet
-                else "show-wallet",
-            ),
-        )
+    keyboard.insert(
+        0,
+        InlineKeyboardButton(
+            text="Hide wallet" if not user.wallet.hide_wallet else "Show wallet",
+            callback_data="hide-wallet"
+            if not user.wallet.hide_wallet
+            else "show-wallet",
+        ),
+    )
 
     if edit_mode:
         return await context.bot.edit_message_text(
@@ -93,17 +112,22 @@ async def connected_wallet_welcome_renderer(
 async def start_renderer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     with DBService().db_session() as db_session:
         user_service = UserService(db_session)
-        user = user_service.get_or_create(telegram_user=update.effective_user)
-        if user.wallet:
-            wallet_service = WalletService(db_session)
-            is_nft_holder = wallet_service.is_nft_holder(
-                owner_address=user.wallet.address,
-                collection_address=userfriendly_to_raw(
-                    Config.TARGET_NFT_COLLECTION_ADDRESS
-                ),
+        user = user_service.get_or_create(
+            telegram_user=TelegramUserDTO(
+                id=update.effective_user.id,
+                first_name=update.effective_user.first_name,
+                last_name=update.effective_user.last_name,
+                username=update.effective_user.username,
+                is_premium=update.effective_user.is_premium,
+                language_code=update.effective_user.language_code,
             )
-            return await connected_wallet_welcome_renderer(
-                update, context, user, is_nft_holder
+        )
+        if user.wallet:
+            return await connected_wallet_response(
+                db_session=db_session,
+                user=user,
+                context=context,
+                update=update,
             )
         else:
             wallets_list = TonConnect.get_wallets()

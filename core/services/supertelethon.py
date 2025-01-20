@@ -24,6 +24,9 @@ class TelethonService:
     async def get_chat(self, chat_id: int) -> Channel:
         return await self.client.get_entity(chat_id)
 
+    async def get_user(self, telegram_user_id: int) -> TelethonUser:
+        return await self.client.get_entity(telegram_user_id)
+
     async def get_participants(
         self, chat_id: int
     ) -> AsyncGenerator[TelethonUser, None]:
@@ -53,3 +56,33 @@ class TelethonService:
             await self.client.download_profile_photo(entity, f)
 
         return logo_path
+
+    async def promote_user(
+        self, chat_id: int, telegram_user_id: int, custom_title: str
+    ) -> None:
+        chat = await self.get_chat(chat_id)
+        user = await self.get_user(telegram_user_id)
+        await self.client.edit_admin(
+            entity=chat,
+            user=user,
+            is_admin=True,
+            title=custom_title,
+        )
+
+    async def demote_user(
+        self,
+        chat_id: int,
+        telegram_user_id: int,
+    ) -> None:
+        chat = await self.get_chat(chat_id)
+        user = await self.get_user(telegram_user_id)
+        await self.client.edit_admin(
+            entity=chat,
+            user=user,
+            is_admin=False,
+        )
+
+    async def kick_chat_member(self, chat_id: int, telegram_user_id: int) -> None:
+        chat = await self.get_chat(chat_id)
+        user = await self.get_user(telegram_user_id)
+        await self.client.kick_participant(chat, user)

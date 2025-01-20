@@ -1,5 +1,5 @@
 from sqlalchemy import BigInteger, String, DateTime, func, Boolean, ForeignKey
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, relationship
 
 from core.db import Base
 
@@ -50,6 +50,15 @@ class TelegramChatJetton(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
+    jetton = relationship(
+        "Jetton",
+        back_populates="telegram_chat_jettons",
+        lazy="joined",
+    )
+
+    def __repr__(self):
+        return f"<TelegramChatJetton(jetton_address={self.jetton_address}, chat_id={self.chat_id})>"
+
 
 class TelegramChatNFTCollection(Base):
     __tablename__ = "telegram_chat_nft_collection"
@@ -64,6 +73,15 @@ class TelegramChatNFTCollection(Base):
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+    nft_collection = relationship(
+        "NFTCollection",
+        back_populates="telegram_chat_nft_collections",
+        lazy="joined",
+    )
+
+    def __repr__(self):
+        return f"<TelegramChatNFTCollection(collection_address={self.collection_address}, chat_id={self.chat_id})>"
 
 
 # class TelegramChatExternalSource(Base):
@@ -99,6 +117,9 @@ class TelegramChatUser(Base):
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+    user = relationship("User", lazy="joined")
+    chat = relationship("TelegramChat", lazy="joined")
 
     def __repr__(self):
         return f"<TelegramChatUser(user_id={self.user_id}, chat_id={self.chat_id})>"

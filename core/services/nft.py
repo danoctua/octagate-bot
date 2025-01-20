@@ -91,6 +91,17 @@ class NftItemService(BaseService):
     def get(self, address: str) -> NftItem:
         return self.db_session.query(NftItem).filter(NftItem.address == address).one()
 
+    def get_all(
+        self, owner_address: str | None = None, collection_address: str | None = None
+    ) -> list[NftItem]:
+        query = self.db_session.query(NftItem)
+        if owner_address:
+            query = query.filter(NftItem.owner_address == owner_address)
+
+        if collection_address:
+            query = query.filter(NftItem.collection_address == collection_address)
+        return query.all()
+
     def bulk_create_or_update(
         self, nft_items: NftItems, whitelisted_collections: list[NFTCollection]
     ) -> list[NftItem]:

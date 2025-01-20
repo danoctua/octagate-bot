@@ -14,8 +14,7 @@ from core.services.db import DBService
 from core.services.jetton import JettonService
 from core.services.nft import NftCollectionService, NftItemService
 from core.services.superredis import RedisService
-from core.services.wallet import WalletService
-
+from core.services.wallet import JettonWalletService
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +45,8 @@ def fetch_wallet_details(address: str) -> None:
         jetton_service = JettonService(db_session)
         whitelisted_jettons = jetton_service.get_whitelisted()
 
-        wallet_service = WalletService(db_session)
-        wallet_service.create_or_update_jettons_balances(
+        jetton_wallet_service = JettonWalletService(db_session)
+        jetton_wallet_service.bulk_create_or_update(
             jettons_balances, whitelisted_jettons, owner_address=address
         )
         logger.info(f"Jettons for {address!r} fetched.")

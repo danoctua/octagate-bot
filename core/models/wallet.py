@@ -25,6 +25,9 @@ class UserWallet(Base):
     )
     hide_wallet = mapped_column(Boolean, default=False, nullable=False)
 
+    def __repr__(self):
+        return f"<UserWallet(address={self.address}, user_id={self.user_id})>"
+
 
 class JettonWallet(Base):
     __tablename__ = "jetton_wallet"
@@ -51,3 +54,6 @@ class JettonWallet(Base):
     def balance_friendly(self) -> str:
         amount = to_amount(self.balance, precision=0)
         return human_friendly_number(amount)
+
+    def __repr__(self):
+        return f"<JettonWallet(address={self.address}, jetton_master_address={self.jetton_master_address})>"
