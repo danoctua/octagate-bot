@@ -7,18 +7,14 @@ import qrcode
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
-from core.constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_WALLET_TRACK_EXPIRATION
+from core.actions.wallet import WalletAction
+from core.constants import DEFAULT_CONNECT_TIMEOUT
 from core.dtos.user import TelegramUserDTO
 from bot_ui.renderers import MAIN_BUTTON_REPLY_MARKUP, connected_wallet_response
-from core.services.chat import TelegramChatUserService
 from core.services.db import DBService
 from core.services.storage import get_connector
-from core.services.superredis import RedisService
-from core.services.supertelethon import TelethonService
 from core.services.user import UserService
 from core.services.wallet import WalletService, UserWalletExistError
-from core.settings import Config
-from core.tasks.wallet import fetch_wallet_details
 from bot_ui.utils import delete_message
 
 logger = logging.Logger(__name__)
@@ -128,9 +124,9 @@ async def connect_wallet_handler(
                             language_code=update.effective_user.language_code,
                         )
                     )
-                    wallet_service = WalletService(db_session)
+                    wallet_action = WalletAction(db_session)
                     try:
-                        wallet_service.connect_user_wallet(
+                        wallet_action.connect_wallet(
                             user_id=user.id,
                             wallet_address=connector.account.address,
                         )
@@ -173,17 +169,7 @@ async def connect_wallet_handler(
                         chat_id=update.effective_chat.id,
                         message_id=message.message_id,
                     )
-                    # await promote_user(context=context, user=user)
                     connector.pause_connection()
-
-                    fetch_wallet_details.apply_async(args=[connector.account.address])
-
-                    redis_service = RedisService(external=True)
-                    redis_service.set(
-                        key=connector.account.address,
-                        value="",
-                        ex=DEFAULT_WALLET_TRACK_EXPIRATION,
-                    )
 
                     return await connected_wallet_response(
                         db_session=db_session,
@@ -213,36 +199,8 @@ async def disconnect_wallet_handler(
     await connector.restore_connection()
 
     with DBService().db_session() as db_session:
-        wallet_service = WalletService(db_session)
-        user_service = UserService(db_session)
-        user = user_service.get_by_telegram_id(telegram_id=update.effective_user.id)
-        telegram_chat_user_service = TelegramChatUserService(db_session)
-        chat_member = telegram_chat_user_service.get(
-            chat_id=Config.TARGET_COMMON_CHAT_ID, user_id=user.id
-        )
-        user_wallet_address = user.wallet.address
-        if not chat_member:
-            logger.debug(
-                f"User {user.telegram_id!r} is not a chat member and can't be kicked"
-            )
-        else:
-            telethon_service = TelethonService()
-            await telethon_service.start()
-            await telethon_service.kick_chat_member(
-                chat_id=Config.TARGET_COMMON_CHAT_ID,
-                telegram_user_id=user.telegram_id,
-            )
-            telegram_chat_user_service.delete(
-                chat_id=Config.TARGET_COMMON_CHAT_ID, user_id=user.id
-            )
-        logger.info(
-            f"User {user.telegram_id!r} is disconnecting the wallet and was kicked from the group"
-        )
-        wallet_service.disconnect_user_wallet(user_id=user.id)
-        logger.info(f"User {user.telegram_id!r} wallet disconnected")
-
-        redis_service = RedisService(external=True)
-        redis_service.delete(user_wallet_address)
+        wallet_action = WalletAction(db_session)
+        await wallet_action.disconnect_wallet(telegram_id=update.effective_user.id)
 
         if connector.connected:
             await connector.disconnect()

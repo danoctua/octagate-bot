@@ -2,6 +2,7 @@ import logging
 
 from sqlalchemy.orm import Session
 
+from core.actions.base import BaseAction
 from core.constants import CUSTOM_TITLE_TEMPLATE
 from core.dtos.chat import TelegramChatEligibilitySummaryDTO
 from core.models.chat import TelegramChatJetton, TelegramChatUser
@@ -9,20 +10,17 @@ from core.models.wallet import JettonWallet
 from core.services.chat import TelegramChatUserService, TelegramChatJettonService
 from core.services.nft import NftItemService
 from core.services.supertelethon import TelethonService
-from core.services.user import UserService
 from core.services.wallet import JettonWalletService
 
 logger = logging.getLogger(__name__)
 
 
-class AuthorizationAction:
+class AuthorizationAction(BaseAction):
     def __init__(self, db_session: Session) -> None:
-        self.db_session = db_session
-        self.user_service = UserService(db_session)
+        super().__init__(db_session)
         self.jetton_wallet_service = JettonWalletService(db_session)
         self.telegram_chat_user_service = TelegramChatUserService(db_session)
         self.telegram_chat_jetton_service = TelegramChatJettonService(db_session)
-        self.telethon_service = TelethonService()
 
     def is_user_eligible_chat_member(
         self, user_id: int, chat_id: int
@@ -66,7 +64,7 @@ class AuthorizationAction:
 
         return self.telegram_chat_user_service.find(chat_id=chat_id, user_id=user.id)
 
-    def promote_whale_admin(
+    async def promote_whale_admin(
         self, chat_id: int, user_id: int, jetton_address: str
     ) -> None:
         chat_member = self.get_chat_user_by_telegram_id(
@@ -105,7 +103,9 @@ class AuthorizationAction:
             logger.info(
                 f"User {chat_member.user.telegram_id!r} is not a whale admin. Promoting"
             )
-            self.telethon_service.promote_user(
+            telethon_service = TelethonService()
+            await telethon_service.start()
+            await telethon_service.promote_user(
                 chat_id=chat_id,
                 telegram_user_id=chat_member.user.telegram_id,
                 custom_title=self.get_whale_title(
@@ -117,7 +117,7 @@ class AuthorizationAction:
                 chat_id=chat_id, user_id=chat_member.user.id
             )
 
-    def demote_whale_admin(self, chat_id: int, telegram_id: int) -> None:
+    async def demote_whale_admin(self, chat_id: int, telegram_id: int) -> None:
         chat_member = self.get_chat_user_by_telegram_id(
             chat_id=chat_id, telegram_id=telegram_id
         )
@@ -140,7 +140,9 @@ class AuthorizationAction:
             return
 
         logger.info(f"User {chat_member.user.telegram_id!r} is a whale admin. Demoting")
-        self.telethon_service.demote_user(
+        telethon_service = TelethonService()
+        await telethon_service.start()
+        await telethon_service.demote_user(
             chat_id=chat_id,
             telegram_user_id=chat_member.user.telegram_id,
         )
