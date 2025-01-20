@@ -9,7 +9,7 @@ from core.dtos.chat import (
     TelegramChatJettonRule,
     TelegramChatNFTCollectionRule,
 )
-from core.models import NftItem
+from core.models.blockchain import NftItem
 from core.models.wallet import JettonWallet
 from core.models.chat import (
     TelegramChat,

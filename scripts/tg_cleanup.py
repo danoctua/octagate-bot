@@ -1,23 +1,36 @@
 import asyncio
 
-from telethon import TelegramClient
-from core.settings import Config
+
+from core.celery_app import app
 
 
 CHAT_NAME = "8 Club"
 
 
 async def main():
-    client = TelegramClient(
-        "octagate", Config.TELEGRAM_APP_ID, Config.TELEGRAM_APP_HASH
+    # blockchain_service = BlockchainService()
+    #
+    # jettons_balances: JettonsBalances = await blockchain_service.get_all_jetton_balances(
+    #     "0:11e309f0666214d7e189bc13a1eb73af9c95d2800de276db5d59b728c70e5d47"
+    # )
+    # print(jettons_balances)
+    # for jetton_balance in jettons_balances.balances:
+    #     print(jetton_balance.wallet_address.address.to_raw())
+
+    app.send_task(
+        "fetch-wallet-details",
+        args=["0:94f0c00706e3a19ffd139418078ab8c205db49afe6a0fe68c08d87dd8eb3946e"],
     )
-    await client.start(bot_token=Config.TELEGRAM_BOT_TOKEN)
-
-    entity = await client.get_entity(int(Config.TARGET_COMMON_CHAT_ID))
-    print(entity.stringify())
-
-    photo_url = await client.download_profile_photo(entity)
-    print(type(photo_url))
+    # client = TelegramClient(
+    #     "octagate", Config.TELEGRAM_APP_ID, Config.TELEGRAM_APP_HASH
+    # )
+    # await client.start(bot_token=Config.TELEGRAM_BOT_TOKEN)
+    #
+    # entity = await client.get_entity(int(Config.TARGET_COMMON_CHAT_ID))
+    # print(entity.stringify())
+    #
+    # photo_url = await client.download_profile_photo(entity)
+    # print(type(photo_url))
 
     # async for participant in client.iter_participants(int(Config.TARGET_COMMON_CHAT_ID)):
     #     print(participant.stringify())

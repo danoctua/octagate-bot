@@ -3,7 +3,7 @@ import logging
 from pytonapi.schema.jettons import JettonBalance, JettonsBalances
 from sqlalchemy.exc import NoResultFound
 
-from core.models import Jetton
+from core.models.blockchain import Jetton
 from core.models.wallet import UserWallet, JettonWallet
 from core.services.base import BaseService
 

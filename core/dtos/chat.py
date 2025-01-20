@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
-from core.models import TelegramChatJetton, TelegramChatNFTCollection
+
+from core.models.chat import TelegramChatJetton, TelegramChatNFTCollection
 
 
 class TelegramChatEligibilityRules(BaseModel):
