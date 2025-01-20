@@ -15,4 +15,5 @@ Base.metadata.create_all(bind=engine)
 
 
 # To prevent imports from this module
+# Only Base should be imported from this module to import models by migrator
 __all__ = ["Base"]
