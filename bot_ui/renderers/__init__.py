@@ -29,6 +29,7 @@ async def connected_wallet_response(
     user: User,
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
+    edit_mode: bool = False,
 ) -> None:
     telegram_chat_user_service = TelegramChatUserService(db_session)
     eligibility_rules = telegram_chat_user_service.get_eligibility_rules(
@@ -54,6 +55,7 @@ async def connected_wallet_response(
         user=user,
         eligibility_summary=eligibility_summary,
         is_member=is_chat_member,
+        edit_mode=edit_mode,
     )
 
 

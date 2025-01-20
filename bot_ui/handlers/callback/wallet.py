@@ -244,6 +244,7 @@ async def show_wallet_handler(
                     user=user,
                     context=context,
                     update=update,
+                    edit_mode=True,
                 )
         else:
             await context.bot.edit_message_text(
@@ -283,6 +284,7 @@ async def hide_wallet_handler(
                     user=user,
                     context=context,
                     update=update,
+                    edit_mode=True,
                 )
         else:
             await context.bot.edit_message_text(
