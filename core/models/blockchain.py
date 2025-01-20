@@ -1,6 +1,6 @@
 from sqlalchemy import String, Boolean, DateTime, func, BigInteger, ForeignKey
 from sqlalchemy.dialects.mysql import TEXT
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, relationship
 
 from core.db import Base
 from core.models.fields import BLOCKCHAIN_ADDRESS_RAW
@@ -18,6 +18,11 @@ class Jetton(Base):
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    telegram_chat_jettons = relationship(
+        "TelegramChatJetton",
+        back_populates="jetton",
+    )
+
     def __repr__(self):
         return f"<Jetton(address={self.address}, name={self.name})>"
 
@@ -31,6 +36,11 @@ class NFTCollection(Base):
     logo_path = mapped_column(String(290), nullable=False)
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    telegram_chat_nft_collections = relationship(
+        "TelegramChatNFTCollection",
+        back_populates="nft_collection",
+    )
 
     def __repr__(self):
         return f"<NFTCollection(address={self.address}, name={self.name})>"

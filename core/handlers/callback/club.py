@@ -30,7 +30,7 @@ async def join_club_handler(
                 first_name=update.effective_user.first_name,
                 last_name=update.effective_user.last_name,
                 username=update.effective_user.username,
-                is_premium=update.effective_user.is_premium,
+                is_premium=update.effective_user.is_premium or False,
                 language_code=update.effective_user.language_code,
             )
         )

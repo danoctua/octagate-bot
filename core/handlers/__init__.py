@@ -1,10 +1,15 @@
-from telegram.ext import ChatJoinRequestHandler
+from telegram.ext import ChatJoinRequestHandler, ChatMemberHandler
 
-from core.handlers.join_request import chat_join_request_callback
+from core.handlers.chat import (
+    chat_join_request_callback,
+    chat_member_update_request_callback,
+)
 
 handlers = [
     ChatJoinRequestHandler(
         chat_join_request_callback,
-        # chat_id=Config.TARGET_COMMON_CHAT_ID,
+    ),
+    ChatMemberHandler(
+        chat_member_update_request_callback, ChatMemberHandler.ANY_CHAT_MEMBER
     ),
 ]

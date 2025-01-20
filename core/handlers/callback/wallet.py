@@ -17,6 +17,7 @@ from core.services.supertelethon import TelethonService
 from core.services.user import UserService
 from core.services.wallet import WalletService, UserWalletExistError
 from core.settings import Config
+from core.tasks.wallet import fetch_wallet_details
 from core.utils.bot import delete_message
 
 logger = logging.Logger(__name__)
@@ -38,7 +39,7 @@ async def connect_wallet_handler(
                     first_name=update.effective_user.first_name,
                     last_name=update.effective_user.last_name,
                     username=update.effective_user.username,
-                    is_premium=update.effective_user.is_premium,
+                    is_premium=update.effective_user.is_premium or False,
                     language_code=update.effective_user.language_code,
                 )
             )
@@ -122,7 +123,7 @@ async def connect_wallet_handler(
                             first_name=update.effective_user.first_name,
                             last_name=update.effective_user.last_name,
                             username=update.effective_user.username,
-                            is_premium=update.effective_user.is_premium,
+                            is_premium=update.effective_user.is_premium or False,
                             language_code=update.effective_user.language_code,
                         )
                     )
@@ -173,6 +174,8 @@ async def connect_wallet_handler(
                     )
                     # await promote_user(context=context, user=user)
                     connector.pause_connection()
+
+                    fetch_wallet_details.apply_async(args=[connector.account.address])
 
                     return await connected_wallet_response(
                         db_session=db_session,
@@ -260,7 +263,7 @@ async def show_wallet_handler(
                 first_name=update.effective_user.first_name,
                 last_name=update.effective_user.last_name,
                 username=update.effective_user.username,
-                is_premium=update.effective_user.is_premium,
+                is_premium=update.effective_user.is_premium or False,
                 language_code=update.effective_user.language_code,
             )
         )
@@ -299,7 +302,7 @@ async def hide_wallet_handler(
                 first_name=update.effective_user.first_name,
                 last_name=update.effective_user.last_name,
                 username=update.effective_user.username,
-                is_premium=update.effective_user.is_premium,
+                is_premium=update.effective_user.is_premium or False,
                 language_code=update.effective_user.language_code,
             )
         )

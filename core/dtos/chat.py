@@ -1,3 +1,4 @@
+import dataclasses
 import enum
 
 from pydantic import BaseModel
@@ -11,7 +12,8 @@ class EligibilityCheckType(enum.Enum):
     NFT_COLLECTION = "nft_collection"
 
 
-class TelegramChatEligibilityRulesDTO(BaseModel):
+@dataclasses.dataclass
+class TelegramChatEligibilityRulesDTO:
     jettons: list[TelegramChatJetton]
     nft_collections: list[TelegramChatNFTCollection]
 
@@ -20,8 +22,8 @@ class TelegramChatEligibilityItemDTO(BaseModel):
     category: EligibilityCheckType
     title: str
     address_raw: str
-    current: int = 0
-    expected: int
+    current: float = 0.0
+    expected: float
 
     @property
     def address(self):

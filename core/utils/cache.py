@@ -6,7 +6,9 @@ from core.settings import Config
 DEFAULT_EXPIRATION_SECONDS = 10
 
 
-redis_client = redis.asyncio.Redis(host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0)
+redis_client = redis.asyncio.Redis(
+    host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=Config.REDIS_DB
+)
 
 
 def format_response_cache_key_value(

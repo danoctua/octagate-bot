@@ -78,6 +78,7 @@ async def connected_wallet_welcome_renderer(
             for rule in eligibility_summary.items
         ]
     )
+    text_lines.append(f"Private chat member: {'✅' if is_member else '❌'}")
 
     if not is_member and eligibility_summary:
         keyboard.append(
@@ -118,7 +119,7 @@ async def start_renderer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 first_name=update.effective_user.first_name,
                 last_name=update.effective_user.last_name,
                 username=update.effective_user.username,
-                is_premium=update.effective_user.is_premium,
+                is_premium=update.effective_user.is_premium or False,
                 language_code=update.effective_user.language_code,
             )
         )

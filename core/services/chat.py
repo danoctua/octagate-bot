@@ -244,6 +244,14 @@ class TelegramChatUserService(BaseService):
         self.db_session.commit()
         logger.debug(f"Telegram Chat User {chat_user!r} demoted from admin.")
 
+    def delete(self, chat_id: int, user_id: int) -> None:
+        self.db_session.query(TelegramChatUser).filter(
+            TelegramChatUser.chat_id == chat_id,
+            TelegramChatUser.user_id == user_id,
+        ).delete(synchronize_session=True)
+        self.db_session.commit()
+        logger.debug(f"Telegram Chat User {user_id!r} in chat {chat_id!r} deleted.")
+
 
 TelegramChatRuleType = TelegramChatJetton | TelegramChatNFTCollection
 TelegramChatRuleDTOType = TelegramChatJettonRuleDTO | TelegramChatNFTCollectionRuleDTO

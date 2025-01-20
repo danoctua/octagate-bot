@@ -83,7 +83,7 @@ class UserService(BaseService):
                 first_name=telegram_user.first_name,
                 last_name=telegram_user.last_name,
                 username=telegram_user.username,
-                is_premium=telegram_user.premium,
+                is_premium=telegram_user.premium or False,
                 language_code=telegram_user.lang_code,
             )
         elif isinstance(telegram_user, TelegramUser):
@@ -92,7 +92,7 @@ class UserService(BaseService):
                 first_name=telegram_user.first_name,
                 last_name=telegram_user.last_name,
                 username=telegram_user.username,
-                is_premium=telegram_user.is_premium,
+                is_premium=telegram_user.is_premium or False,
                 language_code=telegram_user.language_code,
             )
         else:
