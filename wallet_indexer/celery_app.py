@@ -23,7 +23,9 @@ def create_app() -> Celery:
 
 @signals.worker_ready.connect
 def at_start(sender, **kwargs):
-    sender.app.send_task("load-noticed-wallets")
+    sender.app.send_task(
+        "load-noticed-wallets", queue=CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME
+    )
 
 
 app = create_app()

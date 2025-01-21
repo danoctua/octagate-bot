@@ -1,3 +1,6 @@
+from collections.abc import Iterable
+from typing import Any
+
 import redis
 
 from core.settings import core_settings
@@ -35,8 +38,12 @@ class RedisService:
     def delete(self, key: str) -> str:
         return self.client.delete(key)
 
-    def get_stream_items(self):
-        return self.client.xread({core_settings.redis_transaction_stream_name: "0-0"})
+    def get_stream_items(self) -> dict[str, Any]:
+        return dict(
+            self.client.xread({core_settings.redis_transaction_stream_name: "0-0"})[0][
+                1
+            ]
+        )
 
-    def get_unique_stream_items(self):
-        return set(self.get_stream_items())
+    def get_unique_stream_items(self) -> Iterable[str]:
+        return {item["wallet"] for item in self.get_stream_items().values()}
