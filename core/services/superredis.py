@@ -26,6 +26,12 @@ class RedisService:
     def set(self, key: str, value: str, ex: int | None = None) -> None:
         self.client.set(key, value, ex=ex)
 
+    def set_all(self, data: dict, ex: int | None = None) -> None:
+        pipeline = self.client.pipeline()
+        for key, value in data.items():
+            pipeline.set(key, value, ex=ex)
+        pipeline.execute()
+
     def delete(self, key: str) -> str:
         return self.client.delete(key)
 

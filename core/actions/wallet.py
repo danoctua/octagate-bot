@@ -8,7 +8,7 @@ from core.services.chat import TelegramChatUserService
 from core.services.superredis import RedisService
 from core.services.supertelethon import TelethonService
 from core.services.wallet import WalletService, UserWalletExistError
-from wallet_indexer.tasks import fetch_wallet_details
+from wallet_indexer.celery_app import app
 from core.utils.task import wait_for_task
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class WalletAction(BaseAction):
             raise exc
 
         # Run initial wallet data loading
-        task_result = fetch_wallet_details.apply_async(args=[wallet_address])
+        task_result = app.send_task("fetch-wallet-details", args=(wallet_address,))
         await wait_for_task(task_result=task_result)
 
         redis_service = RedisService(external=True)

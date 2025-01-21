@@ -22,7 +22,7 @@ generate-migration:
 	docker compose run --rm telegram-bot alembic revision --autogenerate -m "$(m)"
 
 create-empty-migration:
-	docker compose run --rm telegram-bot alembic revision --empty -m "$(m)"
+	docker compose run --rm telegram-bot alembic revision -m "$(m)"
 
 migrate:
 	docker compose run --rm telegram-bot alembic upgrade head

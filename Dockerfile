@@ -1,6 +1,12 @@
 # Stage 1: Build the base image with the core package
 FROM python:3.11.6-slim AS octagate-base
 
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+
+RUN groupadd -g 1000 appuser && \
+    useradd -r -u 1000 -g appuser appuser
+
 WORKDIR /app
 
 COPY alembic.ini .
@@ -25,7 +31,11 @@ RUN pip install -r requirements-bot-ui.txt
 
 COPY bot_ui ./bot_ui
 
-CMD ["python3", "bot_ui/__init__.py"]
+# Change ownership of the working directory
+RUN chown -R appuser:appuser /app
+
+# Switch to the non-root user
+USER appuser
 
 # Stage 3: Build the wallet-indexer image
 FROM octagate-base AS wallet-indexer
@@ -33,4 +43,8 @@ FROM octagate-base AS wallet-indexer
 COPY wallet_indexer/requirements.txt requirements-wallet-indexer.txt
 RUN pip install -r requirements-wallet-indexer.txt
 
-CMD ["python3", "wallet_indexer/__init__.py"]
+# Change ownership of the working directory
+RUN chown -R appuser:appuser /app
+
+# Switch to the non-root user
+USER appuser

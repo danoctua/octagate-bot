@@ -11,7 +11,6 @@ from bot_ui.not_telegram_ext.limiter import NotAIORateLimiter
 from bot_ui.not_telegram_ext.processor import MyUpdateProcessor
 from core.constants import POOL_TIMEOUT
 from bot_ui.settings import bot_ui_settings
-from core.services.db import DBService
 
 
 logging.basicConfig(
@@ -69,7 +68,6 @@ class NotBot:
 bot = NotBot(token=bot_ui_settings.telegram_bot_token)
 
 if __name__ == "__main__":
-    DBService.create_tables()
     if bot_ui_settings.webhook_url:
         logger.info("Running webhook")
         bot.run_webhook()

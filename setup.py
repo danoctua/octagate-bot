@@ -8,6 +8,7 @@ setup(
     packages=find_packages(),
     entry_points={
         "console_scripts": [
+            "load-wallets-on-start = core.cli.load_wallets_on_start:main",
             "load-telegram-chat = core.cli.load_telegram_chat:main",
             "load-jetton = wallet_indexer.cli.load_jetton:main",
             "load-nft-collection = wallet_indexer.cli.load_nft_collection:main",

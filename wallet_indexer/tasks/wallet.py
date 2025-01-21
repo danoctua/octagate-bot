@@ -71,3 +71,5 @@ def load_noticed_wallets():
     noticed_wallets = redis_service.get_unique_stream_items()
     for wallet in noticed_wallets:
         fetch_wallet_details.apply_async(args=(wallet,))
+
+    app.send_task("load-noticed-wallets")

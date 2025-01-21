@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Generator
 
 from pytonapi.schema.jettons import JettonBalance, JettonsBalances
 from sqlalchemy.exc import NoResultFound
@@ -31,6 +32,13 @@ class WalletService(BaseService):
         new_wallet = UserWallet(user_id=user_id, address=wallet_address)
         self.db_session.add(new_wallet)
         self.db_session.commit()
+
+    def get_all(self) -> list[UserWallet]:
+        return self.db_session.query(UserWallet).all()
+
+    def get_all_wallet_addresses(self) -> Generator[str, None, None]:
+        query = self.db_session.query(UserWallet.address).all()
+        return (str(address[0]) for address in query)
 
     def get_user_wallet(self, wallet_address: str) -> UserWallet | None:
         return (
