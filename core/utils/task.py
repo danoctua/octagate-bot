@@ -1,6 +1,6 @@
 import asyncio
 from celery.result import AsyncResult
-from core.celery_app import app
+from wallet_indexer.celery_app import app
 
 
 async def wait_for_task(

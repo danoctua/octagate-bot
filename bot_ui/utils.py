@@ -5,7 +5,7 @@ from telegram.error import BadRequest, TimedOut, TelegramError
 from telegram.ext import ContextTypes
 
 from core.constants import POOL_TIMEOUT
-from core.settings import Config
+from bot_ui.settings import bot_ui_settings
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ async def edit_or_send_message(
 
 
 async def answer_callback_query(update: Update) -> None:
-    if Config.ENABLE_CALLBACK_REPLIES and update.callback_query:
+    if bot_ui_settings.enable_callback_replies and update.callback_query:
         try:
             await update.callback_query.answer()
         except TelegramError as exc:

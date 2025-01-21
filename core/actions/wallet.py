@@ -8,7 +8,7 @@ from core.services.chat import TelegramChatUserService
 from core.services.superredis import RedisService
 from core.services.supertelethon import TelethonService
 from core.services.wallet import WalletService, UserWalletExistError
-from core.tasks.wallet import fetch_wallet_details
+from wallet_indexer.tasks import fetch_wallet_details
 from core.utils.task import wait_for_task
 
 logger = logging.getLogger(__name__)

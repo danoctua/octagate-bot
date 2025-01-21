@@ -1,14 +1,11 @@
 SQLAlchemy~=2.0.34
-python-telegram-bot[rate-limiter]~=21.10
-python-telegram-bot[webhooks]~=21.10
 redis~=5.1.0b7
 mysql-connector-python~=9.1.0
-pytonapi==0.4.3
-pytonconnect==0.3.2
-qrcode==7.4.2
 pre-commit==4.0.1
 click==8.1.8
 httpx>=0.27.0
 telethon==1.38.1
 celery==5.4.0
 alembic==1.14.1
+pydantic-settings==2.7.1
+pytonapi==0.4.3

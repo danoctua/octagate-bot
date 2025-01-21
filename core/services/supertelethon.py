@@ -6,7 +6,7 @@ from telethon.tl.functions.messages import ExportChatInviteRequest
 from telethon.tl.types import User as TelethonUser, Channel, ChatInviteExported
 
 from core.constants import TELETHON_SESSION_PATH, CHAT_LOGO_PATH, DEFAULT_CHAT_LOGO_PATH
-from core.settings import Config
+from core.settings import core_settings
 
 
 logger = logging.getLogger(__name__)
@@ -15,11 +15,13 @@ logger = logging.getLogger(__name__)
 class TelethonService:
     def __init__(self):
         self.client = TelegramClient(
-            TELETHON_SESSION_PATH, Config.TELEGRAM_APP_ID, Config.TELEGRAM_APP_HASH
+            TELETHON_SESSION_PATH,
+            core_settings.telegram_app_id,
+            core_settings.telegram_app_hash,
         )
 
     async def start(self) -> None:
-        await self.client.start(bot_token=Config.TELEGRAM_BOT_TOKEN)
+        await self.client.start(bot_token=core_settings.telegram_bot_token)
 
     async def get_chat(self, chat_id: int) -> Channel:
         return await self.client.get_entity(chat_id)

@@ -10,7 +10,7 @@ from pytonapi.exceptions import TONAPIInternalServerError
 from pytonapi.schema.jettons import JettonHolders, JettonsBalances, JettonInfo
 from pytonapi.schema.nft import NftItems, NftCollection
 
-from core.settings import Config
+from wallet_indexer.settings import wallet_indexer_settings
 
 
 logger = logging.getLogger(__name__)
@@ -21,10 +21,11 @@ DEFAULT_TONAPI_LIMIT = 1000
 DEFAULT_TONAPI_MAX_RETRIES = 10
 
 
-class BlockchainService:
+class TonApiService:
     def __init__(self):
         self._tonapi = AsyncTonapi(
-            api_key=Config.TON_API_KEY, max_retries=DEFAULT_TONAPI_MAX_RETRIES
+            api_key=wallet_indexer_settings.ton_api_key,
+            max_retries=DEFAULT_TONAPI_MAX_RETRIES,
         )
 
     @classmethod

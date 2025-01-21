@@ -2,7 +2,7 @@ from sqlalchemy import Integer, String, DateTime, Boolean, BigInteger, func
 from sqlalchemy.orm import mapped_column, relationship
 
 from core.db import Base
-from core.settings import Config
+from core.settings import core_settings
 
 
 class User(Base):
@@ -15,7 +15,7 @@ class User(Base):
     first_name = mapped_column(String(255), nullable=False)
     last_name = mapped_column(String(255), nullable=True)
     language = mapped_column(
-        String(10), nullable=False, default=Config.DEFAULT_LANGUAGE
+        String(10), nullable=False, default=core_settings.default_language
     )
     is_blocked = mapped_column(Boolean, nullable=False, default=False)
     is_admin = mapped_column(Boolean, nullable=False, default=False)

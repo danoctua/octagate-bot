@@ -14,7 +14,7 @@ from core.services.db import DBService
 from core.services.nft import NftItemService
 from core.services.user import UserService
 from core.services.wallet import JettonWalletService
-from core.settings import Config
+from bot_ui.settings import bot_ui_settings
 
 MAIN_BUTTON_REPLY_MARKUP = InlineKeyboardMarkup.from_button(
     InlineKeyboardButton(text="Main", callback_data="main")
@@ -33,7 +33,7 @@ async def connected_wallet_response(
 ) -> None:
     telegram_chat_user_service = TelegramChatUserService(db_session)
     eligibility_rules = telegram_chat_user_service.get_eligibility_rules(
-        chat_id=Config.TARGET_COMMON_CHAT_ID
+        chat_id=bot_ui_settings.target_common_chat_id
     )
     nft_item_service = NftItemService(db_session)
     user_nft_items = nft_item_service.get_all(owner_address=user.wallet.address)
@@ -46,7 +46,7 @@ async def connected_wallet_response(
         user_nft_items=user_nft_items,
     )
     is_chat_member = telegram_chat_user_service.is_chat_member(
-        chat_id=Config.TARGET_COMMON_CHAT_ID,
+        chat_id=bot_ui_settings.target_common_chat_id,
         user_id=user.id,
     )
     await connected_wallet_welcome_renderer(

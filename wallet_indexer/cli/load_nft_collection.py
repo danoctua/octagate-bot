@@ -3,7 +3,7 @@ import asyncio
 import click
 
 from core.constants import NFT_LOGO_SUB_PATH, DEFAULT_NFT_LOGO_PATH
-from core.services.blockchain import BlockchainService
+from wallet_indexer.indexers.tonapi import TonApiService
 from core.services.db import DBService
 from core.services.nft import NftCollectionService
 from core.utils.file import pick_best_preview, download_media
@@ -16,7 +16,7 @@ def main(address: str) -> None:
     CLI command to add a new NFT collection to the database.
     """
 
-    blockchain_service = BlockchainService()
+    blockchain_service = TonApiService()
     nft_collection_data = asyncio.run(
         blockchain_service.get_nft_collection_info(address)
     )

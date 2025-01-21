@@ -4,7 +4,7 @@ import click
 from pytonapi.schema.jettons import JettonInfo
 
 from core.constants import JETTON_LOGO_SUB_PATH, DEFAULT_JETTON_LOGO_PATH
-from core.services.blockchain import BlockchainService
+from wallet_indexer.indexers.tonapi import TonApiService
 from core.services.db import DBService
 from core.services.jetton import JettonService
 from core.utils.file import download_media
@@ -17,7 +17,7 @@ def main(address: str) -> None:
     CLI command to add a token to the database.
     """
 
-    blockchain_service = BlockchainService()
+    blockchain_service = TonApiService()
     jetton_info: JettonInfo = asyncio.run(blockchain_service.get_jetton_info(address))
 
     jetton_logo = jetton_info.metadata.image

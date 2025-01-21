@@ -10,7 +10,7 @@ from core.services.db import DBService
 from core.services.nft import NftItemService
 from core.services.user import UserService
 from core.services.wallet import JettonWalletService
-from core.settings import Config
+from bot_ui.settings import bot_ui_settings
 from bot_ui.utils import answer_callback_query, delete_message
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ async def join_club_handler(
         )
         telegram_chat_user_service = TelegramChatUserService(db_session)
         if telegram_chat_user_service.is_chat_member(
-            chat_id=Config.TARGET_COMMON_CHAT_ID, user_id=user.id
+            chat_id=bot_ui_settings.target_common_chat_id, user_id=user.id
         ):
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
@@ -49,7 +49,7 @@ async def join_club_handler(
             return
 
         eligibility_rules = telegram_chat_user_service.get_eligibility_rules(
-            chat_id=Config.TARGET_COMMON_CHAT_ID
+            chat_id=bot_ui_settings.target_common_chat_id
         )
         nft_item_service = NftItemService(db_session)
         user_nft_items = nft_item_service.get_all(owner_address=user.wallet.address)
@@ -74,7 +74,7 @@ async def join_club_handler(
             return
 
         telegram_chat_service = TelegramChatService(db_session)
-        telegram_chat = telegram_chat_service.get(Config.TARGET_COMMON_CHAT_ID)
+        telegram_chat = telegram_chat_service.get(bot_ui_settings.target_common_chat_id)
 
         if not telegram_chat.invite_link:
             return await context.bot.send_message(

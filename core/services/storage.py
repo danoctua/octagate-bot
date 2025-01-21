@@ -2,11 +2,13 @@ from pytonconnect import TonConnect
 from pytonconnect.storage import IStorage
 
 from core.services.superredis import RedisService
-from core.settings import Config
+from core.settings import core_settings
 
 
 def get_connector(chat_id: int) -> TonConnect:
-    return TonConnect(Config.TC_MANIFEST_URL, storage=TCRStorage(chat_id=chat_id))
+    return TonConnect(
+        core_settings.tc_manifest_url, storage=TCRStorage(chat_id=chat_id)
+    )
 
 
 class TCRStorage(IStorage):

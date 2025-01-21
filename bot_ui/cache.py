@@ -1,13 +1,15 @@
 import redis
 from telegram import Update
 
-from core.settings import Config
+from bot_ui.settings import bot_ui_settings
 
 DEFAULT_EXPIRATION_SECONDS = 10
 
 
 redis_client = redis.asyncio.Redis(
-    host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=Config.REDIS_DB
+    host=bot_ui_settings.redis_host,
+    port=bot_ui_settings.redis_port,
+    db=bot_ui_settings.redis_db,
 )
 
 

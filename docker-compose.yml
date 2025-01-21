@@ -1,18 +1,10 @@
 x-python-service:
   &x-python-service
-  image: 'meta-python'
   depends_on:
     redis:
       condition: service_healthy
     mysql:
       condition: service_healthy
-  env_file:
-    - .env
-  volumes:
-    - ./bot_ui:/app/bot_ui
-    - ./core:/app/core
-    - ./scripts:/app/scripts
-    - /etc/letsencrypt:/etc/certbot:ro
   networks:
     - internal
 
@@ -22,14 +14,18 @@ services:
     <<: *x-python-service
     build:
       context: .
-      dockerfile: bot_ui/config/Dockerfile
+      dockerfile: Dockerfile
+      target: telegram-bot
+    env_file:
+      - bot_ui/config/.env
+      - core/config/.env
     ports:
       - "433:433"
+    volumes:
+      - ./bot_ui:/app/bot_ui
+      - ./core:/app/core
+      - /etc/letsencrypt:/etc/certbot:ro
     command: ["python3", "bot_ui/__init__.py"]
-
-  worker:
-    <<: *x-python-service
-    command: ["celery", "-A", "core.celery_app:app", "worker", "-Q", "wallet-fetch-queue,noticed-wallets-upload-queue", "--loglevel=info"]
 
   transaction-lookup:
     build:
@@ -42,6 +38,28 @@ services:
         condition: service_healthy
     networks:
       - internal
+
+  wallet-indexer:
+    <<: *x-python-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: wallet-indexer
+    env_file:
+      - wallet_indexer/config/.env
+      - core/config/.env
+    command: [
+      "celery",
+      "-A",
+      "wallet_indexer.celery_app:app",
+      "worker",
+      "-Q",
+      "wallet-fetch-queue,noticed-wallets-upload-queue",
+      "--loglevel=info"
+    ]
+    volumes:
+      - ./core:/app/core
+      - ./wallet_indexer:/app/wallet_indexer
 
   redis:
     image: "redis:7.2.4-alpine"
@@ -62,7 +80,7 @@ services:
     ports:
       - "3307:3306"
     env_file:
-      - .env
+      - core/config/.env
     volumes:
       - volume-data:/var/lib/mysql
     healthcheck:

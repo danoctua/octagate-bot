@@ -10,7 +10,7 @@ from bot_ui.handlers.error import error_handler
 from bot_ui.not_telegram_ext.limiter import NotAIORateLimiter
 from bot_ui.not_telegram_ext.processor import MyUpdateProcessor
 from core.constants import POOL_TIMEOUT
-from core.settings import Config
+from bot_ui.settings import bot_ui_settings
 from core.services.db import DBService
 
 
@@ -34,9 +34,9 @@ class NotBot:
         self.application: Application = (
             ApplicationBuilder()
             .pool_timeout(POOL_TIMEOUT)
-            .base_url(base_url=Config.TELEGRAM_API_BASE_URL)
+            .base_url(base_url=bot_ui_settings.telegram_api_base_url)
             .token(token)
-            .concurrent_updates(MyUpdateProcessor(Config.CONCURRENT_UPDATES))
+            .concurrent_updates(MyUpdateProcessor(bot_ui_settings.concurrent_updates))
             .rate_limiter(rate_limiter)
             .build()
         )
@@ -58,19 +58,19 @@ class NotBot:
 
     def run_webhook(self):
         self.application.run_webhook(
-            listen=Config.WEBHOOK_HOST,
-            port=Config.WEBHOOK_PORT,
-            url_path=Config.TELEGRAM_BOT_TOKEN,
-            secret_token=Config.WEBHOOK_SECRET_KEY,
-            webhook_url=f"{Config.WEBHOOK_URL}/{Config.TELEGRAM_BOT_TOKEN}",
+            listen=bot_ui_settings.webhook_host,
+            port=bot_ui_settings.webhook_port,
+            url_path=bot_ui_settings.telegram_bot_token,
+            secret_token=bot_ui_settings.webhook_secret_key,
+            webhook_url=bot_ui_settings.full_webhook_url,
         )
 
 
-bot = NotBot(token=Config.TELEGRAM_BOT_TOKEN)
+bot = NotBot(token=bot_ui_settings.telegram_bot_token)
 
 if __name__ == "__main__":
     DBService.create_tables()
-    if Config.WEBHOOK_URL:
+    if bot_ui_settings.webhook_url:
         logger.info("Running webhook")
         bot.run_webhook()
     else:

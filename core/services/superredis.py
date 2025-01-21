@@ -1,22 +1,22 @@
 import redis
 
-from core.settings import Config
+from core.settings import core_settings
 
 
 class RedisService:
     def __init__(self, external: bool = False) -> None:
         if not external:
             self.client = redis.StrictRedis(
-                host=Config.REDIS_HOST,
-                port=Config.REDIS_PORT,
-                db=Config.REDIS_DB,
+                host=core_settings.redis_host,
+                port=core_settings.redis_port,
+                db=core_settings.redis_db,
                 decode_responses=True,
             )
         else:
             self.client = redis.StrictRedis(
-                host=Config.REDIS_HOST,
-                port=Config.REDIS_PORT,
-                db=Config.REDIS_TRANSACTION_DB,
+                host=core_settings.redis_host,
+                port=core_settings.redis_port,
+                db=core_settings.redis_transaction_db,
                 decode_responses=True,
             )
 
@@ -30,7 +30,7 @@ class RedisService:
         return self.client.delete(key)
 
     def get_stream_items(self):
-        return self.client.xread({Config.REDIS_TRANSACTION_STREAM_NAME: "0-0"})
+        return self.client.xread({core_settings.redis_transaction_stream_name: "0-0"})
 
     def get_unique_stream_items(self):
         return set(self.get_stream_items())

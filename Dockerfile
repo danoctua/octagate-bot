@@ -1,9 +1,10 @@
-FROM python:3.11.6-slim
+# Stage 1: Build the base image with the core package
+FROM python:3.11.6-slim AS octagate-base
 
 WORKDIR /app
 
 COPY alembic.ini .
-COPY requirements.txt .
+COPY core/requirements.txt .
 
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
@@ -13,6 +14,23 @@ COPY setup.cfg .
 
 RUN pip install -e .
 
-COPY .env .
-
+COPY wallet_indexer ./wallet_indexer
 COPY core ./core
+
+# Stage 2: Build the telegram-bot image
+FROM octagate-base AS telegram-bot
+
+COPY bot_ui/requirements.txt requirements-bot-ui.txt
+RUN pip install -r requirements-bot-ui.txt
+
+COPY bot_ui ./bot_ui
+
+CMD ["python3", "bot_ui/__init__.py"]
+
+# Stage 3: Build the wallet-indexer image
+FROM octagate-base AS wallet-indexer
+
+COPY wallet_indexer/requirements.txt requirements-wallet-indexer.txt
+RUN pip install -r requirements-wallet-indexer.txt
+
+CMD ["python3", "wallet_indexer/__init__.py"]

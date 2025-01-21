@@ -7,8 +7,7 @@ build:
 down:
 	docker compose down
 
-restart:
-	docker compose stop telegram-bot && docker compose up -d telegram-bot
+restart: stop run
 
 run:
 	docker compose up -d
@@ -28,5 +27,10 @@ create-empty-migration:
 migrate:
 	docker compose run --rm telegram-bot alembic upgrade head
 
+setup-venv:
+	pip3 install -r core/requirements.txt
+	pip3 install -r bot_ui/requirements.txt
+	pip3 install -r wallet_indexer/requirements.txt
 
-include .env
+
+include core/config/.env
