@@ -5,6 +5,7 @@ from pydantic import BaseModel, field_serializer
 from pytonapi.utils import raw_to_userfriendly, to_nano
 
 from core.models.chat import TelegramChatJetton, TelegramChatNFTCollection
+from core.utils.number import human_friendly_number
 
 
 class EligibilityCheckType(enum.Enum):
@@ -32,6 +33,14 @@ class TelegramChatEligibilityItemDTO(BaseModel):
     @property
     def is_eligible(self):
         return self.current >= self.expected
+
+    @property
+    def current_human_friendly(self) -> str:
+        return human_friendly_number(self.current)
+
+    @property
+    def expected_human_friendly(self) -> str:
+        return human_friendly_number(self.expected)
 
 
 class TelegramChatEligibilitySummaryDTO(BaseModel):

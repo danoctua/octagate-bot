@@ -50,7 +50,7 @@ class TonApiService:
 
             previous_run_start = time.time()
             try:
-                logger.info(
+                logger.debug(
                     "Fetching records from %s with offset %s and limit %s",
                     method.__name__,
                     current_offset,
@@ -72,10 +72,10 @@ class TonApiService:
             total_count = len(getattr(records_dto, attribute_name))
 
             if not total_count:
-                logger.info("No more records to fetch. Exiting")
+                logger.debug("No more records to fetch. Exiting")
                 break
 
-            logger.info("Fetched %s records", total_count)
+            logger.debug("Fetched %s records", total_count)
             current_offset += total_count
 
     async def get_all_jetton_holders(

@@ -77,13 +77,13 @@ async def connected_wallet_welcome_renderer(
         f"{user_address[:4]}..{user_address[-4:]}", version=2
     )
     text_lines = [
-        f"Connected wallet: [{shorten_address_escaped}](https://tonscan.org/address/{user_address})\n",
+        f"Connected wallet: [{shorten_address_escaped}](https://tonscan.org/address/{user_address}) {'hidden' if user.wallet.hide_wallet else 'public'}\n",
     ]
 
     text_lines.extend(
         [
             escape_markdown(
-                f"{rule.title}: {int(rule.current)}/{int(rule.expected)} {'✅' if rule.is_eligible else '❌'}",
+                f"{rule.title}: {rule.current_human_friendly}/{rule.expected_human_friendly} {'✅' if rule.is_eligible else '❌'}",
                 version=2,
             )
             for rule in eligibility_summary.items
@@ -109,8 +109,6 @@ async def connected_wallet_welcome_renderer(
             else "show-wallet",
         ),
     )
-
-    print("\n".join(text_lines))
 
     if edit_mode:
         return await context.bot.edit_message_text(

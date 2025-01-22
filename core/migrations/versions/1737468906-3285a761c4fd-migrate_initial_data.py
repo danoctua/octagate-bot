@@ -18,6 +18,12 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+BANNED_PUBLIC_WALLETS = [
+    "0:779dcc815138d9500e449c5291e7f12738c23d575b5310000f6a253bd607384e",  # stonfi router
+    "0:0000000000000000000000000000000000000000000000000000000000000000",  # burn address
+]
+
+
 def upgrade() -> None:
     op.execute(
         f"""

@@ -78,7 +78,12 @@ def fetch_wallet_details(address: str) -> None:
 def load_noticed_wallets():
     redis_service = RedisService(external=True)
     noticed_wallets = redis_service.get_unique_stream_items()
+    logger.info(f"Loading {len(noticed_wallets)} noticed wallets")
     for wallet in noticed_wallets:
         fetch_wallet_details.apply_async(args=(wallet,))
 
-    app.send_task("load-noticed-wallets")
+    app.send_task(
+        "load-noticed-wallets",
+        queue=CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME,
+        countdown=3,
+    )

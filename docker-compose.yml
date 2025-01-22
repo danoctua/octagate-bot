@@ -49,6 +49,7 @@ services:
     env_file:
       - wallet_indexer/config/.env
       - core/config/.env
+    restart: on-failure
     command: [
       "celery",
       "-A",

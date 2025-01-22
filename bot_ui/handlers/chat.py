@@ -89,7 +89,15 @@ async def chat_member_update_request_callback(
 
         if was_member and not is_member:
             user_service = UserService(db_session)
-            user = user_service.get_by_telegram_id(update.effective_user.id)
+            try:
+                user = user_service.get_by_telegram_id(
+                    telegram_id=update.effective_user.id
+                )
+            except NoResultFound:
+                logger.warning(
+                    f"User {update.effective_user.id!r} not found in the database. Can't remove from the chat. Chat member {update.chat_member.from_user.id}"
+                )
+                return
             telegram_chat_user_service = TelegramChatUserService(db_session)
             telegram_chat_user_service.delete(
                 chat_id=update.effective_chat.id, user_id=user.id
