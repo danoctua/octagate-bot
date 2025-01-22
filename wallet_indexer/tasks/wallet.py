@@ -20,13 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 async def get_all_nfts_per_user(
-    blockchain_service: TonApiService, address: str
+    blockchain_service: TonApiService, address: str, nft_collections: list[str]
 ) -> NftItems:
     nft_items = []
-    async for batch in blockchain_service.get_all_nft_items_for_user(
-        wallet_address=address
-    ):
-        nft_items.extend(batch.nft_items)
+    for collection_address in nft_collections:
+        async for batch in blockchain_service.get_all_nft_items_for_user(
+            wallet_address=address, collection_address=collection_address
+        ):
+            nft_items.extend(batch.nft_items)
     return NftItems(nft_items=nft_items)
 
 
@@ -51,14 +52,22 @@ def fetch_wallet_details(address: str) -> None:
         )
         logger.info(f"Jettons for {address!r} fetched.")
 
-    nft_items: NftItems = asyncio.run(
-        get_all_nfts_per_user(blockchain_service=blockchain_service, address=address)
-    )
-    with DBService().db_session() as db_session:
         nft_collection_service = NftCollectionService(db_session)
         whitelisted_nfts = nft_collection_service.get_whitelisted()
+        whitelist_collection_addresses = [
+            collection.address for collection in whitelisted_nfts
+        ]
+
+    nft_items: NftItems = asyncio.run(
+        get_all_nfts_per_user(
+            blockchain_service=blockchain_service,
+            address=address,
+            nft_collections=whitelist_collection_addresses,
+        )
+    )
+    with DBService().db_session() as db_session:
         nft_service = NftItemService(db_session)
-        nft_service.bulk_create_or_update(nft_items, whitelisted_nfts)
+        nft_service.bulk_create_or_update(nft_items, whitelist_collection_addresses)
         logger.info(f"NFT items for {address!r} fetched.")
 
 

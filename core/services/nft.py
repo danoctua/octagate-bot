@@ -103,12 +103,8 @@ class NftItemService(BaseService):
         return query.all()
 
     def bulk_create_or_update(
-        self, nft_items: NftItems, whitelisted_collections: list[NFTCollection]
+        self, nft_items: NftItems, whitelist_collection_addresses: list[str]
     ) -> list[NftItem]:
-        whitelist_collection_addresses = [
-            collection.address for collection in whitelisted_collections
-        ]
-
         created_or_updated_nfts = []
         for nft_item in nft_items.nft_items:
             if (
