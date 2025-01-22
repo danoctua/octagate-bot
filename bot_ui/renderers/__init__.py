@@ -4,7 +4,9 @@ from pytonapi.utils import raw_to_userfriendly
 from pytonconnect import TonConnect
 from sqlalchemy.orm import Session
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
+from telegram.helpers import escape_markdown
 
 from core.dtos.chat import TelegramChatEligibilitySummaryDTO
 from core.dtos.user import TelegramUserDTO
@@ -70,17 +72,28 @@ async def connected_wallet_welcome_renderer(
     keyboard = [
         InlineKeyboardButton(text="Disconnect wallet", callback_data="disconnect")
     ]
+    user_address = raw_to_userfriendly(user.wallet.address)
+    shorten_address_escaped = escape_markdown(
+        f"{user_address[:4]}..{user_address[-4:]}", version=2
+    )
     text_lines = [
-        f"Connected wallet: {raw_to_userfriendly(user.wallet.address)}\n",
+        f"Connected wallet: [{shorten_address_escaped}](https://tonscan.org/address/{user_address})\n",
     ]
 
     text_lines.extend(
         [
-            f"{rule.title}: {rule.current}/{rule.expected} {'✅' if rule.is_eligible else '❌'}"
+            escape_markdown(
+                f"{rule.title}: {int(rule.current)}/{int(rule.expected)} {'✅' if rule.is_eligible else '❌'}",
+                version=2,
+            )
             for rule in eligibility_summary.items
         ]
     )
-    text_lines.append(f"Private chat member: {'✅' if is_member else '❌'}")
+    text_lines.append(
+        escape_markdown(
+            f"Private chat member: {'✅' if is_member else '❌'}", version=2
+        )
+    )
 
     if not is_member and eligibility_summary:
         keyboard.append(
@@ -97,18 +110,22 @@ async def connected_wallet_welcome_renderer(
         ),
     )
 
+    print("\n".join(text_lines))
+
     if edit_mode:
         return await context.bot.edit_message_text(
             chat_id=update.effective_chat.id,
             message_id=update.effective_message.message_id,
             text="\n".join(text_lines),
             reply_markup=InlineKeyboardMarkup.from_column(keyboard),
+            parse_mode=ParseMode.MARKDOWN_V2,
         )
     else:
         return await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="\n".join(text_lines),
             reply_markup=InlineKeyboardMarkup.from_column(keyboard),
+            parse_mode=ParseMode.MARKDOWN_V2,
         )
 
 
