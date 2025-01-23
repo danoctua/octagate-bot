@@ -1,18 +1,13 @@
 x-python-service:
   &x-python-service
-  image: 'meta-python'
+  user: "1000:1000"
   depends_on:
     redis:
       condition: service_healthy
     mysql:
       condition: service_healthy
-  env_file:
-    - .env
-  volumes:
-    - ./core:/app/core
-    - ./scripts:/app/scripts
-    - ./__init__.py/:/app/__init__.py
-    - /etc/letsencrypt:/etc/certbot:ro
+  networks:
+    - internal
 
 
 services:
@@ -21,9 +16,100 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: telegram-bot
+    env_file:
+      - bot_ui/config/.env
+      - core/config/.env
     ports:
       - "433:433"
-    command: ["python3", "__init__.py"]
+    volumes:
+      - ./bot_ui:/app/bot_ui
+      - ./core:/app/core
+      - /etc/letsencrypt:/etc/certbot:ro
+    command: ["python3", "bot_ui/__init__.py"]
+
+  transaction-lookup:
+    build:
+      context: transaction-lookup
+      dockerfile: build/Dockerfile.worker
+    env_file:
+      - transaction-lookup/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+
+  wallet-indexer:
+    <<: *x-python-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: wallet-indexer
+    image: wallet-indexer
+    env_file:
+      - wallet_indexer/config/.env
+      - core/config/.env
+    restart: on-failure
+    command: [
+      "celery",
+      "-A",
+      "wallet_indexer.celery_app:app",
+      "worker",
+      "-Q",
+      "wallet-fetch-queue",
+      "--loglevel=info"
+    ]
+    environment:
+      - WORKER_CONCURRENCY=8
+    volumes:
+      - ./core:/app/core
+      - ./wallet_indexer:/app/wallet_indexer
+
+  load-noticed-wallets:
+    <<: *x-python-service
+    image: wallet-indexer
+    env_file:
+      - wallet_indexer/config/.env
+      - core/config/.env
+    restart: on-failure
+    command: [
+      "celery",
+      "-A",
+      "wallet_indexer.celery_app:app",
+      "worker",
+      "-Q",
+      "noticed-wallets-upload-queue",
+      "--loglevel=info"
+    ]
+    environment:
+      - WORKER_CONCURRENCY=1
+      - LOAD_WALLETS=1
+    volumes:
+      - ./core:/app/core
+      - ./wallet_indexer:/app/wallet_indexer
+
+  community-manager:
+    <<: *x-python-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: community-manager
+    env_file:
+      - community_manager/config/.env
+      - core/config/.env
+    command: [
+      "celery",
+      "-A",
+      "community_manager.celery_app:app",
+      "worker",
+      "-Q",
+      "system-queue",
+      "--loglevel=info"
+    ]
+    volumes:
+      - ./community_manager:/app/community_manager
+      - ./core:/app/core
 
   redis:
     image: "redis:7.2.4-alpine"
@@ -36,13 +122,15 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - internal
 
   mysql:
     image: "mysql:8.3.0"
     ports:
       - "3307:3306"
     env_file:
-      - .env
+      - core/config/.env
     volumes:
       - volume-data:/var/lib/mysql
     healthcheck:
@@ -50,7 +138,13 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - internal
 
 volumes:
   volume-data:
   volume-queue:
+
+
+networks:
+  internal:

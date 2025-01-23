@@ -1,25 +1,27 @@
 from typing import Iterable
 
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import joinedload
-from telegram import User as TelegramUser
 
+from core.dtos.user import TelegramUserDTO
 from core.models.user import User
-from core.models.wallet import UserWallet
 from core.services.base import BaseService
 
 
 class UserService(BaseService):
-    def get(self, telegram_id: int) -> User:
+    def get_by_telegram_id(self, telegram_id: int) -> User:
         return (
             self.db_session.query(User)
             .filter(
                 User.telegram_id == telegram_id,
             )
-            .options(
-                joinedload(User.wallet).options(
-                    joinedload(UserWallet.jetton_wallet),
-                )
+            .one()
+        )
+
+    def get(self, user_id: int) -> User:
+        return (
+            self.db_session.query(User)
+            .filter(
+                User.id == user_id,
             )
             .one()
         )
@@ -39,15 +41,9 @@ class UserService(BaseService):
         if telegram_ids:
             query = query.filter(User.telegram_id.in_(telegram_ids))
 
-        query = query.options(
-            joinedload(User.wallet).options(
-                joinedload(UserWallet.jetton_wallet),
-            )
-        )
-
         return query.all()
 
-    def create(self, telegram_user: TelegramUser) -> User:
+    def create(self, telegram_user: TelegramUserDTO) -> User:
         new_user = User(
             first_name=telegram_user.first_name,
             last_name=telegram_user.last_name,
@@ -60,7 +56,7 @@ class UserService(BaseService):
         self.db_session.commit()
         return new_user
 
-    def update(self, user: User, telegram_user: TelegramUser) -> User:
+    def update(self, user: User, telegram_user: TelegramUserDTO) -> User:
         user.language = telegram_user.language_code
         user.first_name = telegram_user.first_name
         user.last_name = telegram_user.last_name
@@ -70,15 +66,15 @@ class UserService(BaseService):
         self.db_session.commit()
         return user
 
-    def create_or_update(self, telegram_user: TelegramUser) -> User:
+    def create_or_update(self, telegram_user: TelegramUserDTO) -> User:
         try:
-            user = self.get(telegram_user.id)
+            user = self.get_by_telegram_id(telegram_user.id)
             return self.update(user=user, telegram_user=telegram_user)
         except NoResultFound:
             return self.create(telegram_user)
 
-    def get_or_create(self, telegram_user: TelegramUser) -> User:
+    def get_or_create(self, telegram_user: TelegramUserDTO) -> User:
         try:
-            return self.get(telegram_user.id)
+            return self.get_by_telegram_id(telegram_user.id)
         except NoResultFound:
             return self.create(telegram_user)

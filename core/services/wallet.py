@@ -1,10 +1,11 @@
 import logging
+from collections.abc import Generator
 
-from pytonapi.schema.jettons import JettonHolders
-from pytonapi.schema.nft import NftItems
+from pytonapi.schema.jettons import JettonBalance, JettonsBalances
+from sqlalchemy.exc import NoResultFound
 
-from core.constants import DEFAULT_WALLET_RATING, DEFAULT_WALLET_BALANCE
-from core.models.wallet import UserWallet, JettonWallet, NftWallet
+from core.models.blockchain import Jetton
+from core.models.wallet import UserWallet, JettonWallet
 from core.services.base import BaseService
 
 
@@ -32,6 +33,18 @@ class WalletService(BaseService):
         self.db_session.add(new_wallet)
         self.db_session.commit()
 
+    def get_all(self, addresses: list[str] | None = None) -> list[UserWallet]:
+        query = self.db_session.query(UserWallet)
+
+        if addresses:
+            query = query.filter(UserWallet.address.in_(addresses))
+
+        return query.all()
+
+    def get_all_wallet_addresses(self) -> Generator[str, None, None]:
+        query = self.db_session.query(UserWallet.address).all()
+        return (str(address[0]) for address in query)
+
     def get_user_wallet(self, wallet_address: str) -> UserWallet | None:
         return (
             self.db_session.query(UserWallet)
@@ -45,208 +58,107 @@ class WalletService(BaseService):
         ).delete()
         self.db_session.commit()
 
-    def link_user_jetton_wallet(self, wallet_address: str) -> None:
-        user_wallet = (
-            self.db_session.query(UserWallet)
-            .filter(UserWallet.address == wallet_address)
-            .first()
-        )
-        jetton_wallet = (
-            self.db_session.query(JettonWallet)
-            .filter(JettonWallet.owner_address == wallet_address)
-            .first()
-        )
-        if user_wallet and jetton_wallet:
-            if user_wallet.jetton_wallet_address != wallet_address:
-                user_wallet.jetton_wallet_address = wallet_address
-                self.db_session.add(user_wallet)
-                self.db_session.flush()
-                logger.info(f"Linked user wallet {wallet_address} to jetton wallet")
-                return
-
-            logger.debug(
-                f"User wallet {wallet_address} is already linked to jetton wallet"
-            )
-            return
-
-        logger.debug(
-            f"User wallet {wallet_address} or jetton wallet {wallet_address} not found"
-        )
-
-    def get_all_jetton_wallets(self) -> list[str]:
-        return [
-            str(w[0])
-            for w in self.db_session.query(JettonWallet.owner_address)
-            .filter(
-                JettonWallet.rating < DEFAULT_WALLET_RATING,
-                JettonWallet.balance > DEFAULT_WALLET_BALANCE,
-            )
-            .all()
-        ]
-
-    def _add_jetton_wallet(
-        self, wallet_address: str, balance: int, rating: int
-    ) -> None:
-        new_wallet = JettonWallet(
-            owner_address=wallet_address, balance=balance, rating=rating
-        )
-        self.db_session.add(new_wallet)
-        logger.debug(f"Added jetton wallet {wallet_address}")
-
-    def _update_jetton_wallet(
-        self, wallet_address: str, balance: int, rating: int
-    ) -> None:
-        wallet = (
-            self.db_session.query(JettonWallet)
-            .filter(JettonWallet.owner_address == wallet_address)
-            .one()
-        )
-        if wallet.balance == balance and wallet.rating == rating:
-            logger.debug(f"Jetton wallet {wallet_address} has not changed")
-            return
-        wallet.balance = balance
-        wallet.rating = rating
-        self.db_session.add(wallet)
-        logger.debug(f"Updated jetton wallet {wallet_address}")
-
-    def _flush_jetton_wallets(self, wallet_addresses: set[str]) -> None:
-        self.db_session.query(JettonWallet).filter(
-            JettonWallet.owner_address.in_(wallet_addresses)
-        ).update(
-            {
-                "rating": DEFAULT_WALLET_RATING,
-                "balance": DEFAULT_WALLET_BALANCE,
-            }
-        )
-
-    def jetton_wallet_exists(self, wallet_address: str) -> bool:
-        return (
-            self.db_session.query(JettonWallet)
-            .filter(JettonWallet.owner_address == wallet_address)
-            .count()
-            > 0
-        )
-
-    def get_jetton_wallet(self, wallet_address: str) -> JettonWallet:
-        return (
-            self.db_session.query(JettonWallet)
-            .filter(JettonWallet.owner_address == wallet_address)
-            .one()
-        )
-
-    def add_or_update_jetton_wallet(
-        self, wallet_address: str, balance: int, rating: int
-    ) -> None:
-        if self.jetton_wallet_exists(wallet_address):
-            self._update_jetton_wallet(wallet_address, balance, rating)
-        else:
-            self._add_jetton_wallet(wallet_address, balance, rating)
-
-        self.db_session.flush()
-
-    def bulk_update_jetton_holders(self, wallets: JettonHolders) -> None:
-        wallet_addresses = set(
-            wallet.owner.address.to_raw() for wallet in wallets.addresses
-        )
-        logger.info("Clean up non-existing jetton wallets")
-        missing_jetton_holders = set(self.get_all_jetton_wallets()) - wallet_addresses
-        logger.info(f"Found {len(missing_jetton_holders)} missing jetton wallets")
-        self._flush_jetton_wallets(missing_jetton_holders)
-        logger.info("Bulk update jetton wallets")
-        for rating, wallet in enumerate(wallets.addresses, start=1):
-            logger.info(f"Rating: {rating}, Wallet: {wallet.owner.address.to_raw()}")
-            self.add_or_update_jetton_wallet(
-                wallet.owner.address.to_raw(), int(wallet.balance), rating
-            )
-            self.link_user_jetton_wallet(wallet.owner.address.to_raw())
+    def turn_visibility_on(self, user_id: int) -> None:
+        self.db_session.query(UserWallet).filter(
+            UserWallet.user_id == user_id,
+        ).update({"hide_wallet": False})
         self.db_session.commit()
 
-    def _add_nft_wallet(
-        self, item_address: str, owner_address: str, collection_address: str
-    ) -> None:
-        new_wallet = NftWallet(
-            item_address=item_address,
+    def turn_visibility_off(self, user_id: int) -> None:
+        self.db_session.query(UserWallet).filter(
+            UserWallet.user_id == user_id,
+        ).update({"hide_wallet": True})
+        self.db_session.commit()
+
+
+class JettonWalletService(BaseService):
+    def _create(
+        self, jetton_balance: JettonBalance, owner_address: str
+    ) -> JettonWallet:
+        jetton_wallet = JettonWallet(
+            address=jetton_balance.wallet_address.address.to_raw(),
+            jetton_master_address=jetton_balance.jetton.address.to_raw(),
             owner_address=owner_address,
-            collection_address=collection_address,
+            balance=int(jetton_balance.balance),
         )
-        self.db_session.add(new_wallet)
-        logger.debug(f"Added NFT wallet {item_address}")
+        self.db_session.add(jetton_wallet)
+        logger.debug(f"Jetton Wallet {jetton_wallet.address!r} created.")
+        return jetton_wallet
 
-    def get_nft_wallet(self, item_address: str) -> NftWallet:
+    def _update(
+        self, jetton_wallet: JettonWallet, jetton_balance: JettonBalance
+    ) -> JettonWallet:
+        jetton_wallet.balance = int(jetton_balance.balance)
+        self.db_session.add(jetton_wallet)
+        logger.debug(f"Jetton Wallet {jetton_wallet.address!r} updated.")
+        return jetton_wallet
+
+    def get(self, address: str) -> JettonWallet:
         return (
-            self.db_session.query(NftWallet)
-            .filter(NftWallet.item_address == item_address)
+            self.db_session.query(JettonWallet)
+            .filter(JettonWallet.address == address)
             .one()
         )
 
-    def _update_nft_wallet(
-        self, item_address: str, owner_address: str, collection_address: str
-    ) -> None:
-        wallet = self.get_nft_wallet(item_address)
-        if (
-            wallet.owner_address == owner_address
-            and wallet.collection_address == collection_address
-        ):
-            logger.debug(f"NFT wallet {item_address} has not changed")
-            return
-        wallet.owner_address = owner_address
-        wallet.collection_address = collection_address
-        self.db_session.add(wallet)
-        logger.debug(f"Updated NFT wallet {item_address}")
-
-    def nft_wallet_exists(self, item_address: str) -> bool:
+    def get_by_owner_address(
+        self, owner_address: str, jetton_master_address: str
+    ) -> JettonWallet:
         return (
-            self.db_session.query(NftWallet)
-            .filter(NftWallet.item_address == item_address)
-            .count()
-            > 0
+            self.db_session.query(JettonWallet)
+            .filter(JettonWallet.owner_address == owner_address)
+            .filter(JettonWallet.jetton_master_address == jetton_master_address)
+            .one()
         )
 
-    def bulk_update_nft_wallets(self, nft_items: NftItems) -> None:
-        for item in nft_items.nft_items:
-            if not self.nft_wallet_exists(item.address.to_raw()):
-                self._add_nft_wallet(
-                    item_address=item.address.to_raw(),
-                    owner_address=item.owner.address.to_raw(),
-                    collection_address=item.collection.address.to_raw(),
-                )
-            else:
-                self._update_nft_wallet(
-                    item_address=item.address.to_raw(),
-                    owner_address=item.owner.address.to_raw(),
-                    collection_address=item.collection.address.to_raw(),
-                )
-        self.db_session.commit()
-
-    def is_nft_holder(self, owner_address: str, collection_address: str) -> bool:
+    def get_all(self, owner_address: str) -> list[JettonWallet]:
         return (
-            self.db_session.query(NftWallet)
-            .filter(
-                NftWallet.owner_address == owner_address,
-                NftWallet.collection_address == collection_address,
+            self.db_session.query(JettonWallet)
+            .filter(JettonWallet.owner_address == owner_address)
+            .all()
+        )
+
+    def _create_or_update(
+        self, jetton_balance: JettonBalance, owner_address: str
+    ) -> JettonWallet:
+        try:
+            jetton_wallet = self.get(jetton_balance.wallet_address.address.to_raw())
+            return self._update(
+                jetton_wallet=jetton_wallet, jetton_balance=jetton_balance
             )
-            .count()
-            > 0
-        )
+        except NoResultFound:
+            logger.debug(
+                f"No Jetton Wallet for address {jetton_balance.wallet_address.address!r} found. Creating new Jetton Wallet."
+            )
+            return self._create(jetton_balance, owner_address)
 
-    def hide_user_wallet(self, user_id: int) -> bool:
-        user_wallet: type[UserWallet] = (
-            self.db_session.query(UserWallet)
-            .filter(UserWallet.user_id == user_id)
-            .one()
-        )
-        user_wallet.hide_wallet = True
-        self.db_session.add(user_wallet)
-        self.db_session.commit()
-        return True
+    def bulk_create_or_update(
+        self,
+        jettons_balances: JettonsBalances,
+        whitelisted_jettons: list[Jetton],
+        owner_address: str,
+    ) -> list[JettonWallet]:
+        """
+        Create or update Jetton Wallets for the given JettonsBalances
 
-    def show_user_wallet(self, user_id: int) -> bool:
-        user_wallet: type[UserWallet] = (
-            self.db_session.query(UserWallet)
-            .filter(UserWallet.user_id == user_id)
-            .one()
-        )
-        user_wallet.hide_wallet = False
-        self.db_session.add(user_wallet)
+        :param jettons_balances: list of JettonBalances
+        :param whitelisted_jettons: jettons that should be refreshed
+        :param owner_address: address of the wallet owner
+        :return: list of created or updated Jetton Wallets
+        """
+        whitelist_addresses = [jetton.address for jetton in whitelisted_jettons]
+
+        jetton_wallets = []
+        for jetton_balance in jettons_balances.balances:
+            if jetton_balance.jetton.address.to_raw() not in whitelist_addresses:
+                continue
+            jetton_wallet = self._create_or_update(
+                jetton_balance, owner_address=owner_address
+            )
+            jetton_wallets.append(jetton_wallet)
         self.db_session.commit()
-        return True
+        logger.debug(
+            "Created/updated %s Jetton Wallets for user %s",
+            len(jetton_wallets),
+            owner_address,
+        )
+        return jetton_wallets

@@ -1,63 +1,56 @@
-import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from core.constants import STATIC_PATH
 
 
-DEFAULT_API_BASE_URL = "https://api.telegram.org/bot"
+class CoreSettings(BaseSettings):
+    redis_host: str
+    redis_port: int
+    redis_db: int
+    redis_transaction_db: int
+    redis_username: str | None = None
+    redis_password: str | None = None
+    redis_transaction_stream_name: str
 
+    @property
+    def broker_url(self):
+        return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
-class Config:
-    REDIS_HOST = os.getenv("REDIS_HOST")
-    REDIS_PORT = os.getenv("REDIS_PORT")
-    REDIS_QUEUE_NAME = os.getenv("REDIS_QUEUE_NAME")
+    mysql_host: str
+    mysql_port: int
+    mysql_database: str
+    mysql_user: str
+    mysql_password: str
+    mysql_root_password: str
 
-    MYSQL_HOST = os.getenv("MYSQL_HOST")
-    MYSQL_PORT = os.getenv("MYSQL_PORT")
-    MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
-    MYSQL_USER = os.getenv("MYSQL_USER")
-    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
-    MYSQL_ROOT_PASSWORD = os.getenv("MYSQL_ROOT_PASSWORD")
+    @property
+    def db_connection_string(self):
+        return f"mysql+mysqlconnector://{self.mysql_user}:{self.mysql_password}@{self.mysql_host}:{self.mysql_port}/{self.mysql_database}"
 
-    MYSQL_CONNECTION_STRING = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
+    telegram_bot_token: str
+    telegram_app_id: int
+    telegram_app_hash: str
 
-    TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-    TELEGRAM_API_BASE_URL = os.getenv("TELEGRAM_API_BASE_URL", DEFAULT_API_BASE_URL)
-    TELEGRAM_APP_ID = os.getenv("TELEGRAM_APP_ID")
-    TELEGRAM_APP_HASH = os.getenv("TELEGRAM_APP_HASH")
+    default_language: str = "en"
 
-    WEBHOOK_URL = os.getenv("WEBHOOK_URL")
-    WEBHOOK_SECRET_KEY = os.getenv("WEBHOOK_SECRET_KEY")
-    WEBHOOK_HOST = os.getenv("WEBHOOK_HOST", "0.0.0.0")
-    WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT") or 433)
+    tc_manifest_url: str
 
-    SSL_CERT_PATH = os.getenv("SSL_CERT_PATH")
-    SSL_KEY_PATH = os.getenv("SSL_KEY_PATH")
-
-    broker_url = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
-
-    ADMIN_IDS = [
-        int(admin_id) for admin_id in os.getenv("ADMIN_IDS", "").split(",") if admin_id
-    ]
-
-    DEVELOPER_CHAT_ID = os.getenv("DEVELOPER_CHAT_ID")
-    DEFAULT_LANGUAGE = "en"
-    LANGUAGES = ["en"]
-
-    LIGHT_MODE = bool(os.getenv("LIGHT_MODE") or 0)
-    ENABLE_CALLBACK_REPLIES = bool(os.getenv("ENABLE_CALLBACK_REPLIES") or 0)
-    IS_ACTIVE = bool(os.getenv("IS_ACTIVE") or 0)
-
-    DEFAULT_QUEUE_BATCH_PROCESS_LIMIT = int(
-        os.getenv("DEFAULT_QUEUE_BATCH_PROCESS_LIMIT") or 60
+    model_config = SettingsConfigDict(
+        case_sensitive=False,
+        validate_default=True,
     )
-    CONCURRENT_UPDATES = int(os.getenv("CONCURRENT_UPDATES") or 256)
 
-    TON_API_KEY = os.getenv("TON_API_KEY")
-    TARGET_JETTON_MASTER = os.getenv("TARGET_JETTON_MASTER")
-    TARGET_NFT_COLLECTION_ADDRESS = os.getenv("TARGET_NFT_COLLECTION_ADDRESS")
-    WHALE_RATING_THRESHOLD = int(os.getenv("WHALE_RATING_THRESHOLD") or 90)
-    WHALE_BALANCE_THRESHOLD = int(os.getenv("WHALE_BALANCE_THRESHOLD") or 1_000_000)
-    CLUB_BALANCE_THRESHOLD = int(os.getenv("CLUB_BALANCE_THRESHOLD") or 888_888)
+    _blacklisted_wallets: list[str] | None = None
 
-    TC_MANIFEST_URL = os.getenv(
-        "TC_MANIFEST_URL",
-    )
-    TARGET_COMMON_CHAT_ID = os.getenv("TARGET_COMMON_CHAT_ID")
+    @property
+    def blacklisted_wallets(self):
+        if self._blacklisted_wallets is not None:
+            return self._blacklisted_wallets
+
+        with open(STATIC_PATH / "blacklisted_wallets.txt") as f:
+            self._blacklisted_wallets = f.read().splitlines()
+
+        return self._blacklisted_wallets
+
+
+core_settings = CoreSettings()

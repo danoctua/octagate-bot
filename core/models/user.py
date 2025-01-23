@@ -1,10 +1,8 @@
-import datetime
-
-from sqlalchemy import Integer, String, DateTime, Boolean, BigInteger, ForeignKey
+from sqlalchemy import Integer, String, DateTime, Boolean, BigInteger, func
 from sqlalchemy.orm import mapped_column, relationship
 
 from core.db import Base
-from core.settings import Config
+from core.settings import core_settings
 
 
 class User(Base):
@@ -17,12 +15,13 @@ class User(Base):
     first_name = mapped_column(String(255), nullable=False)
     last_name = mapped_column(String(255), nullable=True)
     language = mapped_column(
-        String(10), nullable=False, default=Config.DEFAULT_LANGUAGE
+        String(10), nullable=False, default=core_settings.default_language
     )
     is_blocked = mapped_column(Boolean, nullable=False, default=False)
+    is_admin = mapped_column(Boolean, nullable=False, default=False)
 
     created_at = mapped_column(
-        DateTime(timezone=True), default=datetime.datetime.utcnow
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
     wallet = relationship(
@@ -32,40 +31,7 @@ class User(Base):
         lazy="joined",
         primaryjoin="User.id == UserWallet.user_id",
     )
-    chat_user = relationship(
-        "ChatUser",
-        uselist=False,
-        backref="user",
-        lazy="joined",
-        primaryjoin="User.id == ChatUser.user_id",
-    )
 
     @property
     def full_name(self) -> str:
         return " ".join(filter(lambda x: x, [self.first_name, self.last_name]))
-
-    def is_eligible_club_member(self, is_nft_holder: bool) -> bool:
-        return is_nft_holder or (
-            self.wallet
-            and self.wallet.jetton_wallet
-            and self.wallet.jetton_wallet.is_eligible_to_join_club
-        )
-
-
-class ChatUser(Base):
-    __tablename__ = "chat_user"
-
-    user_id = mapped_column(ForeignKey("user.id"), primary_key=True)
-    invite_link = mapped_column(String(255), nullable=False)
-    invite_link_expiry = mapped_column(DateTime(timezone=True), nullable=False)
-    invite_link_activated = mapped_column(Boolean, default=False, nullable=False)
-    created_at = mapped_column(
-        DateTime(timezone=True), default=datetime.datetime.utcnow
-    )
-
-    @property
-    def is_invite_link_expired(self) -> bool:
-        return (
-            self.invite_link_activated
-            or self.invite_link_expiry < datetime.datetime.utcnow()
-        )
