@@ -131,7 +131,8 @@ async def connect_wallet_handler(
                             wallet_address=connector.account.address,
                         )
                     except UserWalletExistError:
-                        await connector.disconnect()
+                        if connector.connected:
+                            await connector.disconnect()
                         await context.bot.send_message(
                             chat_id=update.effective_chat.id,
                             text="Wallet is already connected to another account!",

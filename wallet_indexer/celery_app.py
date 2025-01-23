@@ -1,3 +1,5 @@
+import os
+
 from celery import Celery, signals
 
 from core.constants import CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME
@@ -17,11 +19,12 @@ def create_app() -> Celery:
     return _app
 
 
-@signals.worker_ready.connect
+@signals.worker_process_init.connect
 def at_start(sender, **kwargs):
-    sender.app.send_task(
-        "load-noticed-wallets", queue=CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME
-    )
+    if os.getenv("LOAD_WALLETS"):
+        sender.app.send_task(
+            "load-noticed-wallets", queue=CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME
+        )
 
 
 app = create_app()

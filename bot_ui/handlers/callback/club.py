@@ -35,7 +35,7 @@ async def join_club_handler(
             )
         )
         telegram_chat_user_service = TelegramChatUserService(db_session)
-        if telegram_chat_user := telegram_chat_user_service.get(
+        if telegram_chat_user := telegram_chat_user_service.find(
             chat_id=bot_ui_settings.target_common_chat_id, user_id=user.id
         ):
             await context.bot.send_message(

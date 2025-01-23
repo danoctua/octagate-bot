@@ -3,7 +3,10 @@ import logging
 from sqlalchemy.orm import Session
 
 from core.actions.base import BaseAction
-from core.constants import DEFAULT_WALLET_TRACK_EXPIRATION
+from core.constants import (
+    DEFAULT_WALLET_TRACK_EXPIRATION,
+    CELERY_WALLET_FETCH_QUEUE_NAME,
+)
 from core.services.chat import TelegramChatUserService
 from core.services.superredis import RedisService
 from core.services.supertelethon import TelethonService
@@ -30,7 +33,11 @@ class WalletAction(BaseAction):
             raise exc
 
         # Run initial wallet data loading
-        task_result = app.send_task("fetch-wallet-details", args=(wallet_address,))
+        task_result = app.send_task(
+            "fetch-wallet-details",
+            args=(wallet_address,),
+            queue=CELERY_WALLET_FETCH_QUEUE_NAME,
+        )
         await wait_for_task(task_result=task_result)
 
         redis_service = RedisService(external=True)

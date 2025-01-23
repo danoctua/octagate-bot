@@ -76,9 +76,8 @@ def fetch_wallet_details(address: str) -> None:
     with DBService().db_session() as db_session:
         nft_service = NftItemService(db_session)
         nft_service.bulk_create_or_update(nft_items, whitelist_collection_addresses)
-        logger.info(f"NFT items for {address!r} fetched.")
 
-    logger.info(f"Details for {address!r} fetched.")
+    logger.info(f"NFT items for {address!r} fetched.")
     redis_service = RedisService()
     redis_service.add_to_set(name=UPDATED_WALLETS_SET_NAME, value=address)
 
