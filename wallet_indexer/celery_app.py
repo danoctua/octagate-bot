@@ -19,7 +19,7 @@ def create_app() -> Celery:
     return _app
 
 
-@signals.worker_process_init.connect
+@signals.worker_ready.connect
 def at_start(sender, **kwargs):
     if os.getenv("LOAD_WALLETS"):
         sender.app.send_task(
