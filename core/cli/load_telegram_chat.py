@@ -7,6 +7,7 @@ from core.services.chat import TelegramChatService, TelegramChatUserService
 from core.services.db import DBService
 from core.services.supertelethon import TelethonService
 from core.services.user import UserService
+from core.settings import core_settings
 
 
 async def load_telegram_chat(chat_id: int) -> None:
@@ -49,7 +50,8 @@ async def load_telegram_chat(chat_id: int) -> None:
                     last_name=participant_user.last_name,
                     username=participant_user.username,
                     is_premium=participant_user.premium or False,
-                    language_code=participant_user.lang_code,
+                    language_code=participant_user.lang_code
+                    or core_settings.default_language,
                 )
             )
             telegram_chat_user_service.create_or_update(
