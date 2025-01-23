@@ -2,6 +2,7 @@ import asyncio
 
 import click
 
+from core.dtos.user import TelegramUserDTO
 from core.services.chat import TelegramChatService, TelegramChatUserService
 from core.services.db import DBService
 from core.services.supertelethon import TelethonService
@@ -41,7 +42,16 @@ async def load_telegram_chat(chat_id: int) -> None:
             if participant_user.bot:
                 continue
 
-            user = user_service.create_or_update(participant_user)
+            user = user_service.create_or_update(
+                TelegramUserDTO(
+                    id=participant_user.id,
+                    first_name=participant_user.first_name,
+                    last_name=participant_user.last_name,
+                    username=participant_user.username,
+                    is_premium=participant_user.premium or False,
+                    language_code=participant_user.lang_code,
+                )
+            )
             telegram_chat_user_service.create_or_update(
                 chat_id=chat_id,
                 user_id=user.id,

@@ -1,8 +1,6 @@
-from typing import Iterable, overload
+from typing import Iterable
 
 from sqlalchemy.exc import NoResultFound
-from telegram import User as TelegramUser
-from telethon.tl.types import User as TelethonUser
 
 from core.dtos.user import TelegramUserDTO
 from core.models.user import User
@@ -68,41 +66,12 @@ class UserService(BaseService):
         self.db_session.commit()
         return user
 
-    @overload
-    def create_or_update(self, telegram_user: TelegramUser) -> User:
-        ...
-
-    @overload
-    def create_or_update(self, telegram_user: TelethonUser) -> User:
-        ...
-
-    def create_or_update(self, telegram_user) -> User:
-        if isinstance(telegram_user, TelethonUser):
-            telegram_user_dto = TelegramUserDTO(
-                id=telegram_user.id,
-                first_name=telegram_user.first_name,
-                last_name=telegram_user.last_name,
-                username=telegram_user.username,
-                is_premium=telegram_user.premium or False,
-                language_code=telegram_user.lang_code,
-            )
-        elif isinstance(telegram_user, TelegramUser):
-            telegram_user_dto = TelegramUserDTO(
-                id=telegram_user.id,
-                first_name=telegram_user.first_name,
-                last_name=telegram_user.last_name,
-                username=telegram_user.username,
-                is_premium=telegram_user.is_premium or False,
-                language_code=telegram_user.language_code,
-            )
-        else:
-            raise ValueError(f"Unsupported user type: {type(telegram_user)}")
-
+    def create_or_update(self, telegram_user: TelegramUserDTO) -> User:
         try:
             user = self.get_by_telegram_id(telegram_user.id)
-            return self.update(user=user, telegram_user=telegram_user_dto)
+            return self.update(user=user, telegram_user=telegram_user)
         except NoResultFound:
-            return self.create(telegram_user_dto)
+            return self.create(telegram_user)
 
     def get_or_create(self, telegram_user: TelegramUserDTO) -> User:
         try:

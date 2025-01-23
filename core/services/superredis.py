@@ -34,6 +34,26 @@ class RedisService:
             pipeline.set(key, value, ex=ex)
         pipeline.execute()
 
+    def add_to_set(self, name: str, value: str) -> None:
+        """
+        Add a value to a set
+        :param name: Name of the set
+        :param value: Value to add
+        :return: None
+        """
+        self.client.sadd(name, value)
+
+    def pop_from_set(
+        self, name: str, count: int | None = None
+    ) -> str | list[str] | None:
+        """
+        Pop a value from a set
+        :param name: Name of the set
+        :param count: Number of values to pop
+        :return: Value popped
+        """
+        return self.client.spop(name, count=count)
+
     def delete(self, key: str) -> str:
         return self.client.delete(key)
 

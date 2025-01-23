@@ -33,8 +33,13 @@ class WalletService(BaseService):
         self.db_session.add(new_wallet)
         self.db_session.commit()
 
-    def get_all(self) -> list[UserWallet]:
-        return self.db_session.query(UserWallet).all()
+    def get_all(self, addresses: list[str] | None = None) -> list[UserWallet]:
+        query = self.db_session.query(UserWallet)
+
+        if addresses:
+            query = query.filter(UserWallet.address.in_(addresses))
+
+        return query.all()
 
     def get_all_wallet_addresses(self) -> Generator[str, None, None]:
         query = self.db_session.query(UserWallet.address).all()

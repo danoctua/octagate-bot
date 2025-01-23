@@ -35,12 +35,12 @@ async def join_club_handler(
             )
         )
         telegram_chat_user_service = TelegramChatUserService(db_session)
-        if telegram_chat_user_service.is_chat_member(
+        if telegram_chat_user := telegram_chat_user_service.get(
             chat_id=bot_ui_settings.target_common_chat_id, user_id=user.id
         ):
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="You are already in the club!",
+                text="You are already in the chat!",
                 reply_markup=MAIN_BUTTON_REPLY_MARKUP,
             )
             await delete_message(
@@ -61,6 +61,7 @@ async def join_club_handler(
                 eligibility_rules=eligibility_rules,
                 user_jettons=user_jettons,
                 user_nft_items=user_nft_items,
+                chat_member=telegram_chat_user,
             )
         ):
             await context.bot.send_message(

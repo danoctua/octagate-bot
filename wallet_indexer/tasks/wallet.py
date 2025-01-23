@@ -4,10 +4,13 @@ import logging
 from pytonapi.schema.jettons import JettonsBalances
 from pytonapi.schema.nft import NftItems
 
-from wallet_indexer.celery_app import (
-    app,
+from core.constants import (
+    UPDATED_WALLETS_SET_NAME,
     CELERY_WALLET_FETCH_QUEUE_NAME,
     CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME,
+)
+from wallet_indexer.celery_app import (
+    app,
 )
 from wallet_indexer.indexers.tonapi import TonApiService
 from core.services.db import DBService
@@ -69,6 +72,10 @@ def fetch_wallet_details(address: str) -> None:
         nft_service = NftItemService(db_session)
         nft_service.bulk_create_or_update(nft_items, whitelist_collection_addresses)
         logger.info(f"NFT items for {address!r} fetched.")
+
+    logger.info(f"Details for {address!r} fetched.")
+    redis_service = RedisService()
+    redis_service.add_to_set(name=UPDATED_WALLETS_SET_NAME, value=address)
 
 
 @app.task(

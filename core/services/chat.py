@@ -101,12 +101,13 @@ class TelegramChatUserService(BaseService):
             .one()
         )
 
-    def get_all(self, user_id: int) -> list[TelegramChatUser]:
-        return (
-            self.db_session.query(TelegramChatUser)
-            .filter(TelegramChatUser.user_id == user_id)
-            .all()
-        )
+    def get_all(self, user_ids: list[int] | None = None) -> list[TelegramChatUser]:
+        query = self.db_session.query(TelegramChatUser)
+
+        if user_ids:
+            query = query.filter(TelegramChatUser.user_id.in_(user_ids))
+
+        return query.all()
 
     def find(self, chat_id: int, user_id: int) -> TelegramChatUser | None:
         try:
@@ -160,6 +161,7 @@ class TelegramChatUserService(BaseService):
         eligibility_rules: TelegramChatEligibilityRulesDTO,
         user_jettons: list[JettonWallet],
         user_nft_items: list[NftItem],
+        chat_member: TelegramChatUser | None = None,
     ) -> TelegramChatEligibilitySummaryDTO:
         """
         The rule is to have all required jetton balance OR all NFT items from the required collections
@@ -167,6 +169,7 @@ class TelegramChatUserService(BaseService):
         :param eligibility_rules: Rules for eligibility to join the chat
         :param user_jettons: Jetton balances of the user
         :param user_nft_items: NFT items of the user
+        :param chat_member: Chat member record
         :return: Summary of eligibility check
         """
         items = []
@@ -215,7 +218,9 @@ class TelegramChatUserService(BaseService):
                 for rule in eligibility_rules.nft_collections
             ]
         )
-        return TelegramChatEligibilitySummaryDTO(items=items)
+        return TelegramChatEligibilitySummaryDTO(
+            items=items, is_admin=bool(chat_member and chat_member.is_admin)
+        )
 
     def is_chat_member(self, chat_id: int, user_id: int) -> bool:
         return (

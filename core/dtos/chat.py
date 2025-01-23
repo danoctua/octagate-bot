@@ -42,12 +42,26 @@ class TelegramChatEligibilityItemDTO(BaseModel):
     def expected_human_friendly(self) -> str:
         return human_friendly_number(self.expected)
 
+    def __repr__(self):
+        return (
+            f"<{self.__class__.__name__} "
+            f"{self.category=} "
+            f"{self.title=} "
+            f"{self.address=} "
+            f"{self.current=} "
+            f"{self.expected=}>"
+        )
+
 
 class TelegramChatEligibilitySummaryDTO(BaseModel):
     items: list[TelegramChatEligibilityItemDTO]
+    is_admin: bool
 
     def __bool__(self):
-        return any(item.is_eligible for item in self.items)
+        return self.is_admin or any(item.is_eligible for item in self.items)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} ({self.items=}) {self.is_admin=}>"
 
 
 class TelegramChatJettonRuleDTO(BaseModel):

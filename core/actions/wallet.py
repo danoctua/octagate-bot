@@ -44,7 +44,7 @@ class WalletAction(BaseAction):
     async def disconnect_wallet(self, telegram_id: int) -> None:
         user = self.user_service.get_by_telegram_id(telegram_id=telegram_id)
         telegram_chat_user_service = TelegramChatUserService(self.db_session)
-        chats = telegram_chat_user_service.get_all(user_id=user.id)
+        chats = telegram_chat_user_service.get_all(user_ids=[user.id])
         user_wallet_address = user.wallet.address
         if not chats:
             logger.debug(

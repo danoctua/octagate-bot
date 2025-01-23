@@ -33,3 +33,12 @@ FROM octagate-base AS wallet-indexer
 
 COPY wallet_indexer/requirements.txt requirements-wallet-indexer.txt
 RUN pip install -r requirements-wallet-indexer.txt
+
+
+# Stage 4: Build the community-manager image
+FROM octagate-base AS community-manager
+
+COPY community_manager/requirements.txt requirements-community-manager.txt
+RUN pip install -r requirements-community-manager.txt
+
+COPY community_manager ./community_manager

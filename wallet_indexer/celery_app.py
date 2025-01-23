@@ -1,11 +1,7 @@
 from celery import Celery, signals
 
+from core.constants import CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME
 from wallet_indexer.settings import wallet_indexer_settings
-
-
-CELERY_WALLET_FETCH_QUEUE_NAME = "wallet-fetch-queue"
-CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME = "noticed-wallets-upload-queue"
-CELERY_SYSTEM_QUEUE_NAME = "system-queue"
 
 
 def create_app() -> Celery:

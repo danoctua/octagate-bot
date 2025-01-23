@@ -63,6 +63,28 @@ services:
       - ./core:/app/core
       - ./wallet_indexer:/app/wallet_indexer
 
+  community-manager:
+    <<: *x-python-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: community-manager
+    env_file:
+      - community_manager/config/.env
+      - core/config/.env
+    command: [
+      "celery",
+      "-A",
+      "community_manager.celery_app:app",
+      "worker",
+      "-Q",
+      "system-queue",
+      "--loglevel=info"
+    ]
+    volumes:
+      - ./community_manager:/app/community_manager
+      - ./core:/app/core
+
   redis:
     image: "redis:7.2.4-alpine"
     ports:

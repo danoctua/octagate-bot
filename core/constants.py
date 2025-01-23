@@ -10,6 +10,12 @@ CUSTOM_TITLE_TEMPLATE = "Whale #{rank}"
 
 DEFAULT_WALLET_TRACK_EXPIRATION = 60 * 60 * 24 * 365 * 10  # 10 years
 
+# ------------------ Redis --------------------
+UPDATED_WALLETS_SET_NAME = "updated_wallets"
+CELERY_WALLET_FETCH_QUEUE_NAME = "wallet-fetch-queue"
+CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME = "noticed-wallets-upload-queue"
+CELERY_SYSTEM_QUEUE_NAME = "system-queue"
+
 # ----------------- Paths ---------------------
 PACKAGE_ROOT = Path(__file__).parent
 PROJECT_ROOT = PACKAGE_ROOT.parent

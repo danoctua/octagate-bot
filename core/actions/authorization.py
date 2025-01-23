@@ -1,10 +1,14 @@
 import logging
+from collections import defaultdict
 
 from sqlalchemy.orm import Session
 
 from core.actions.base import BaseAction
 from core.constants import CUSTOM_TITLE_TEMPLATE
-from core.dtos.chat import TelegramChatEligibilitySummaryDTO
+from core.dtos.chat import (
+    TelegramChatEligibilitySummaryDTO,
+    TelegramChatEligibilityRulesDTO,
+)
 from core.models.chat import TelegramChatJetton, TelegramChatUser
 from core.models.wallet import JettonWallet
 from core.services.chat import TelegramChatUserService, TelegramChatJettonService
@@ -25,7 +29,16 @@ class AuthorizationAction(BaseAction):
     def is_user_eligible_chat_member(
         self, user_id: int, chat_id: int
     ) -> TelegramChatEligibilitySummaryDTO:
+        """
+        Check if user is eligible to be a chat member
+        :param user_id:
+        :param chat_id:
+        :return:
+        """
         user = self.user_service.get(user_id=user_id)
+        telegram_chat_user = self.telegram_chat_user_service.find(
+            chat_id=chat_id, user_id=user.id
+        )
         eligibility_rules = self.telegram_chat_user_service.get_eligibility_rules(
             chat_id=chat_id
         )
@@ -40,9 +53,85 @@ class AuthorizationAction(BaseAction):
                 eligibility_rules=eligibility_rules,
                 user_jettons=user_jettons,
                 user_nft_items=user_nft_items,
+                chat_member=telegram_chat_user,
             )
         )
         return eligibility_summary
+
+    def get_ineligible_chat_members(
+        self,
+        chat_members: list[TelegramChatUser],
+    ) -> list[TelegramChatUser]:
+        """
+        Process list of the current chat members and return the ones that are not eligible to be in the chat
+        :param chat_members: list of chat members
+        :return: list of ineligible chat members
+        """
+        members_per_chat = defaultdict(list)
+        eligibility_rules_per_chat: dict[int, TelegramChatEligibilityRulesDTO] = {}
+        for chat_member in chat_members:
+            members_per_chat[chat_member.chat_id].append(chat_member)
+            eligibility_rules_per_chat[
+                chat_member.chat_id
+            ] = self.telegram_chat_user_service.get_eligibility_rules(
+                chat_id=chat_member.chat_id
+            )
+
+        nft_item_service = NftItemService(self.db_session)
+        jetton_wallet_service = JettonWalletService(self.db_session)
+
+        unique_users = {chat_member.user for chat_member in chat_members}
+
+        nft_items_per_user = defaultdict(list)
+        jetton_wallets_per_user = defaultdict(list)
+
+        for user in unique_users:
+            nft_items_per_user[user] = nft_item_service.get_all(
+                owner_address=user.wallet.address
+            )
+            jetton_wallets_per_user[user] = jetton_wallet_service.get_all(
+                owner_address=user.wallet.address
+            )
+
+        ineligible_members = []
+        for chat, members in members_per_chat.items():
+            for member in members:
+                if not (
+                    eligibility_summary
+                    := self.telegram_chat_user_service.is_user_eligible_chat_member(
+                        eligibility_rules=eligibility_rules_per_chat[chat],
+                        user_jettons=jetton_wallets_per_user[member.user],
+                        user_nft_items=nft_items_per_user[member.user],
+                        chat_member=member,
+                    )
+                ):
+                    logger.debug(
+                        f"User {member.user.telegram_id!r} is not eligible to be in chat {chat!r}."
+                        f"Eligibility summary: {eligibility_summary!r}"
+                    )
+                    ineligible_members.append(member)
+
+        return ineligible_members
+
+    async def kick_ineligible_chat_members(
+        self,
+        chat_members: list[TelegramChatUser],
+    ) -> None:
+        ineligible_members = self.get_ineligible_chat_members(chat_members=chat_members)
+        for member in ineligible_members:
+            telethon_service = TelethonService()
+            await telethon_service.start()
+            await telethon_service.kick_chat_member(
+                chat_id=member.chat_id, telegram_user_id=member.user.telegram_id
+            )
+            self.telegram_chat_user_service.delete(
+                chat_id=member.chat_id, user_id=member.user.id
+            )
+            logger.info(
+                f"User {member.user.telegram_id!r} was kicked from chat {member.chat_id!r}"
+            )
+        else:
+            logger.info("No ineligible chat members found")
 
     @staticmethod
     def get_whale_title(

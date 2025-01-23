@@ -46,6 +46,7 @@ async def connected_wallet_response(
         eligibility_rules=eligibility_rules,
         user_jettons=user_jettons,
         user_nft_items=user_nft_items,
+        chat_member=None,
     )
     is_chat_member = telegram_chat_user_service.is_chat_member(
         chat_id=bot_ui_settings.target_common_chat_id,
