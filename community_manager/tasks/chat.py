@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from community_manager.celery_app import app
+from community_manager.settings import community_manager_settings
 from core.actions.authorization import AuthorizationAction
 from core.constants import CELERY_SYSTEM_QUEUE_NAME, UPDATED_WALLETS_SET_NAME
 from core.services.chat import TelegramChatUserService
@@ -36,7 +37,7 @@ def check_chat_members() -> None:
     redis_service = RedisService()
     wallets = redis_service.pop_from_set(name=UPDATED_WALLETS_SET_NAME, count=100)
 
-    if not wallets:
+    if not wallets and community_manager_settings.enable_manager:
         logger.info("No wallets to check.")
         app.send_task(
             name="check-chat-members",
@@ -48,8 +49,10 @@ def check_chat_members() -> None:
         wallets = [wallets]
 
     asyncio.run(sanity_chat_checks(wallets=wallets))
-    app.send_task(
-        name="check-chat-members",
-        queue=CELERY_SYSTEM_QUEUE_NAME,
-        countdown=60,
-    )
+
+    if community_manager_settings.enable_manager:
+        app.send_task(
+            name="check-chat-members",
+            queue=CELERY_SYSTEM_QUEUE_NAME,
+            countdown=60,
+        )

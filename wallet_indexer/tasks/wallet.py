@@ -18,6 +18,7 @@ from core.services.jetton import JettonService
 from core.services.nft import NftCollectionService, NftItemService
 from core.services.superredis import RedisService
 from core.services.wallet import JettonWalletService
+from wallet_indexer.settings import wallet_indexer_settings
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,10 @@ async def get_all_nfts_per_user(
     queue=CELERY_WALLET_FETCH_QUEUE_NAME,
 )
 def fetch_wallet_details(address: str) -> None:
+    if address in wallet_indexer_settings.blacklisted_wallets:
+        logger.warning(f"Wallet {address!r} is blacklisted.")
+        return
+
     blockchain_service = TonApiService()
 
     jettons_balances: JettonsBalances = asyncio.run(

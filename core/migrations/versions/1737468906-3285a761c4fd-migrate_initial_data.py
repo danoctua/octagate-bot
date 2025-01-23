@@ -18,12 +18,6 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-BANNED_PUBLIC_WALLETS = [
-    "0:779dcc815138d9500e449c5291e7f12738c23d575b5310000f6a253bd607384e",  # stonfi router
-    "0:0000000000000000000000000000000000000000000000000000000000000000",  # burn address
-]
-
-
 def upgrade() -> None:
     op.execute(
         f"""
@@ -39,6 +33,7 @@ def upgrade() -> None:
             INSERT INTO {core_settings.mysql_database}.user_wallet (address, user_id, created_at, updated_at, hide_wallet)
             SELECT address, user_id, created_at, updated_at, hide_wallet
             FROM anon.user_wallet
+            WHERE anon.user_wallet.address NOT IN ({', '.join([f"'{address}'" for address in core_settings.blacklisted_wallets])})
         """
     )
 
@@ -46,5 +41,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute(f"DELETE FROM {core_settings.mysql_database}.user")
     op.execute(f"DELETE FROM {core_settings.mysql_database}.user_wallet")
+    op.execute(f"DELETE FROM {core_settings.mysql_database}.user")

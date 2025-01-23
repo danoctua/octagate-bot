@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from core.constants import STATIC_PATH
+
 
 class CoreSettings(BaseSettings):
     redis_host: str
@@ -37,6 +39,18 @@ class CoreSettings(BaseSettings):
         case_sensitive=False,
         validate_default=True,
     )
+
+    _blacklisted_wallets: list[str] | None = None
+
+    @property
+    def blacklisted_wallets(self):
+        if self._blacklisted_wallets is not None:
+            return self._blacklisted_wallets
+
+        with open(STATIC_PATH / "blacklisted_wallets.txt") as f:
+            self._blacklisted_wallets = f.read().splitlines()
+
+        return self._blacklisted_wallets
 
 
 core_settings = CoreSettings()

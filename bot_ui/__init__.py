@@ -68,9 +68,12 @@ class NotBot:
 bot = NotBot(token=bot_ui_settings.telegram_bot_token)
 
 if __name__ == "__main__":
-    if bot_ui_settings.webhook_url:
-        logger.info("Running webhook")
-        bot.run_webhook()
+    if not bot_ui_settings.is_active:
+        logger.warning("Bot is not enabled")
     else:
-        logger.info("Running polling")
-        bot.start_polling()
+        if bot_ui_settings.webhook_url:
+            logger.info("Running webhook")
+            bot.run_webhook()
+        else:
+            logger.info("Running polling")
+            bot.start_polling()

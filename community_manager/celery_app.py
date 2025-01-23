@@ -19,7 +19,8 @@ def create_app() -> Celery:
 
 @signals.worker_ready.connect
 def at_start(sender, **kwargs):
-    sender.app.send_task("check-chat-members", queue=CELERY_SYSTEM_QUEUE_NAME)
+    if community_manager_settings.enable_manager:
+        sender.app.send_task("check-chat-members", queue=CELERY_SYSTEM_QUEUE_NAME)
 
 
 app = create_app()
