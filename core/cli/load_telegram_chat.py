@@ -46,7 +46,7 @@ async def load_telegram_chat(chat_id: int) -> None:
             user = user_service.create_or_update(
                 TelegramUserDTO(
                     id=participant_user.id,
-                    first_name=participant_user.first_name,
+                    first_name=participant_user.first_name or "",
                     last_name=participant_user.last_name,
                     username=participant_user.username,
                     is_premium=participant_user.premium or False,
