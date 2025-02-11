@@ -23,6 +23,9 @@ class TelethonService:
     async def start(self) -> None:
         await self.client.start(bot_token=core_settings.telegram_bot_token)
 
+    async def stop(self) -> None:
+        await self.client.disconnect()
+
     async def get_chat(self, chat_id: int) -> Channel:
         return await self.client.get_entity(chat_id)
 

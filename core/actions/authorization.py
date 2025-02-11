@@ -118,9 +118,9 @@ class AuthorizationAction(BaseAction):
         chat_members: list[TelegramChatUser],
     ) -> None:
         ineligible_members = self.get_ineligible_chat_members(chat_members=chat_members)
+        telethon_service = TelethonService()
+        await telethon_service.start()
         for member in ineligible_members:
-            telethon_service = TelethonService()
-            await telethon_service.start()
             await telethon_service.kick_chat_member(
                 chat_id=member.chat_id, telegram_user_id=member.user.telegram_id
             )
@@ -132,6 +132,7 @@ class AuthorizationAction(BaseAction):
             )
         else:
             logger.info("No ineligible chat members found")
+        await telethon_service.stop()
 
     @staticmethod
     def get_whale_title(
