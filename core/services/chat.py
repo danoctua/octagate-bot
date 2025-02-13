@@ -80,6 +80,11 @@ class TelegramChatService(BaseService):
         logger.debug(f"Telegram Chat {chat.title!r} invite link updated.")
         return chat
 
+    def get_by_slug(self, slug: str) -> TelegramChat:
+        return (
+            self.db_session.query(TelegramChat).filter(TelegramChat.slug == slug).one()
+        )
+
 
 class TelegramChatUserService(BaseService):
     def create(
