@@ -2,6 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 
 from pytonapi.utils import to_amount
+from slugify import slugify
 from sqlalchemy.exc import NoResultFound
 from telethon.tl.types import Channel
 
@@ -35,6 +36,8 @@ class TelegramChatService(BaseService):
             title=entity.title,
             is_forum=entity.forum,
             logo_path=logo_path,
+            # TODO: handle cases with the same slug
+            slug=slugify(entity.title),
         )
         self.db_session.add(chat)
         self.db_session.commit()
@@ -46,6 +49,7 @@ class TelegramChatService(BaseService):
     ) -> TelegramChat:
         chat.username = entity.username
         chat.title = entity.title
+        chat.slug = slugify(entity.title)
         chat.is_forum = entity.forum
         chat.logo_path = logo_path
         self.db_session.commit()
