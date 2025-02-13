@@ -31,6 +31,7 @@ setup-venv:
 	pip3 install -r core/requirements.txt
 	pip3 install -r bot_ui/requirements.txt
 	pip3 install -r wallet_indexer/requirements.txt
+	pip3 install -r api/requirements.txt
 
 
 include core/config/.env

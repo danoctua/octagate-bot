@@ -42,3 +42,11 @@ COPY community_manager/requirements.txt requirements-community-manager.txt
 RUN pip install -r requirements-community-manager.txt
 
 COPY community_manager ./community_manager
+
+# Stage 5: FastAPI application
+FROM octagate-base AS api
+
+COPY api/requirements.txt requirements-api.txt
+RUN pip install -r requirements-api.txt
+
+COPY api ./api

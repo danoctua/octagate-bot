@@ -2,7 +2,7 @@ import logging
 from collections.abc import Generator
 
 from pytonapi.schema.jettons import JettonBalance, JettonsBalances
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 
 from core.models.blockchain import Jetton
 from core.models.wallet import UserWallet, JettonWallet
@@ -16,22 +16,27 @@ class UserWalletExistError(Exception):
     pass
 
 
+class UserWalletConnectedError(Exception):
+    pass
+
+
 class WalletService(BaseService):
     def connect_user_wallet(self, user_id: int, wallet_address: str) -> None:
         existing_user_wallet = self.get_user_wallet(wallet_address)
         if existing_user_wallet:
-            logger.warning(
-                "User %s is trying to connect already connected wallet %s",
-                user_id,
-                wallet_address,
-            )
             raise UserWalletExistError(
                 f"User {user_id} is trying to connect already connected wallet {wallet_address}"
             )
 
-        new_wallet = UserWallet(user_id=user_id, address=wallet_address)
-        self.db_session.add(new_wallet)
-        self.db_session.commit()
+        try:
+            new_wallet = UserWallet(user_id=user_id, address=wallet_address)
+            self.db_session.add(new_wallet)
+            self.db_session.commit()
+        except IntegrityError:
+            self.db_session.rollback()
+            raise UserWalletConnectedError(
+                f"User {user_id} already has a connected wallet {wallet_address}"
+            )
 
     def get_all(self, addresses: list[str] | None = None) -> list[UserWallet]:
         query = self.db_session.query(UserWallet)

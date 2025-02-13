@@ -2,10 +2,11 @@ import logging
 from typing import AsyncGenerator
 
 from telethon import TelegramClient
+from telethon.sessions import MemorySession
 from telethon.tl.functions.messages import ExportChatInviteRequest
 from telethon.tl.types import User as TelethonUser, Channel, ChatInviteExported
 
-from core.constants import TELETHON_SESSION_PATH, CHAT_LOGO_PATH, DEFAULT_CHAT_LOGO_PATH
+from core.constants import CHAT_LOGO_PATH, DEFAULT_CHAT_LOGO_PATH
 from core.settings import core_settings
 
 
@@ -14,8 +15,9 @@ logger = logging.getLogger(__name__)
 
 class TelethonService:
     def __init__(self):
+        session = MemorySession()
         self.client = TelegramClient(
-            TELETHON_SESSION_PATH,
+            session,
             core_settings.telegram_app_id,
             core_settings.telegram_app_hash,
         )

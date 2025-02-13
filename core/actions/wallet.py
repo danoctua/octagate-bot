@@ -9,8 +9,11 @@ from core.constants import (
 )
 from core.services.chat import TelegramChatUserService
 from core.services.superredis import RedisService
-from core.services.supertelethon import TelethonService
-from core.services.wallet import WalletService, UserWalletExistError
+from core.services.wallet import (
+    WalletService,
+    UserWalletExistError,
+    UserWalletConnectedError,
+)
 from wallet_indexer.celery_app import app
 from core.utils.task import wait_for_task
 
@@ -29,6 +32,10 @@ class WalletAction(BaseAction):
                 wallet_address=wallet_address,
             )
         except UserWalletExistError as exc:
+            logger.error(str(exc))
+            raise exc
+
+        except UserWalletConnectedError as exc:
             logger.error(str(exc))
             raise exc
 
@@ -58,14 +65,15 @@ class WalletAction(BaseAction):
                 f"User {user.telegram_id!r} is not a member of any chat and won't be kicked"
             )
         else:
-            telethon_service = TelethonService()
-            await telethon_service.start()
-            for chat in chats:
-                await telethon_service.kick_chat_member(
-                    chat_id=chat.chat_id,
-                    telegram_user_id=user.telegram_id,
-                )
-                telegram_chat_user_service.delete(chat_id=chat.chat_id, user_id=user.id)
+            pass
+            # telethon_service = TelethonService()
+            # await telethon_service.start()
+            # for chat in chats:
+            #     await telethon_service.kick_chat_member(
+            #         chat_id=chat.chat_id,
+            #         telegram_user_id=user.telegram_id,
+            #     )
+            #     telegram_chat_user_service.delete(chat_id=chat.chat_id, user_id=user.id)
         logger.info(
             f"User {user.id!r} is disconnecting the wallet and was kicked from the group"
         )

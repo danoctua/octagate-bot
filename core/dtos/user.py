@@ -8,3 +8,4 @@ class TelegramUserDTO(BaseModel):
     username: str | None = None
     is_premium: bool
     language_code: str
+    photo_url: str | None = None

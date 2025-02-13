@@ -62,6 +62,7 @@ class UserService(BaseService):
         user.last_name = telegram_user.last_name
         user.username = telegram_user.username
         user.is_premium = bool(telegram_user.is_premium)
+        # TODO add photo_url
         self.db_session.add(user)
         self.db_session.commit()
         return user
