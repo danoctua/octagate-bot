@@ -58,6 +58,8 @@ async def update_wallet_address(
 
         wallet_action = WalletAction(db_session)
 
+        db_session.refresh(user)
+
         try:
             await wallet_action.connect_wallet(
                 user_id=user.id, wallet_address=wallet_details.wallet_address

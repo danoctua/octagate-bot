@@ -11,7 +11,7 @@ export interface IUser {
   walletAddress: string | null;
 }
 
-export function useAuthAndFetchUser(): [IUser | undefined, (user: IUser | undefined) => void] {
+export const useAuthAndFetchUser = (): [IUser | undefined, (user: IUser | undefined) => void] => {
   const [user, setUser] = useState<IUser | undefined>(undefined);
 
   useClientOnce(() => {
@@ -19,13 +19,17 @@ export function useAuthAndFetchUser(): [IUser | undefined, (user: IUser | undefi
       try {
         await authenticateUser();
         const response = await apiClient.get("/users/me");
-        setUser(response.data);
+        return response.data
       } catch (error) {
         console.error("Failed to fetch user", error);
       }
     };
 
-    fetchUser().then();
+    if (user) { return; }
+
+    console.log("Fetching user", user);
+
+    fetchUser().then(data => setUser(data));
   });
 
   return [user, setUser];

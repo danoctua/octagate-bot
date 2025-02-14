@@ -193,7 +193,7 @@ class TelegramChatUserService(BaseService):
                     category=EligibilityCheckType.JETTON,
                     expected=to_amount(rule.threshold),
                     title=rule.jetton.name,
-                    address_raw=rule.jetton.address,
+                    address_raw=rule.jetton_address,
                     current=(
                         to_amount(user_jetton_wallet.balance)
                         if (
@@ -214,7 +214,7 @@ class TelegramChatUserService(BaseService):
                     category=EligibilityCheckType.NFT_COLLECTION,
                     expected=1,
                     title=rule.nft_collection.name,
-                    address_raw=rule.nft_collection.address,
+                    address_raw=rule.collection_address,
                     current=(
                         len(
                             [

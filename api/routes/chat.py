@@ -1,20 +1,20 @@
 import logging
 
-from fastapi import APIRouter
-from pytonapi.utils import raw_to_userfriendly, to_amount
+from fastapi import APIRouter, Depends
 from sqlalchemy.exc import NoResultFound
 
+from api.deps import validate_access_token
 from api.pos.chat import (
     TelegramChatWithRulesFDO,
     TelegramChatFDO,
     TelegramChatEligibilityRuleFDO,
-    PROMOTE_JETTON_TEMPLATE,
-    PROMOTE_NFT_COLLECTION_TEMPLATE,
 )
-from core.dtos.chat import EligibilityCheckType
+from core.dtos.chat import TelegramChatEligibilitySummaryDTO
 from core.services.chat import TelegramChatService, TelegramChatUserService
 from core.services.db import DBService
-
+from core.services.nft import NftItemService
+from core.services.user import UserService
+from core.services.wallet import JettonWalletService
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,10 @@ chat_router = APIRouter(prefix="/chats")
 
 
 @chat_router.get("/{slug}")
-async def get_chat(slug: str) -> TelegramChatWithRulesFDO:
+async def get_chat(
+    slug: str,
+    user_id: int = Depends(validate_access_token),
+) -> TelegramChatWithRulesFDO:
     with DBService().db_session() as db_session:
         chat_service = TelegramChatService(db_session)
         try:
@@ -35,6 +38,33 @@ async def get_chat(slug: str) -> TelegramChatWithRulesFDO:
             chat_id=chat.id
         )
 
+        user_service = UserService(db_session)
+        user = user_service.get(user_id)
+
+        if user.wallet:
+            nft_item_service = NftItemService(db_session)
+            user_nft_items = nft_item_service.get_all(owner_address=user.wallet.address)
+            jetton_wallet_service = JettonWalletService(db_session)
+            user_jettons = jetton_wallet_service.get_all(
+                owner_address=user.wallet.address
+            )
+        else:
+            user_nft_items = []
+            user_jettons = []
+
+        eligibility_summary: TelegramChatEligibilitySummaryDTO = (
+            telegram_chat_user_service.is_user_eligible_chat_member(
+                eligibility_rules=eligibility_rules,
+                user_jettons=user_jettons,
+                user_nft_items=user_nft_items,
+                chat_member=None,
+            )
+        )
+        is_chat_member = telegram_chat_user_service.is_chat_member(
+            chat_id=chat.id,
+            user_id=user.id,
+        )
+
         return TelegramChatWithRulesFDO(
             chat=TelegramChatFDO(
                 id=chat.id,
@@ -43,35 +73,19 @@ async def get_chat(slug: str) -> TelegramChatWithRulesFDO:
                 slug=chat.slug,
                 is_forum=chat.is_forum,
                 logo_path=chat.logo_path,
+                join_url=chat.invite_link if bool(eligibility_summary) else None,
+                is_member=is_chat_member,
             ),
             rules=[
-                *[
-                    TelegramChatEligibilityRuleFDO(
-                        category=EligibilityCheckType.JETTON,
-                        title=f"HOLD {rule.jetton.name}",
-                        promote_url=PROMOTE_JETTON_TEMPLATE.format(
-                            jetton_master_address=raw_to_userfriendly(
-                                rule.jetton_address
-                            )
-                        ),
-                        expected=to_amount(rule.threshold),
-                        photo_url=rule.jetton.logo_path,
-                    )
-                    for rule in eligibility_rules.jettons
-                ],
-                *[
-                    TelegramChatEligibilityRuleFDO(
-                        category=EligibilityCheckType.NFT_COLLECTION,
-                        title=f"HOLD {rule.nft_collection.name}",
-                        promote_url=PROMOTE_NFT_COLLECTION_TEMPLATE.format(
-                            collection_address=raw_to_userfriendly(
-                                rule.collection_address
-                            )
-                        ),
-                        expected=1,
-                        photo_url=rule.nft_collection.logo_path,
-                    )
-                    for rule in eligibility_rules.nft_collections
-                ],
+                TelegramChatEligibilityRuleFDO(
+                    category=rule.category,
+                    title=f"HOLD {rule.title}",
+                    expected=rule.expected,
+                    actual=rule.current,
+                    is_eligible=rule.is_eligible,
+                    photo_url=None,
+                    blockchain_address=rule.address,
+                )
+                for rule in eligibility_summary.items
             ],
         )
