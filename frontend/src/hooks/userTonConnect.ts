@@ -1,5 +1,6 @@
 import {TonConnectButton, useTonConnectUI } from "@tonconnect/ui-react";
 import {useClientOnce} from "@/hooks/useClientOnce";
+import {useCallback} from "react";
 
 
 const useTonConnect = () => {
@@ -14,7 +15,17 @@ const useTonConnect = () => {
 
     });
 
-    return { tonConnectUI, TonConnectButton };
+    const disconnectWallet = useCallback(async () => {
+        if (tonConnectUI.wallet) {
+            await tonConnectUI.disconnect();
+        }
+    }, [tonConnectUI])
+
+    const connectWallet = useCallback(async () => {
+        await tonConnectUI.openModal();
+    }, [tonConnectUI])
+
+    return { tonConnectUI, TonConnectButton, disconnectWallet, connectWallet };
 }
 
 export default useTonConnect;
