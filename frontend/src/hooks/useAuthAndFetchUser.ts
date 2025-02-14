@@ -8,7 +8,7 @@ export interface IUser {
   lastName: string;
   username: string;
   photoUrl: string;
-  walletAddress: string;
+  walletAddress: string | null;
 }
 
 export function useAuthAndFetchUser(): [IUser | undefined, (user: IUser | undefined) => void] {

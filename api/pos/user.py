@@ -23,7 +23,7 @@ class UserFDO(BaseModel):
     is_premium: bool = False
     language_code: str
     photo_url: str | None = None
-    wallet_address: str | None = None
+    wallet_address: str | None
 
     model_config = ConfigDict(
         alias_generator=to_camel,

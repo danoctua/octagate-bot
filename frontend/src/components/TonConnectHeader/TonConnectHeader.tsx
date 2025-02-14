@@ -7,6 +7,7 @@ import useTonConnect from "@/hooks/userTonConnect";
 import {useAuthAndFetchUser} from "@/hooks/useAuthAndFetchUser";
 import apiClient from "@/utils/apiClient";
 
+
 export const TonConnectHeader: FC = () => {
 
     const {tonConnectUI} = useTonConnect();
@@ -53,12 +54,18 @@ export const TonConnectHeader: FC = () => {
         };
     }, [tonConnectUI])
 
+    const parsedWalletAddress = user?.walletAddress ?
+        Address.parse(user?.walletAddress).toString({bounceable: false}):
+        null
+
+    const shortenWalletAddress = parsedWalletAddress ? `${parsedWalletAddress.slice(0, 4)}...${parsedWalletAddress.slice(-4)}` : null
+
     return (
         <div style={{display: 'flex', justifyContent: 'flex-end', padding: '20px'}}>
             {
                 user?.walletAddress ?
                     <div style={{display: 'flex', alignItems: 'center'}}>
-                        <div style={{marginRight: '10px'}}>{Address.parse(user.walletAddress).toString({bounceable: false})}</div>
+                        <div style={{marginRight: '10px'}}>{shortenWalletAddress}</div>
                         <button onClick={disconnectWallet}>Disconnect wallet</button>
                     </div>
                     : <div style={{display: 'flex', alignItems: 'center'}}>

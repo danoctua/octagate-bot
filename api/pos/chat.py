@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 from core.dtos.chat import EligibilityCheckType
 from core.utils.number import human_friendly_number
@@ -18,6 +19,11 @@ class TelegramChatFDO(BaseModel):
     is_forum: bool
     logo_path: str | None
 
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
 
 class TelegramChatEligibilityRuleFDO(BaseModel):
     category: EligibilityCheckType
@@ -29,6 +35,11 @@ class TelegramChatEligibilityRuleFDO(BaseModel):
     @property
     def expected_human_friendly(self) -> str:
         return human_friendly_number(self.expected)
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
 
 class TelegramChatWithRulesFDO(BaseModel):

@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import APIRouter
-from pytonapi.utils import raw_to_userfriendly
+from pytonapi.utils import raw_to_userfriendly, to_amount
 from sqlalchemy.exc import NoResultFound
 
 from api.pos.chat import (
@@ -54,7 +54,7 @@ async def get_chat(slug: str) -> TelegramChatWithRulesFDO:
                                 rule.jetton_address
                             )
                         ),
-                        expected=rule.threshold,
+                        expected=to_amount(rule.threshold),
                         photo_url=rule.jetton.logo_path,
                     )
                     for rule in eligibility_rules.jettons
