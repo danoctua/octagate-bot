@@ -20,9 +20,6 @@ CELERY_SYSTEM_QUEUE_NAME = "system-queue"
 PACKAGE_ROOT = Path(__file__).parent
 PROJECT_ROOT = PACKAGE_ROOT.parent
 
-# ---------------- Telethon --------------------
-TELETHON_SESSION_PATH = PACKAGE_ROOT / "octagate.session"
-
 # ---------------- Static files ----------------
 STATIC_PATH = PACKAGE_ROOT / "static"
 DEFAULTS_PATH = STATIC_PATH / "defaults"

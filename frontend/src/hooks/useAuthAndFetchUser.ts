@@ -11,7 +11,7 @@ export interface IUser {
   walletAddress: string | null;
 }
 
-export const useAuthAndFetchUser = (): [IUser | undefined, (user: IUser | undefined) => void] => {
+const useAuthAndFetchUser = (): [IUser | undefined, (user: IUser | undefined) => void] => {
   const [user, setUser] = useState<IUser | undefined>(undefined);
 
   useClientOnce(() => {
@@ -34,3 +34,5 @@ export const useAuthAndFetchUser = (): [IUser | undefined, (user: IUser | undefi
 
   return [user, setUser];
 }
+
+export default useAuthAndFetchUser;

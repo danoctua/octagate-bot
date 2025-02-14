@@ -33,5 +33,18 @@ setup-venv:
 	pip3 install -r wallet_indexer/requirements.txt
 	pip3 install -r api/requirements.txt
 
+generate-local-certs:
+	# Wait for confirmation from user to generate new certificates
+	@echo "This will generate new local certificates, are you sure you want to continue? [y/N] "; \
+	read REPLY; \
+	if [ "$$REPLY" != "y" ] && [ "$$REPLY" != "Y" ]; then \
+		exit 1; \
+	fi
+	# Remove existing certificates or ignore if they don't exist
+	rm -r certs || true
+
+	mkdir certs
+	mkcert -cert-file certs/local-cert.pem -key-file certs/local-key.pem "localhost"
+
 
 include core/config/.env

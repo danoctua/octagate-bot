@@ -6,7 +6,7 @@ import {Button, Cell} from "@telegram-apps/telegram-ui";
 import {Check, Wallet} from "lucide-react";
 
 
-export const TonConnectItem: FC<PropsWithChildren<{ walletAddress: string | null, disconnectWallet: () => void, connectWallet: () => void }>> = ({ walletAddress, disconnectWallet, connectWallet, children }) => {
+const TonConnectItem: FC<PropsWithChildren<{ walletAddress: string | null, disconnectWallet: () => void, connectWallet: () => void }>> = ({ walletAddress, disconnectWallet, connectWallet, children }) => {
 
     const shortenWalletAddress = walletAddress ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}` : null
 
@@ -32,3 +32,5 @@ export const TonConnectItem: FC<PropsWithChildren<{ walletAddress: string | null
         </Cell>
     );
 };
+
+export default TonConnectItem;

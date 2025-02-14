@@ -7,7 +7,7 @@ from api.routes.user import user_router
 
 
 def create_app() -> FastAPI:
-    _app = FastAPI()
+    _app = FastAPI(root_path="/api")
     _app.include_router(user_router)
     _app.include_router(auth_router)
     _app.include_router(chat_router)

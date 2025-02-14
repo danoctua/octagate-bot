@@ -15,7 +15,7 @@ services:
     <<: *x-python-service
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: backend.Dockerfile
       target: telegram-bot
     env_file:
       - bot_ui/config/.env
@@ -44,7 +44,7 @@ services:
     <<: *x-python-service
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: backend.Dockerfile
       target: wallet-indexer
     image: wallet-indexer
     env_file:
@@ -93,7 +93,7 @@ services:
     <<: *x-python-service
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: backend.Dockerfile
       target: community-manager
     env_file:
       - community_manager/config/.env
@@ -115,11 +115,12 @@ services:
     <<: *x-python-service
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: backend.Dockerfile
       target: api
     env_file:
       - api/config/.env
       - core/config/.env
+    container_name: "octagate-api"
     volumes:
       - ./api:/app/api
       - ./core:/app/core
@@ -131,6 +132,7 @@ services:
       - "6380:6379"
     volumes:
       - volume-queue:/data
+    container_name: "octagate-redis"
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
@@ -147,11 +149,26 @@ services:
       - core/config/.env
     volumes:
       - volume-data:/var/lib/mysql
+    container_name: "octagate-mysql"
     healthcheck:
       test: [ "CMD-SHELL", "mysqladmin ping -hlocalhost -uroot -p${MYSQL_ROOT_PASSWORD}" ]
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - internal
+
+  frontend:
+    image: "octagate-frontend"
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+      target: development
+    container_name: "octagate-frontend"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/package.json:/app/package.json
     networks:
       - internal
 
@@ -167,6 +184,7 @@ services:
       - internal
     depends_on:
       - api
+      - frontend
 
 volumes:
   volume-data:

@@ -4,28 +4,27 @@ import {
     Avatar,
     AvatarStack,
     Cell,
+    Headline,
     IconButton,
     List,
     Section
 } from '@telegram-apps/telegram-ui';
-import {useTranslations} from 'next-intl';
 
 import {Page} from '@/components/Page';
 
-import {TonConnectItem} from "@/components/TonConnectItem/TonConnectItem";
-import {IUser, useAuthAndFetchUser} from "@/hooks/useAuthAndFetchUser";
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import TonConnectItem from "@/components/TonConnectItem/TonConnectItem";
+import useAuthAndFetchUser from "@/hooks/useAuthAndFetchUser";
+import React, {useCallback, useEffect, useMemo} from 'react';
 import apiClient from "@/utils/apiClient";
 import {mainButton, openLink, openTelegramLink, useLaunchParams} from '@telegram-apps/sdk-react';
 import {useClientOnce} from "@/hooks/useClientOnce";
 import {Binary, Check, Coins, Plus} from "lucide-react";
-import useTonConnect from '@/hooks/userTonConnect';
+import useTonConnect from '@/hooks/useTonConnect';
 import {Address} from "@ton/core";
 import useChatData from '@/hooks/useChatData';
 
 
 export default function Home() {
-    const t = useTranslations('i18n');
     const [user, setUser] = useAuthAndFetchUser();
     const launchParams = useLaunchParams();
     const { connectWallet , disconnectWallet, tonConnectUI } = useTonConnect();
@@ -105,7 +104,15 @@ export default function Home() {
             });
         } else {
             // Disable the button if no URL is provided
-            mainButton.setParams({text: "No chat link", isEnabled: false, isVisible: true, isLoaderVisible: false});
+            mainButton.setParams(
+                {
+                    text: "No chat link",
+                    isEnabled: false,
+                    isVisible: true,
+                    isLoaderVisible: false,
+                    hasShineEffect: false
+                }
+            );
             mainButton.onClick.isAvailable() && mainButton.onClick(() => {});
         }
         console.debug("Updated main button", chatJoinUrl, chat.chat.joinUrl);
@@ -183,6 +190,13 @@ export default function Home() {
                     {blockchainRules}
                 </Section>
             </List>
+            <Headline
+                plain={false}
+                weight="3"
+                style={{textAlign: 'center'}}
+              >
+                You&apos;re free to join
+              </Headline>
         </Page>
     );
 }
