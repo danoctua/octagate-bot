@@ -122,9 +122,7 @@ export default function Home() {
                     subtitle={`${rule.actual || '?'}/${rule.expected}`}
                     after={
                         <IconButton
-                            onClick={() => {
-                                openLink(rule.promoteUrl);
-                            }}
+                            onClick={() => {openLink(rule.promoteUrl)}}
                         >
                             <Plus/>
                         </IconButton>
