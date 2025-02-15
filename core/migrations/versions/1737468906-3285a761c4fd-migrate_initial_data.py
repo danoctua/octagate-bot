@@ -19,6 +19,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # Check if anon database exists
+    anon_db = op.get_bind().execute("SHOW DATABASES LIKE 'anon'").fetchone()
+    if not anon_db:
+        print("Anon database not found")
+        return
+
     op.execute(
         f"""
             INSERT INTO {core_settings.mysql_database}.user (id, telegram_id, is_premium, username, first_name, last_name, language, is_blocked, is_admin, created_at)
