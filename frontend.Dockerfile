@@ -14,7 +14,7 @@ COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install
 
 # Copy the rest of the application code
-COPY frontend/next.config.mjs frontend/tailwind.config.ts frontend/postcss.config.mjs frontend/next-env.d.ts frontend/tsconfig.json ./
+COPY frontend/next.config.mjs frontend/tailwind.config.ts frontend/postcss.config.mjs frontend/tsconfig.json ./
 COPY frontend/public ./public
 COPY frontend/src ./src
 
