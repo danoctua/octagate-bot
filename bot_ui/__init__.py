@@ -3,9 +3,10 @@ import logging
 from telegram import Update
 from telegram.ext import Application, ApplicationBuilder
 
-from bot_ui.handlers import handlers as message_handlers
-from bot_ui.handlers.callback import handlers as callback_handlers
-from bot_ui.handlers.command import handlers as command_handlers
+from bot_ui.handlers import handlers as chat_handlers
+
+# from bot_ui.handlers.callback import handlers as callback_handlers
+# from bot_ui.handlers.command import handlers as command_handlers
 from bot_ui.handlers.error import error_handler
 from bot_ui.not_telegram_ext.limiter import NotAIORateLimiter
 from bot_ui.not_telegram_ext.processor import MyUpdateProcessor
@@ -44,10 +45,10 @@ class NotBot:
     def configure_handlers(self):
         self.application.add_handlers(
             [
-                # *backdoor_handlers,
-                *message_handlers,
-                *command_handlers,
-                *callback_handlers,
+                # TODO - migrate this to telethon or another library
+                *chat_handlers,
+                # *command_handlers,
+                # *callback_handlers,
             ]
         )
         self.application.add_error_handler(error_handler)

@@ -121,10 +121,12 @@ services:
       - api/config/.env
       - core/config/.env
     container_name: "octagate-api"
+    ports:
+      - "8000:8000"
     volumes:
       - ./api:/app/api
       - ./core:/app/core
-    command: ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "80", "--workers", "4", "--reload"]
+    command: ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--reload"]
 
   redis:
     image: "redis:7.2.4-alpine"
@@ -165,26 +167,14 @@ services:
       dockerfile: frontend.Dockerfile
       target: development
     container_name: "octagate-frontend"
+    ports:
+      - "3000:3000"
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
       - ./frontend/package.json:/app/package.json
     networks:
       - internal
-
-  nginx:
-    image: "nginx:stable"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./certs:/etc/nginx/certs
-    networks:
-      - internal
-    depends_on:
-      - api
-      - frontend
 
 volumes:
   volume-data:

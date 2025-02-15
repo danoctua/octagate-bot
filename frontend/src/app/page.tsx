@@ -163,7 +163,8 @@ export default function Home() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexDirection: 'column',
-                padding: 42
+                padding: 32,
+                paddingTop: 48,
             }}>
                 <AvatarStack>
                     <Avatar
@@ -180,7 +181,7 @@ export default function Home() {
                     />
                     <Avatar
                         size={48}
-                        src="https://t.me/i/userpic/160/freesoul.jpg"
+                        src="https://t.me/i/userpic/160/durov.jpg"
                     />
                 </AvatarStack>
                 <h2>Join {chat.chat.title}</h2>
@@ -190,13 +191,6 @@ export default function Home() {
                     {blockchainRules}
                 </Section>
             </List>
-            <Headline
-                plain={false}
-                weight="3"
-                style={{textAlign: 'center'}}
-              >
-                You&apos;re free to join
-              </Headline>
         </Page>
     );
 }
