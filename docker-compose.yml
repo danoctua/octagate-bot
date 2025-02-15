@@ -18,8 +18,9 @@ services:
       dockerfile: backend.Dockerfile
       target: telegram-bot
     env_file:
-      - bot_ui/config/.env
-      - core/config/.env
+      - ./bot_ui/config/.env
+      - ./core/config/.env
+      - ./config/.env
     ports:
       - "433:433"
     volumes:
@@ -33,7 +34,7 @@ services:
       context: transaction-lookup
       dockerfile: build/Dockerfile.worker
     env_file:
-      - transaction-lookup/.env
+      - ./transaction-lookup/.env
     depends_on:
       redis:
         condition: service_healthy
@@ -48,8 +49,8 @@ services:
       target: wallet-indexer
     image: wallet-indexer
     env_file:
-      - wallet_indexer/config/.env
-      - core/config/.env
+      - ./wallet_indexer/config/.env
+      - ./core/config/.env
     restart: on-failure
     command: [
       "celery",
@@ -70,8 +71,8 @@ services:
     <<: *x-python-service
     image: wallet-indexer
     env_file:
-      - wallet_indexer/config/.env
-      - core/config/.env
+      - ./wallet_indexer/config/.env
+      - ./core/config/.env
     restart: on-failure
     command: [
       "celery",
@@ -96,8 +97,8 @@ services:
       dockerfile: backend.Dockerfile
       target: community-manager
     env_file:
-      - community_manager/config/.env
-      - core/config/.env
+      - ./community_manager/config/.env
+      - ./core/config/.env
     command: [
       "celery",
       "-A",
@@ -118,8 +119,9 @@ services:
       dockerfile: backend.Dockerfile
       target: api
     env_file:
-      - api/config/.env
-      - core/config/.env
+      - ./api/config/.env
+      - ./core/config/.env
+      - ./config/.env
     container_name: "octagate-api"
     ports:
       - "8000:8000"
@@ -167,6 +169,8 @@ services:
       dockerfile: frontend.Dockerfile
       target: production
     container_name: "octagate-frontend"
+    env_file:
+      - ./config/.env
     ports:
       - "3000:3000"
     volumes:

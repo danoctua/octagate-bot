@@ -4,7 +4,7 @@ import { retrieveLaunchParams } from "@telegram-apps/sdk-react";
 
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://localhost/api",
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api`,
   headers: {
     "Content-Type": "application/json",
   },

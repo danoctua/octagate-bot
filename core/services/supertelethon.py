@@ -31,6 +31,9 @@ class TelethonService:
     async def get_chat(self, chat_id: int) -> Channel:
         return await self.client.get_entity(chat_id)
 
+    async def get_me(self) -> TelethonUser:
+        return await self.client.get_me()
+
     async def get_user(self, telegram_user_id: int) -> TelethonUser:
         return await self.client.get_entity(telegram_user_id)
 
