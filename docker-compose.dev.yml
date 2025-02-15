@@ -12,3 +12,19 @@ services:
     depends_on:
       - api
       - frontend
+
+  frontend:
+    image: "octagate-frontend"
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+      target: production
+    container_name: "octagate-frontend"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/package.json:/app/package.json
+    networks:
+      - internal

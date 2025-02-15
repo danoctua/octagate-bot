@@ -165,7 +165,7 @@ services:
     build:
       context: .
       dockerfile: frontend.Dockerfile
-      target: development
+      target: production
     container_name: "octagate-frontend"
     ports:
       - "3000:3000"
