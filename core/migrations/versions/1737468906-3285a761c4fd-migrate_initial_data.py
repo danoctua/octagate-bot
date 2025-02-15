@@ -8,6 +8,7 @@ Create Date: 2025-01-21 14:15:06.057960
 from typing import Sequence, Union
 
 from alembic import op
+from sqlalchemy import text
 
 from core.settings import core_settings
 
@@ -20,7 +21,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # Check if anon database exists
-    anon_db = op.get_bind().execute("SHOW DATABASES LIKE 'anon'").fetchone()
+    anon_db = op.get_bind().execute(text("SHOW DATABASES LIKE 'anon'")).fetchone()
     if not anon_db:
         print("Anon database not found")
         return
