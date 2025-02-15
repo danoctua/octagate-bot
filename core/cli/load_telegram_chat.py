@@ -14,6 +14,8 @@ async def load_telegram_chat(chat_id: int) -> None:
     telethon_service = TelethonService()
     await telethon_service.start()
 
+    click.echo(f"Loading chat {chat_id!r}...")
+
     chat = await telethon_service.get_chat(chat_id)
     if not chat.admin_rights.change_info:
         click.echo(
