@@ -79,7 +79,7 @@ def fetch_wallet_details(address: str) -> None:
 
     logger.info(f"NFT items for {address!r} fetched.")
     redis_service = RedisService()
-    redis_service.add_to_set(name=UPDATED_WALLETS_SET_NAME, value=address)
+    redis_service.add_to_set(UPDATED_WALLETS_SET_NAME, address)
 
 
 @app.task(

@@ -12,6 +12,7 @@ DEFAULT_WALLET_TRACK_EXPIRATION = 60 * 60 * 24 * 365 * 10  # 10 years
 
 # ------------------ Redis --------------------
 UPDATED_WALLETS_SET_NAME = "updated_wallets"
+DISCONNECTED_WALLETS_SET_NAME = "disconnected_wallets"
 CELERY_WALLET_FETCH_QUEUE_NAME = "wallet-fetch-queue"
 CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME = "noticed-wallets-upload-queue"
 CELERY_SYSTEM_QUEUE_NAME = "system-queue"

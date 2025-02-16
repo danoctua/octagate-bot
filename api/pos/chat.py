@@ -1,6 +1,6 @@
-from pydantic import BaseModel, ConfigDict, computed_field, Field
-from pydantic.alias_generators import to_camel
+from pydantic import BaseModel, computed_field, Field
 
+from api.pos.base import BaseFDO
 from core.dtos.chat import EligibilityCheckType
 from core.utils.number import human_friendly_number
 
@@ -11,7 +11,7 @@ PROMOTE_JETTON_TEMPLATE = (
 )
 
 
-class TelegramChatFDO(BaseModel):
+class TelegramChatFDO(BaseFDO):
     id: int
     username: str | None
     title: str
@@ -20,14 +20,10 @@ class TelegramChatFDO(BaseModel):
     logo_path: str | None
     join_url: str | None = None
     is_member: bool = False
-
-    model_config = ConfigDict(
-        alias_generator=to_camel,
-        populate_by_name=True,
-    )
+    is_eligible: bool = False
 
 
-class TelegramChatEligibilityRuleFDO(BaseModel):
+class TelegramChatEligibilityRuleFDO(BaseFDO):
     category: EligibilityCheckType
     title: str
     expected: float
@@ -51,11 +47,6 @@ class TelegramChatEligibilityRuleFDO(BaseModel):
                 collection_address=self.blockchain_address
             )
         return None
-
-    model_config = ConfigDict(
-        alias_generator=to_camel,
-        populate_by_name=True,
-    )
 
 
 class TelegramChatWithRulesFDO(BaseModel):

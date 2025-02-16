@@ -86,6 +86,9 @@ class AuthorizationAction(BaseAction):
         jetton_wallets_per_user = defaultdict(list)
 
         for user in unique_users:
+            if not user.wallet:
+                continue
+
             nft_items_per_user[user] = nft_item_service.get_all(
                 owner_address=user.wallet.address
             )
@@ -100,8 +103,8 @@ class AuthorizationAction(BaseAction):
                     eligibility_summary
                     := self.telegram_chat_user_service.is_user_eligible_chat_member(
                         eligibility_rules=eligibility_rules_per_chat[chat],
-                        user_jettons=jetton_wallets_per_user[member.user],
-                        user_nft_items=nft_items_per_user[member.user],
+                        user_jettons=jetton_wallets_per_user.get(member.user, []),
+                        user_nft_items=nft_items_per_user.get(member.user, []),
                         chat_member=member,
                     )
                 ):
@@ -118,6 +121,10 @@ class AuthorizationAction(BaseAction):
         chat_members: list[TelegramChatUser],
     ) -> None:
         ineligible_members = self.get_ineligible_chat_members(chat_members=chat_members)
+        if not ineligible_members:
+            logger.info("No ineligible chat members found")
+            return
+
         telethon_service = TelethonService()
         await telethon_service.start()
         for member in ineligible_members:

@@ -18,10 +18,12 @@ services:
     build:
       context: .
       dockerfile: frontend.Dockerfile
-      target: production
+      target: development
     container_name: "octagate-frontend"
     env_file:
       - ./config/.env
+    environment:
+      - NODE_ENV=development
     ports:
       - "3000:3000"
     volumes:

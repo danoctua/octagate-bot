@@ -64,6 +64,7 @@ async def get_chat(
             chat_id=chat.id,
             user_id=user.id,
         )
+        is_eligible = bool(eligibility_summary)
 
         return TelegramChatWithRulesFDO(
             chat=TelegramChatFDO(
@@ -73,8 +74,9 @@ async def get_chat(
                 slug=chat.slug,
                 is_forum=chat.is_forum,
                 logo_path=chat.logo_path,
-                join_url=chat.invite_link if bool(eligibility_summary) else None,
+                join_url=chat.invite_link if is_eligible else None,
                 is_member=is_chat_member,
+                is_eligible=is_eligible,
             ),
             rules=[
                 TelegramChatEligibilityRuleFDO(

@@ -34,14 +34,23 @@ class RedisService:
             pipeline.set(key, value, ex=ex)
         pipeline.execute()
 
-    def add_to_set(self, name: str, value: str) -> None:
+    def add_to_set(self, name: str, *values: str) -> None:
         """
         Add a value to a set
         :param name: Name of the set
-        :param value: Value to add
+        :param values: Value to add
         :return: None
         """
-        self.client.sadd(name, value)
+        self.client.sadd(name, *values)
+
+    def delete_from_set(self, name: str, *values: str) -> None:
+        """
+        Delete a value from a set
+        :param name: Name of the set
+        :param values: Value to delete
+        :return: None
+        """
+        self.client.srem(name, *values)
 
     def pop_from_set(
         self, name: str, count: int | None = None

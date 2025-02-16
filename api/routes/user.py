@@ -3,7 +3,7 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.exc import NoResultFound
 
 from api.deps import validate_access_token
-from api.pos.user import UserFDO
+from api.pos.user import UserFDO, UpdateUserWalletFDO
 from api.pos.wallet import WalletDetailsWithProofPO
 from core.actions.wallet import WalletAction
 from core.services.db import DBService
@@ -37,7 +37,7 @@ async def get_user_data(
 async def update_wallet_address(
     wallet_details: WalletDetailsWithProofPO,
     user_id: int = Depends(validate_access_token),
-) -> UserFDO:
+) -> UpdateUserWalletFDO:
     try:
         TonProofService.verify_ton_proof(wallet_details=wallet_details)
     except ProofValidationError as e:
@@ -59,7 +59,7 @@ async def update_wallet_address(
         wallet_action = WalletAction(db_session)
 
         try:
-            await wallet_action.connect_wallet(
+            task_id = await wallet_action.connect_wallet(
                 user_id=user.id, wallet_address=wallet_details.wallet_address
             )
         except UserWalletExistError:
@@ -75,15 +75,18 @@ async def update_wallet_address(
                 status_code=400,
             )
 
-        return UserFDO(
-            id=user.id,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            username=user.username,
-            is_premium=user.is_premium,
-            language_code=user.language,
-            photo_url=None,
-            wallet_address=user.wallet.address,
+        return UpdateUserWalletFDO(
+            user=UserFDO(
+                id=user.id,
+                first_name=user.first_name,
+                last_name=user.last_name,
+                username=user.username,
+                is_premium=user.is_premium,
+                language_code=user.language,
+                photo_url=None,
+                wallet_address=user.wallet.address,
+            ),
+            task_id=task_id,
         )
 
 

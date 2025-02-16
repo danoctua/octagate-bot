@@ -1,6 +1,7 @@
 from typing import Iterable
 
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import joinedload
 
 from core.dtos.user import TelegramUserDTO
 from core.models.user import User
@@ -11,6 +12,9 @@ class UserService(BaseService):
     def get_by_telegram_id(self, telegram_id: int) -> User:
         return (
             self.db_session.query(User)
+            .options(
+                joinedload(User.wallet),
+            )
             .filter(
                 User.telegram_id == telegram_id,
             )
@@ -20,6 +24,9 @@ class UserService(BaseService):
     def get(self, user_id: int) -> User:
         return (
             self.db_session.query(User)
+            .options(
+                joinedload(User.wallet),
+            )
             .filter(
                 User.id == user_id,
             )
@@ -40,6 +47,10 @@ class UserService(BaseService):
         query = self.db_session.query(User)
         if telegram_ids:
             query = query.filter(User.telegram_id.in_(telegram_ids))
+
+        query = query.options(
+            joinedload(User.wallet),
+        )
 
         return query.all()
 

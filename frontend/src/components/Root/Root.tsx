@@ -21,13 +21,14 @@ import {useTelegramMock} from "@/hooks/useTelegramMock";
 function RootInner({ children }: PropsWithChildren) {
   const isDev = process.env.NODE_ENV === 'development';
 
-  const lp = useLaunchParams();
-  const debug = isDev || lp.startParam === 'debug';
-
-  if (debug) {
+  // Mock Telegram environment in development mode if needed.
+  if (isDev) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useTelegramMock();
   }
+
+  const lp = useLaunchParams();
+  const debug = isDev || lp.startParam === 'debug';
 
   // Initialize the library.
   useClientOnce(() => {

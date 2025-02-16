@@ -8,7 +8,7 @@ async def wait_for_task(
     task_id: str | None = None,
     task_result: AsyncResult | None = None,
     interval: float = 1.0,
-) -> AsyncResult:
+) -> bool:
     if not task_result and task_id:
         task_result = AsyncResult(task_id, app=app)
     elif not task_result and not task_id:
@@ -16,4 +16,4 @@ async def wait_for_task(
 
     while not task_result.ready():
         await asyncio.sleep(interval)
-    return task_result
+    return task_result.successful()

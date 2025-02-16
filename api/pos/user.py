@@ -1,12 +1,13 @@
-from pydantic import BaseModel, ConfigDict
-from pydantic.alias_generators import to_camel
+from pydantic import BaseModel
+
+from api.pos.base import BaseFDO
 
 
 class UserInitDataPO(BaseModel):
     id: int
-    username: str
-    photo_url: str
-    last_name: str
+    username: str | None = None
+    photo_url: str | None = None
+    last_name: str | None = None
     first_name: str
     language_code: str
     is_premium: bool = False
@@ -15,7 +16,7 @@ class UserInitDataPO(BaseModel):
         extra = "ignore"
 
 
-class UserFDO(BaseModel):
+class UserFDO(BaseFDO):
     id: int
     first_name: str
     last_name: str | None = None
@@ -25,7 +26,7 @@ class UserFDO(BaseModel):
     photo_url: str | None = None
     wallet_address: str | None
 
-    model_config = ConfigDict(
-        alias_generator=to_camel,
-        populate_by_name=True,
-    )
+
+class UpdateUserWalletFDO(BaseFDO):
+    user: UserFDO
+    task_id: str
