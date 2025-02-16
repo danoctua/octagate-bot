@@ -9,7 +9,7 @@ class UserInitDataPO(BaseModel):
     last_name: str
     first_name: str
     language_code: str
-    is_premium: bool
+    is_premium: bool = False
 
     class Config:
         extra = "ignore"
