@@ -71,6 +71,12 @@ async def chat_member_update_request_callback(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ):
+    if not update.chat_member:
+        logger.warning(
+            "No chat member found in the update. Exit. Full update: %r", update
+        )
+        return
+
     status_change = extract_member_status_change(update.chat_member)
     if not status_change:
         logger.info("No status change detected. Exit")
