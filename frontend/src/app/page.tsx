@@ -15,7 +15,7 @@ import {Page} from '@/components/Page';
 import TonConnectItem from "@/components/TonConnectItem/TonConnectItem";
 import useAuthAndFetchUser from "@/hooks/useAuthAndFetchUser";
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {mainButton, openLink, openTelegramLink, useLaunchParams} from '@telegram-apps/sdk-react';
+import {mainButton, miniApp, openLink, openTelegramLink, useLaunchParams} from '@telegram-apps/sdk-react';
 import {useClientOnce} from "@/hooks/useClientOnce";
 import {Binary, Check, Coins, Plus} from "lucide-react";
 import useTonConnect from '@/hooks/useTonConnect';
@@ -27,7 +27,7 @@ import {disconnectUserWallet, fetchTaskStatus, updateUserWallet} from "@/service
 
 export default function Home() {
     const [user, setUser] = useAuthAndFetchUser();
-    const [ asyncTaskId, setAsyncTaskId ] = useState<string | null>(null);
+    const [asyncTaskId, setAsyncTaskId] = useState<string | null>(null);
     const launchParams = useLaunchParams();
     const {connectWallet, disconnectWallet, tonConnectUI} = useTonConnect();
     const {chat, fetchChatData} = useChatData();
@@ -60,7 +60,9 @@ export default function Home() {
     }, [disconnectWallet, fetchChatData, setUser, user?.walletAddress])
 
     useEffect(() => {
-        if (!asyncTaskId) { return; }
+        if (!asyncTaskId) {
+            return;
+        }
         fetchTaskStatus(asyncTaskId).then(
             () => {
                 fetchChatData().then()
@@ -117,7 +119,8 @@ export default function Home() {
             console.log("Setting button to disabled");
             mainButton.setParams({isLoaderVisible: false, isVisible: true, isEnabled: false, text: "Loading..."});
             if (mainButton.offClick.isAvailable()) {
-                mainButton.offClick(() => {});
+                mainButton.offClick(() => {
+                });
             }
             return;
         }
@@ -128,7 +131,8 @@ export default function Home() {
             console.log("Setting button to not eligible");
             mainButton.setParams({...defaultParams, isEnabled: false, text: "Not eligible",});
             if (mainButton.offClick.isAvailable()) {
-                mainButton.offClick(() => {});
+                mainButton.offClick(() => {
+                });
             }
             return;
         }
@@ -146,12 +150,16 @@ export default function Home() {
             if (mainButton.onClick.isAvailable()) {
                 mainButton.onClick(() => {
                     openTelegramLink(chatJoinUrl);
+                    if (miniApp.close.isAvailable()) {
+                        miniApp.close();
+                    }
                 });
             }
         } else {
             // Disable the button if no URL is provided
             if (mainButton.offClick.isAvailable()) {
-                mainButton.offClick(() => {});
+                mainButton.offClick(() => {
+                });
             }
             mainButton.setParams({...defaultParams, text: "No chat link"});
         }
