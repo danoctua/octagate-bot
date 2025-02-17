@@ -1,8 +1,10 @@
-from pydantic import BaseModel
+from typing import Annotated
+
+from pydantic import BaseModel, Field
 
 
 class TonProofDomainPO(BaseModel):
-    length_bytes: int
+    length_bytes: Annotated[int, Field(alias="lengthBytes")]
     value: str
 
     class Config:
