@@ -23,8 +23,12 @@ class BotUiSettings(CoreSettings):
     target_common_chat_id: int
 
     @property
+    def webhook_url_path(self):
+        return f"{bot_ui_settings.webhook_prefix}/{bot_ui_settings.telegram_bot_token}"
+
+    @property
     def full_webhook_url(self):
-        return f"{bot_ui_settings.webhook_url}/{bot_ui_settings.webhook_prefix}/{bot_ui_settings.telegram_bot_token}"
+        return f"{bot_ui_settings.webhook_url}/{bot_ui_settings.webhook_url_path}"
 
 
 bot_ui_settings = BotUiSettings()

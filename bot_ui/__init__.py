@@ -60,7 +60,7 @@ class NotBot:
         self.application.run_webhook(
             listen=bot_ui_settings.webhook_host,
             port=bot_ui_settings.webhook_port,
-            url_path=bot_ui_settings.telegram_bot_token,
+            url_path=bot_ui_settings.webhook_url_path,
             secret_token=bot_ui_settings.webhook_secret_key,
             webhook_url=bot_ui_settings.full_webhook_url,
         )
