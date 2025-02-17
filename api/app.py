@@ -34,7 +34,9 @@ app = create_app()
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logging.error(f"Validation error: {exc.errors()}")
+    logging.error(
+        f"Validation error: {exc.errors()} on request: {request.url} with body: {await request.body()}"
+    )
     return JSONResponse(
         status_code=422,
         content=jsonable_encoder({"detail": exc.errors()}),
