@@ -23,6 +23,7 @@ import Image from "next/image";
 import {disconnectUserWallet, fetchTaskStatus, updateUserWallet} from "@/services";
 import WalletFixedBottomItem from "@/components/WalletFixedBottomItem/WalletFixedBottomItem";
 import GatewayHeader from "@/components/GatewayHeader/GatewayHeader";
+import {IChat, IUser} from "@/interfaces";
 
 
 export default function Home() {
@@ -182,20 +183,37 @@ export default function Home() {
         }
     }, [chat, fetchChatData, isButtonDisabled, timeLeft, user]);
 
+    const mainButtonOnClickListener = useCallback((user: IUser | undefined, chat: IChat | undefined) => {
+        if (!user || !chat) {
+            return;
+        } else if (user.walletAddress && !chat.isEligible) {
+            // Secondary button is handling this case
+        } else if (user && !user.walletAddress) {
+            connectWalletAndRefresh().then();
+        } else if (chat.joinUrl) {
+            openTelegramLink(chat.joinUrl);
+        } else {
+            console.log("Unknown state", chat, user);
+        }
+    }, [connectWalletAndRefresh])
+
     useEffect(() => {
         if (!mainButton.isMounted() || !secondaryButton.isMounted()) {
             return;
         }
 
-        secondaryButton.setParams({isVisible: false})
+        if (secondaryButton.isVisible()) {
+            secondaryButton.setParams({isVisible: false})
+        }
+
+        if (mainButton.onClick.isAvailable()) {
+            mainButton.onClick(() => mainButtonOnClickListener(user, chat?.chat));
+        }
+
 
         if (!user || !chat) {
             console.log("Setting button to disabled");
             mainButton.setParams({isLoaderVisible: true, isVisible: true, isEnabled: false, text: "Loading..."});
-            if (mainButton.offClick.isAvailable()) {
-                mainButton.offClick(() => {
-                });
-            }
             return
         }
 
@@ -214,13 +232,6 @@ export default function Home() {
                 isEnabled: true,
                 hasShineEffect: true
             });
-            if (mainButton.onClick.isAvailable()) {
-                mainButton.offClick(() => {
-                })
-                mainButton.onClick(() => {
-                    connectWalletAndRefresh().then();
-                });
-            }
             return
         }
 
@@ -233,23 +244,10 @@ export default function Home() {
                 console.log("Setting button to join chat");
                 mainButton.setParams({...defaultParams, text: "Join", isEnabled: true, hasShineEffect: true});
             }
-            if (mainButton.onClick.isAvailable()) {
-                mainButton.offClick(() => {
-                })
-                mainButton.onClick(() => {
-                    openTelegramLink(chatJoinUrl);
-                });
-            }
         } else {
-            console.log("Setting button to no chat link");
-            // Disable the button if no URL is provided
-            if (mainButton.offClick.isAvailable()) {
-                mainButton.offClick(() => {
-                });
-            }
             mainButton.setParams({...defaultParams, text: "No chat link"});
         }
-    }, [chat, connectWalletAndRefresh, fetchChatData, isButtonDisabled, timeLeft, user])
+    }, [chat, mainButtonOnClickListener, user])
 
     const parsedWalletAddress = useMemo(() => (
         user?.walletAddress ?

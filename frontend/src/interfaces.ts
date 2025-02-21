@@ -26,3 +26,14 @@ export interface IChatConfiguration {
     chat: IChat,
     rules: IRule[],
 }
+
+export interface IUser {
+    id: number,
+    firstName: string,
+    lastName: string,
+    username: string,
+    isPremium: boolean,
+    languageCode: string,
+    photoUrl: string | null,
+    walletAddress: string | null,
+}

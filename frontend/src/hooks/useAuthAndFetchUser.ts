@@ -1,15 +1,8 @@
 import {useState} from 'react';
 import apiClient, {authenticateUser} from "@/utils/apiClient";
 import {useClientOnce} from "@/hooks/useClientOnce";
+import {IUser} from "@/interfaces";
 
-export interface IUser {
-    id: number;
-    firstName: string;
-    lastName: string;
-    username: string;
-    photoUrl: string;
-    walletAddress: string | null;
-}
 
 const useAuthAndFetchUser = () => {
     const [user, setUser] = useState<IUser | undefined>(undefined);
