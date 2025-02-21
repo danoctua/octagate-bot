@@ -22,6 +22,10 @@ const useTonConnect = () => {
     }, [tonConnectUI])
 
     const connectWallet = useCallback(async () => {
+        if (tonConnectUI.connected) {
+            console.warn("Wallet is already connected. Disconnecting");
+            await tonConnectUI.disconnect();
+        }
         await tonConnectUI.openModal();
     }, [tonConnectUI])
 

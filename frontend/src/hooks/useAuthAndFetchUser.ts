@@ -1,38 +1,41 @@
-import { useState } from 'react';
-import apiClient, { authenticateUser } from "@/utils/apiClient";
+import {useState} from 'react';
+import apiClient, {authenticateUser} from "@/utils/apiClient";
 import {useClientOnce} from "@/hooks/useClientOnce";
 
 export interface IUser {
-  id: number;
-  firstName: string;
-  lastName: string;
-  username: string;
-  photoUrl: string;
-  walletAddress: string | null;
+    id: number;
+    firstName: string;
+    lastName: string;
+    username: string;
+    photoUrl: string;
+    walletAddress: string | null;
 }
 
-const useAuthAndFetchUser = (): [IUser | undefined, (user: IUser | undefined) => void] => {
-  const [user, setUser] = useState<IUser | undefined>(undefined);
+const useAuthAndFetchUser = () => {
+    const [user, setUser] = useState<IUser | undefined>(undefined);
+    const [isUserDataLoading, setIsUserDataLoading] = useState(false);
 
-  useClientOnce(() => {
-    const fetchUser = async () => {
-      try {
-        await authenticateUser();
-        const response = await apiClient.get("/users/me");
-        return response.data
-      } catch (error) {
-        console.error("Failed to fetch user", error);
-      }
-    };
+    useClientOnce(() => {
+        const fetchUser = async () => {
+            try {
+                await authenticateUser();
+                const response = await apiClient.get("/users/me");
+                return response.data
+            } catch (error) {
+                console.error("Failed to fetch user", error);
+            }
+        };
 
-    if (user) { return; }
+        if (user) {
+            return;
+        }
 
-    console.log("Fetching user", user);
+        console.log("Fetching user", user);
 
-    fetchUser().then(data => setUser(data));
-  });
+        fetchUser().then(data => setUser(data));
+    });
 
-  return [user, setUser];
+    return {user, setUser, isUserDataLoading, setIsUserDataLoading};
 }
 
 export default useAuthAndFetchUser;

@@ -110,6 +110,13 @@ class TelegramChatUserService(BaseService):
             .one()
         )
 
+    def get_members_count(self, chat_id: int) -> int:
+        return (
+            self.db_session.query(TelegramChatUser)
+            .filter(TelegramChatUser.chat_id == chat_id)
+            .count()
+        )
+
     def get_all(self, user_ids: list[int] | None = None) -> list[TelegramChatUser]:
         query = self.db_session.query(TelegramChatUser)
 

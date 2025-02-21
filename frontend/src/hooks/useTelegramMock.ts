@@ -61,6 +61,7 @@ export function useTelegramMock(): void {
         initDataRaw,
         version: '8',
         platform: 'tdesktop',
+        startParam: 'anon-whales-test'
       }
     }
 

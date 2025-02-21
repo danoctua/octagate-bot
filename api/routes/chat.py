@@ -37,6 +37,7 @@ async def get_chat(
         eligibility_rules = telegram_chat_user_service.get_eligibility_rules(
             chat_id=chat.id
         )
+        members_count = telegram_chat_user_service.get_members_count(chat.id)
 
         user_service = UserService(db_session)
         user = user_service.get(user_id)
@@ -71,17 +72,19 @@ async def get_chat(
                 id=chat.id,
                 username=chat.username,
                 title=chat.title,
+                description=chat.description,
                 slug=chat.slug,
                 is_forum=chat.is_forum,
                 logo_path=chat.logo_path,
                 join_url=chat.invite_link if is_eligible else None,
                 is_member=is_chat_member,
                 is_eligible=is_eligible,
+                members_count=members_count,
             ),
             rules=[
                 TelegramChatEligibilityRuleFDO(
                     category=rule.category,
-                    title=f"HOLD {rule.title}",
+                    title=rule.title,
                     expected=rule.expected,
                     actual=rule.current,
                     is_eligible=rule.is_eligible,

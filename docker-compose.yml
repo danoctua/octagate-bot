@@ -128,6 +128,7 @@ services:
     volumes:
       - ./api:/app/api
       - ./core:/app/core
+      - volume-public:/app/core/static:rw
     command: ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--reload"]
 
   redis:
@@ -177,12 +178,19 @@ services:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
       - ./frontend/package.json:/app/package.json
+      - volume-public:/app/public/dynamic:ro
     networks:
       - internal
 
 volumes:
   volume-data:
   volume-queue:
+  volume-public:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./core/static
 
 
 networks:

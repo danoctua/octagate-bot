@@ -15,12 +15,14 @@ class TelegramChatFDO(BaseFDO):
     id: int
     username: str | None
     title: str
+    description: str | None
     slug: str
     is_forum: bool
     logo_path: str | None
     join_url: str | None = None
     is_member: bool = False
     is_eligible: bool = False
+    members_count: int
 
 
 class TelegramChatEligibilityRuleFDO(BaseFDO):

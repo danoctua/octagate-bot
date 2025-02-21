@@ -10,6 +10,7 @@ class TelegramChat(Base):
     id = mapped_column(BigInteger, primary_key=True)
     username = mapped_column(String(255), nullable=True)
     title = mapped_column(String(255), nullable=False)
+    description = mapped_column(String(255), nullable=True)
     slug = mapped_column(String(255), nullable=False, unique=True)
     is_forum = mapped_column(Boolean, nullable=False, default=False)
     logo_path = mapped_column(String(55), nullable=True)
