@@ -70,7 +70,7 @@ export default function Home() {
         };
     }, [connectWallet, setIsChatDataLoading, setIsUserDataLoading, setUser, tonConnectUI]);
 
-    useMainButton(user, chat?.chat, launchParams, connectWalletAndRefresh);
+    useMainButton(user, chat?.chat, launchParams.startParam, connectWalletAndRefresh);
     useSecondaryButton(user, chat?.chat, fetchChatData);
 
     const disconnectWalletAndRefresh = useCallback(async () => {

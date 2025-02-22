@@ -7,7 +7,7 @@ import {useClientOnce} from "@/hooks/useClientOnce";
 const useMainButton = (
     user: IUser | undefined,
     chat: IChat | undefined,
-    launchParams: string | undefined,
+    startParam: string | undefined,
     connectWallet: () => Promise<() => void>
 ) => {
     const isListenerAdded = useRef(false)
@@ -53,7 +53,11 @@ const useMainButton = (
             return;
         }
 
-        if (!launchParams) {
+        if (!startParam) {
+            // Don't show the button if there is no start param
+            mainButton.setParams({
+                isVisible: false
+            })
             return
         }
 
@@ -98,7 +102,7 @@ const useMainButton = (
         } else {
             mainButton.setParams({...defaultParams, text: "No chat link"});
         }
-    }, [chat, mainButtonOnClickListener, user]);
+    }, [chat, mainButtonOnClickListener, startParam, user]);
 
     return { mainButton }
 };
