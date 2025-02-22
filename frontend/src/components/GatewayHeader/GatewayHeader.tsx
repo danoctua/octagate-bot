@@ -2,6 +2,8 @@ import {Avatar, AvatarStack, Text, Title} from "@telegram-apps/telegram-ui";
 import React, {FC, PropsWithChildren} from "react";
 import {IChat} from "@/interfaces";
 
+import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
+
 
 const GatewayHeader: FC<PropsWithChildren<{chat: IChat}>> = ({chat, children}) => {
     return (
@@ -15,7 +17,13 @@ const GatewayHeader: FC<PropsWithChildren<{chat: IChat}>> = ({chat, children}) =
             gap: 12,
             textAlign: "center"
         }}>
-            <Avatar size={96} src={`/dynamic/chats/${chat.logoPath}`}/>
+            <ImageWithFallback
+                src={`/dynamic/chats/${chat.logoPath}`}
+                fallbackSrc={"/welcome.gif"}
+                rounded
+                width={96}
+                height={96}
+            />
             <div style={{display: "flex", flexDirection: "column", gap: 8}}>
                 <Title level={"2"} weight={"2"} plain>{chat.title}</Title>
                 {chat.description &&

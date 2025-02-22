@@ -2,7 +2,7 @@
 
 import React, {FC, PropsWithChildren, useMemo} from 'react';
 
-import {Button, Cell, FixedLayout, Modal, Title, Text} from "@telegram-apps/telegram-ui";
+import {Button, Cell, FixedLayout, Modal, Title, Text, Section} from "@telegram-apps/telegram-ui";
 import {ChevronRight, Wallet} from "lucide-react";
 
 
@@ -14,28 +14,30 @@ const WalletFixedBottomItem: FC<PropsWithChildren<{
 
     const walletCell = useMemo(
         () => (
-            <Cell
-                multiline={false}
-                readOnly
-                before={
-                    <span
-                        style={{
-                            backgroundColor: "var(--tg-theme-button-color)",
-                            width: 40,
-                            height: 40,
-                            borderRadius: 100,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                        }}>
+            <Section>
+                <Cell
+                    multiline={false}
+                    readOnly
+                    before={
+                        <span
+                            style={{
+                                backgroundColor: "var(--tg-theme-button-color)",
+                                width: 40,
+                                height: 40,
+                                borderRadius: 100,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}>
                             <Wallet strokeWidth={2}/>
                         </span>
-                }
-                after={<ChevronRight color={"var(--tg-theme-section-header-text-color)"}/>}
-                subtitle={"Wallet connected"}
-            >
-                {shortenWalletAddress}
-            </Cell>
+                    }
+                    after={<ChevronRight color={"var(--tg-theme-section-header-text-color)"}/>}
+                    subtitle={"Wallet connected"}
+                >
+                    {shortenWalletAddress}
+                </Cell>
+            </Section>
         ), [shortenWalletAddress]
     )
 
