@@ -21,7 +21,7 @@ import useChatData from '@/hooks/useChatData';
 import Image from "next/image";
 import {disconnectUserWallet, fetchTaskStatus, updateUserWallet} from "@/services";
 import WalletFixedBottomItem from "@/components/WalletFixedBottomItem/WalletFixedBottomItem";
-import GatewayHeader from "@/components/GatewayHeader/GatewayHeader";
+import ChatHeader from "@/components/ChatHeader/ChatHeader";
 import useMainButton from '@/hooks/useMainButton';
 import useSecondaryButton from '@/hooks/useSecondaryButton';
 
@@ -30,7 +30,7 @@ export default function Home() {
     const [asyncTaskId, setAsyncTaskId] = useState<string | null>(null);
     const launchParams = useLaunchParams();
     const {connectWallet, disconnectWallet, tonConnectUI} = useTonConnect();
-    const {chat, fetchChatData, isChatDataLoading, setIsChatDataLoading} = useChatData();
+    const {chat, fetchChatData, isChatDataLoading, setIsChatDataLoading} = useChatData(launchParams.startParam);
     const onWalletConnectListenerAdded = useRef(false)
 
 
@@ -155,7 +155,7 @@ export default function Home() {
 
     return (
         <Page back={false}>
-            <GatewayHeader chat={chat.chat}/>
+            <ChatHeader chat={chat.chat}/>
             <div>
                 <List>
                     <Section>

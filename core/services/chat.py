@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 from pytonapi.utils import to_amount
 from slugify import slugify
+from sqlalchemy import func
 from sqlalchemy.exc import NoResultFound
 from telethon.tl.types import Channel
 
@@ -73,6 +74,14 @@ class TelegramChatService(BaseService):
             self.db_session.query(TelegramChat).filter(TelegramChat.id == chat_id).one()
         )
 
+    def get_all(self, chat_ids: list[int] | None = None) -> list[TelegramChat]:
+        query = self.db_session.query(TelegramChat)
+        if chat_ids:
+            query = query.filter(TelegramChat.id.in_(chat_ids))
+
+        query = query.order_by(TelegramChat.id)
+        return query.all()
+
     def refresh_invite_link(self, chat_id: int, invite_link: str) -> TelegramChat:
         chat = self.get(chat_id)
         chat.invite_link = invite_link
@@ -116,6 +125,18 @@ class TelegramChatUserService(BaseService):
             .filter(TelegramChatUser.chat_id == chat_id)
             .count()
         )
+
+    def get_members_count_by_chat_id(
+        self, chat_ids: list[int] | None = None
+    ) -> dict[int, int]:
+        query = self.db_session.query(
+            TelegramChatUser.chat_id, func.count(TelegramChatUser.user_id)
+        )
+        if chat_ids:
+            query = query.filter(TelegramChatUser.chat_id.in_(chat_ids))
+
+        query = query.group_by(TelegramChatUser.chat_id)
+        return dict(query.all())
 
     def get_all(self, user_ids: list[int] | None = None) -> list[TelegramChatUser]:
         query = self.db_session.query(TelegramChatUser)

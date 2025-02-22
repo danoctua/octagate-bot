@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import NoResultFound
 
 from api.deps import validate_access_token
@@ -8,6 +8,7 @@ from api.pos.chat import (
     TelegramChatWithRulesFDO,
     TelegramChatFDO,
     TelegramChatEligibilityRuleFDO,
+    BaseTelegramChatFDO,
 )
 from core.dtos.chat import TelegramChatEligibilitySummaryDTO
 from core.services.chat import TelegramChatService, TelegramChatUserService
@@ -21,6 +22,41 @@ logger = logging.getLogger(__name__)
 chat_router = APIRouter(prefix="/chats")
 
 
+@chat_router.get("")
+async def get_chats(
+    user_id: int = Depends(validate_access_token),
+) -> list[BaseTelegramChatFDO]:
+    with DBService().db_session() as db_session:
+        user_service = UserService(db_session)
+        requestor = user_service.get(user_id)
+        if not requestor.is_admin:
+            raise HTTPException(
+                detail={
+                    "error": {"message": "You are not allowed to access this resource"}
+                },
+                status_code=403,
+            )
+        chat_service = TelegramChatService(db_session)
+        chats = chat_service.get_all()
+
+        chat_user_service = TelegramChatUserService(db_session)
+        members_count_by_chat = chat_user_service.get_members_count_by_chat_id()
+
+        return [
+            BaseTelegramChatFDO(
+                id=chat.id,
+                username=chat.username,
+                title=chat.title,
+                description=chat.description,
+                slug=chat.slug,
+                is_forum=chat.is_forum,
+                logo_path=chat.logo_path,
+                members_count=members_count_by_chat.get(chat.id, 0),
+            )
+            for chat in chats
+        ]
+
+
 @chat_router.get("/{slug}")
 async def get_chat(
     slug: str,
@@ -32,6 +68,10 @@ async def get_chat(
             chat = chat_service.get_by_slug(slug)
         except NoResultFound:
             logger.debug(f"Chat with slug {slug!r} not found")
+            raise HTTPException(
+                detail={"error": {"message": "Chat not found"}},
+                status_code=404,
+            )
 
         telegram_chat_user_service = TelegramChatUserService(db_session)
         eligibility_rules = telegram_chat_user_service.get_eligibility_rules(

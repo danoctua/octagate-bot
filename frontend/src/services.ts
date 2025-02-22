@@ -1,5 +1,5 @@
 import apiClient from "@/utils/apiClient";
-import {IChatConfiguration} from "@/interfaces";
+import {IBaseChat, IChatConfiguration, IUser} from "@/interfaces";
 
 
 export const fetchTaskStatus = async (asyncTaskId: string) => {
@@ -7,7 +7,7 @@ export const fetchTaskStatus = async (asyncTaskId: string) => {
 }
 
 
-export const updateUserWallet = async (walletAddress: string, tonProof: any, publicKey: string | undefined) => {
+export const updateUserWallet = async (walletAddress: string, tonProof: any, publicKey: string | undefined): Promise<any> => {
     return await apiClient.post("/users/wallet", {
         walletAddress: walletAddress,
         tonProof: tonProof,
@@ -16,11 +16,16 @@ export const updateUserWallet = async (walletAddress: string, tonProof: any, pub
 }
 
 
-export const disconnectUserWallet = async () => {
+export const disconnectUserWallet = async (): Promise<IUser> => {
     return await apiClient.delete("/users/wallet").then((response) => response.data);
 }
 
 
 export const fetchChatData = async (slug: string): Promise<IChatConfiguration> => {
     return await apiClient.get(`/chats/${slug}`).then((response) => response.data);
+}
+
+
+export const fetchChats = async (): Promise<IBaseChat[]> => {
+    return await apiClient.get("/chats").then(response => response.data);
 }

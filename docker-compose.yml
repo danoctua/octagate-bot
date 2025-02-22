@@ -178,6 +178,7 @@ services:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
       - ./frontend/package.json:/app/package.json
+      - ./config/.env:/app/.env
       - volume-public:/app/public/dynamic:ro
     networks:
       - internal

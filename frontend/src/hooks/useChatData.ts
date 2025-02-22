@@ -1,26 +1,24 @@
 import {useCallback, useState} from "react";
-import {useLaunchParams} from "@telegram-apps/sdk-react";
 import {fetchChatData} from "@/services";
 import {IChatConfiguration} from "@/interfaces";
 
 
-const useChatData = () => {
+const useChatData = (slug: string | undefined) => {
     const [chat, setChat] = useState<IChatConfiguration | null>(null);
     const [isChatDataLoading, setIsChatDataLoading] = useState(false);
-    const launchParams = useLaunchParams();
 
     const refreshChatData = useCallback(async () => {
-        if (!launchParams.startParam) {
+        if (!slug) {
             return;
         }
         setIsChatDataLoading(true);
-        return await fetchChatData(launchParams.startParam).then((chatData: IChatConfiguration) => {
+        return await fetchChatData(slug).then((chatData: IChatConfiguration) => {
             console.debug("Refreshing chat data", chatData);
             setChat(chatData);
             setIsChatDataLoading(false);
             return chatData;
-        }).catch((error) => {});
-    }, [launchParams.startParam])
+        });
+    }, [slug])
 
     return { chat, setChat, fetchChatData: refreshChatData, isChatDataLoading, setIsChatDataLoading };
 }

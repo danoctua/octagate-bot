@@ -1,4 +1,4 @@
-export interface IChat {
+export interface IBaseChat {
     id: number,
     username: string,
     title: string,
@@ -6,10 +6,14 @@ export interface IChat {
     slug: string,
     isForum: boolean,
     logoPath: string,
+    membersCount: number,
+}
+
+
+export interface IChat extends IBaseChat {
     joinUrl?: string,
     isMember: boolean,
     isEligible: boolean,
-    membersCount: number,
 }
 
 export interface IRule {

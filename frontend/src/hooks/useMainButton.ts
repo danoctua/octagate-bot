@@ -31,7 +31,6 @@ const useMainButton = (
     }, [chat, connectWallet, user]);
 
     const mainButtonOnClickListener = useCallback(() => {
-        console.log("Main button on click", connectWallet)
         const currentUser = userRef.current;
         const currentChat = chatRef.current;
         if (!currentUser || !currentChat) {
@@ -44,7 +43,7 @@ const useMainButton = (
         } else if (currentChat.joinUrl) {
             openTelegramLink(currentChat.joinUrl);
         } else {
-            console.log("Unknown state", currentUser, currentChat);
+            console.debug("Unknown state", currentUser, currentChat);
         }
     }, [connectWallet]);
 
@@ -100,7 +99,7 @@ const useMainButton = (
                 mainButton.setParams({...defaultParams, text: "Join", isEnabled: true, hasShineEffect: true});
             }
         } else {
-            mainButton.setParams({...defaultParams, text: "No chat link"});
+            mainButton.setParams({...defaultParams, isEnabled: false, text: "No chat link"});
         }
     }, [chat, mainButtonOnClickListener, startParam, user]);
 

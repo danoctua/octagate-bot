@@ -23,8 +23,6 @@ const useAuthAndFetchUser = () => {
             return;
         }
 
-        console.log("Fetching user", user);
-
         fetchUser().then(data => setUser(data));
     });
 
