@@ -13,17 +13,19 @@ import {Page} from '@/components/Page';
 
 import useAuthAndFetchUser from "@/hooks/useAuthAndFetchUser";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {useLaunchParams} from '@telegram-apps/sdk-react';
+import {mainButton, secondaryButton, useLaunchParams} from '@telegram-apps/sdk-react';
 import {Check} from "lucide-react";
 import useTonConnect from '@/hooks/useTonConnect';
 import {Address} from "@ton/core";
 import useChatData from '@/hooks/useChatData';
 import Image from "next/image";
 import {disconnectUserWallet, fetchTaskStatus, updateUserWallet} from "@/services";
-import WalletFixedBottomItem from "@/components/WalletFixedBottomItem/WalletFixedBottomItem";
+import ConnectedWalletCell from "@/components/ConnectedWalletCell/ConnectedWalletCell";
 import ChatHeader from "@/components/ChatHeader/ChatHeader";
-import useMainButton from '@/hooks/useMainButton';
-import useSecondaryButton from '@/hooks/useSecondaryButton';
+import FixedBottomSection, {ButtonStateProps} from "@/components/FixedBottomSection/FixedBottomSection";
+import useMainButtonState from "@/hooks/useMainButtonState";
+import {useClientOnce} from "@/hooks/useClientOnce";
+import RuleItem from "@/components/RuleItem/RuleItem";
 
 export default function Home() {
     const {user, setUser, isUserDataLoading, setIsUserDataLoading} = useAuthAndFetchUser();
@@ -32,7 +34,6 @@ export default function Home() {
     const {connectWallet, disconnectWallet, tonConnectUI} = useTonConnect();
     const {chat, fetchChatData, isChatDataLoading, setIsChatDataLoading} = useChatData(launchParams.startParam);
     const onWalletConnectListenerAdded = useRef(false)
-
 
     const connectWalletAndRefresh = useCallback(async () => {
         await connectWallet();
@@ -70,8 +71,24 @@ export default function Home() {
         };
     }, [connectWallet, setIsChatDataLoading, setIsUserDataLoading, setUser, tonConnectUI]);
 
-    useMainButton(user, chat?.chat, launchParams.startParam, connectWalletAndRefresh);
-    useSecondaryButton(user, chat?.chat, fetchChatData);
+    useClientOnce(() => {
+        mainButton.mount();
+        mainButton.setParams({isVisible: false});
+        mainButton.unmount()
+        secondaryButton.mount();
+        secondaryButton.setParams({isVisible: false});
+        secondaryButton.unmount()
+    })
+
+    const mainButtonState: ButtonStateProps | undefined = useMainButtonState(
+        isUserDataLoading,
+        isChatDataLoading,
+        launchParams.startParam,
+        user,
+        chat?.chat,
+        connectWalletAndRefresh,
+        fetchChatData
+    )
 
     const disconnectWalletAndRefresh = useCallback(async () => {
         await disconnectWallet();
@@ -131,25 +148,23 @@ export default function Home() {
             key={"wallet"}
             readOnly
             after={
-                isUserDataLoading ? <Spinner size="s"/> : parsedWalletAddress ? <Check/> :
-                    <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>Not yet</Text>
+                isUserDataLoading ?
+                    <Spinner size="s"/> :
+                    parsedWalletAddress ?
+                        <Check style={{ color: "var(--tg-theme-accent-text-color)" }}/> :
+                        <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>
+                            Not yet
+                        </Text>
             }
         >
             Connect wallet
         </Cell>,
         ...chat.rules.map((rule, index) => (
-            <Cell
+            <RuleItem
                 key={`blockchain-rule-${index}`}
+                rule={rule}
                 readOnly
-                multiline={false}
-                disabled={!user.walletAddress}
-                after={
-                    isChatDataLoading ? <Spinner size="s"/> : rule.isEligible ? <Check/> :
-                        <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>Not yet</Text>
-                }
-            >
-                {["jetton", "nft-collection"].includes(rule.category) ? `Hold ${rule.expected} ${rule.title}` : rule.title}
-            </Cell>
+            />
         ))
     ];
 
@@ -163,12 +178,16 @@ export default function Home() {
                     </Section>
                 </List>
             </div>
-            {parsedWalletAddress && (
-                <WalletFixedBottomItem
-                    walletAddress={parsedWalletAddress}
-                    disconnectWallet={disconnectWalletAndRefresh}
-                />
-            )}
+            {mainButtonState &&
+                <FixedBottomSection {...mainButtonState}>
+                    {parsedWalletAddress &&
+                        <ConnectedWalletCell
+                            walletAddress={parsedWalletAddress}
+                            disconnectWallet={disconnectWalletAndRefresh}
+                        />
+                    }
+                </FixedBottomSection>
+            }
         </Page>
     );
 }

@@ -1,6 +1,7 @@
 import { IRule } from "@/interfaces";
 import { Cell, Text } from "@telegram-apps/telegram-ui";
 import {Check, ChevronRight} from "lucide-react";
+import React from "react";
 
 
 const RuleItem = ({ rule, readOnly }: { rule: IRule, readOnly: boolean}) => {
@@ -15,7 +16,11 @@ const RuleItem = ({ rule, readOnly }: { rule: IRule, readOnly: boolean}) => {
     let after;
 
     if (readOnly) {
-        after = rule.isEligible ? <Check/> : <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>Not yet</Text>
+        after = (
+            rule.isEligible ?
+                <Check style={{ color: "var(--tg-theme-accent-text-color)" }}/> :
+                <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>Not yet</Text>
+        )
     } else {
         after = <ChevronRight/>
     }
