@@ -30,6 +30,6 @@ services:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
       - ./frontend/package.json:/app/package.json
-      - ./config/.env:/app/.env
+      - ./config/.env:/app/.env.local
     networks:
       - internal

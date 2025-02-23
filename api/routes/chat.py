@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
+from pytonapi.utils import userfriendly_to_raw
 from sqlalchemy.exc import NoResultFound
 
 from api.deps import validate_access_token
@@ -9,9 +10,14 @@ from api.pos.chat import (
     TelegramChatFDO,
     TelegramChatEligibilityRuleFDO,
     BaseTelegramChatFDO,
+    BaseTelegramChatEligibilityRuleFDO,
 )
-from core.dtos.chat import TelegramChatEligibilitySummaryDTO
-from core.services.chat import TelegramChatService, TelegramChatUserService
+from core.dtos.chat import TelegramChatEligibilitySummaryDTO, EligibilityCheckType
+from core.services.chat import (
+    TelegramChatService,
+    TelegramChatUserService,
+    TelegramChatJettonService,
+)
 from core.services.db import DBService
 from core.services.nft import NftItemService
 from core.services.user import UserService
@@ -133,4 +139,54 @@ async def get_chat(
                 )
                 for rule in eligibility_summary.items
             ],
+        )
+
+
+@chat_router.get("/{slug}/rules/jettons/{address}")
+async def get_chat_rule(
+    slug: str,
+    address: str,
+    user_id: int = Depends(validate_access_token),
+) -> BaseTelegramChatEligibilityRuleFDO:
+    with DBService().db_session() as db_session:
+        user_service = UserService(db_session)
+        requestor = user_service.get(user_id)
+        if not requestor.is_admin:
+            raise HTTPException(
+                detail={
+                    "error": {"message": "You are not allowed to access this resource"}
+                },
+                status_code=403,
+            )
+
+        chat_service = TelegramChatService(db_session)
+        try:
+            chat = chat_service.get_by_slug(slug)
+        except NoResultFound:
+            logger.debug(f"Chat with slug {slug!r} not found")
+            raise HTTPException(
+                detail={"error": {"message": "Chat not found"}},
+                status_code=404,
+            )
+
+        raw_address = userfriendly_to_raw(address)
+
+        telegram_chat_jetton_service = TelegramChatJettonService(db_session)
+        try:
+            rule = telegram_chat_jetton_service.get(
+                chat_id=chat.id, jetton_address=raw_address
+            )
+        except NoResultFound:
+            logger.debug(f"Rule for chat {chat.id!r} and jetton {address} not found")
+            raise HTTPException(
+                detail={"error": {"message": "Rule not found"}},
+                status_code=404,
+            )
+
+        return BaseTelegramChatEligibilityRuleFDO(
+            category=EligibilityCheckType.JETTON,
+            title=rule.jetton.name,
+            expected=rule.threshold,
+            photo_url=rule.jetton.logo_path,
+            blockchain_address=rule.jetton_address,
         )

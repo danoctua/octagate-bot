@@ -1,4 +1,4 @@
-from pydantic import BaseModel, computed_field, Field
+from pydantic import BaseModel, computed_field
 
 from api.pos.base import BaseFDO
 from core.dtos.chat import EligibilityCheckType
@@ -28,18 +28,20 @@ class TelegramChatFDO(BaseTelegramChatFDO):
     is_eligible: bool = False
 
 
-class TelegramChatEligibilityRuleFDO(BaseFDO):
+class BaseTelegramChatEligibilityRuleFDO(BaseFDO):
     category: EligibilityCheckType
     title: str
-    expected: float
-    actual: float | None = None
-    photo_url: str | None = None
-    is_eligible: bool = False
-    blockchain_address: str | None = Field(None, exclude=True)
+    expected: float | int
+    photo_url: str | None
+    blockchain_address: str | None
 
-    @property
-    def expected_human_friendly(self) -> str:
-        return human_friendly_number(self.expected)
+    # TODO properly parse to amount
+    # @field_validator("expected", mode="before")
+    # def preprocess_expected(cls, v: float | int) -> float | int:
+    #     if not v:
+    #         return v
+    #
+    #     return to_amount(v)
 
     @computed_field
     def promote_url(self) -> str | None:
@@ -52,6 +54,16 @@ class TelegramChatEligibilityRuleFDO(BaseFDO):
                 collection_address=self.blockchain_address
             )
         return None
+
+
+class TelegramChatEligibilityRuleFDO(BaseTelegramChatEligibilityRuleFDO):
+    actual: float | None = None
+    photo_url: str | None = None
+    is_eligible: bool = False
+
+    @property
+    def expected_human_friendly(self) -> str:
+        return human_friendly_number(self.expected)
 
 
 class TelegramChatWithRulesFDO(BaseModel):

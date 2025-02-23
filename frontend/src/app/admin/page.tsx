@@ -4,11 +4,12 @@ import Image from 'next/image';
 
 import Header from '@/components/Header/Header';
 import {Page} from '@/components/Page';
-import {Button, Cell, Divider, FixedLayout, List, Section, Skeleton} from "@telegram-apps/telegram-ui";
+import {Cell, List, Section, Skeleton} from "@telegram-apps/telegram-ui";
 import useChats from '@/hooks/useChats';
 import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
 import {ChevronRight} from "lucide-react";
 import {useRouter} from "next/navigation";
+import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
 
 
 const AdminPage = () => {
@@ -47,14 +48,7 @@ const AdminPage = () => {
                     </List>
                 </Skeleton>
             </Section>
-            <FixedLayout vertical={"bottom"}>
-                <Divider/>
-                <div style={{ padding: "16px 8px" }}>
-                    <Button stretched onClick={() => {router.push('/admin/chat')}}>
-                        Add chat
-                    </Button>
-                </div>
-            </FixedLayout>
+            <FixedBottomSection text={"Add chat"} onClick={() => {router.push('/admin/chat')}}/>
         </Page>
     )
 }

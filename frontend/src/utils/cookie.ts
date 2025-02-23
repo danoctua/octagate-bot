@@ -11,6 +11,7 @@ export const getCookie = (name: string) => {
   return null;
 };
 
+
 export const setCookie = (name: string, value: string, seconds: number) => {
   const date = new Date();
   date.setTime(date.getTime() + seconds * 1000);

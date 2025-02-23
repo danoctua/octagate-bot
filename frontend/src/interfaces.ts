@@ -16,19 +16,25 @@ export interface IChat extends IBaseChat {
     isEligible: boolean,
 }
 
+
 export interface IRule {
     category: string,
     title: string,
+    blockchainAddress: string,
     promoteUrl: string,
     expected: number,
-    actual?: number,
     photoUrl: string,
+}
+
+
+export interface IRuleEligibility extends IRule {
+    actual?: number,
     isEligible: boolean,
 }
 
 export interface IChatConfiguration {
     chat: IChat,
-    rules: IRule[],
+    rules: IRuleEligibility[],
 }
 
 export interface IUser {
@@ -40,4 +46,13 @@ export interface IUser {
     languageCode: string,
     photoUrl: string | null,
     walletAddress: string | null,
+}
+
+export interface IJetton {
+    address: string,
+    name: string,
+    description?: string,
+    symbol: string,
+    logoPath?: string,
+    isEnabled: boolean,
 }

@@ -1,5 +1,5 @@
 import apiClient from "@/utils/apiClient";
-import {IBaseChat, IChatConfiguration, IUser} from "@/interfaces";
+import {IBaseChat, IChatConfiguration, IJetton, IRule, IUser} from "@/interfaces";
 
 
 export const fetchTaskStatus = async (asyncTaskId: string) => {
@@ -28,4 +28,14 @@ export const fetchChatData = async (slug: string): Promise<IChatConfiguration> =
 
 export const fetchChats = async (): Promise<IBaseChat[]> => {
     return await apiClient.get("/chats").then(response => response.data);
+}
+
+
+export const fetchJettons = async (): Promise<IJetton[]> => {
+    return await apiClient.get("/resources/jettons").then(response => response.data);
+}
+
+
+export const fetchJettonRule = async (slug: string, jettonAddress: string): Promise<IRule> => {
+    return await apiClient.get(`/chats/${slug}/rules/jettons/${jettonAddress}`).then(response => response.data);
 }

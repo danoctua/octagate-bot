@@ -3,8 +3,8 @@
 import {useState} from "react";
 
 import {Page} from '@/components/Page';
-import {Button, Cell, Chip, Divider, FixedLayout, Input, Section, Snackbar} from "@telegram-apps/telegram-ui";
-import {AlertTriangle} from "lucide-react";
+import {Input, Section} from "@telegram-apps/telegram-ui";
+import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
 
 
 const NewChatPage = () => {
@@ -23,14 +23,7 @@ const NewChatPage = () => {
                 />
             </Section>
 
-            <FixedLayout vertical={"bottom"}>
-                <Divider/>
-                <div style={{ padding: "16px 8px" }}>
-                    <Button stretched onClick={() => {}}>
-                        Save
-                    </Button>
-                </div>
-            </FixedLayout>
+            <FixedBottomSection text={"Save"} onClick={() => {}}/>
         </Page>
     )
 }

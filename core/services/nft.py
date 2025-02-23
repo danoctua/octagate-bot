@@ -1,6 +1,7 @@
 import logging
 
 from pytonapi.schema.nft import NftCollection, NftItem as TONNftItem, NftItems
+from sqlalchemy import desc
 from sqlalchemy.exc import NoResultFound
 
 from core.models.blockchain import NFTCollection, NftItem
@@ -56,6 +57,13 @@ class NftCollectionService(BaseService):
         return (
             self.db_session.query(NFTCollection)
             .filter(NFTCollection.is_enabled.is_(True))
+            .all()
+        )
+
+    def get_all(self) -> list[NFTCollection]:
+        return (
+            self.db_session.query(NFTCollection)
+            .order_by(desc(NFTCollection.is_enabled), NFTCollection.created_at)
             .all()
         )
 

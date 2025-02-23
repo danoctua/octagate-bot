@@ -1,10 +1,16 @@
-import { IRule } from "@/interfaces";
-import { Cell, Text } from "@telegram-apps/telegram-ui";
+import {IRuleEligibility} from "@/interfaces";
+import {Cell, Text} from "@telegram-apps/telegram-ui";
 import {Check, ChevronRight} from "lucide-react";
 import React from "react";
 
 
-const RuleItem = ({ rule, readOnly }: { rule: IRule, readOnly: boolean}) => {
+const RuleItem = (
+    {
+        rule, readOnly, onClick
+    }: {
+        rule: IRuleEligibility, readOnly: boolean, onClick?: () => void
+    }
+) => {
     let title = ''
 
     if (rule.category === "jetton" || rule.category === "nft-collection") {
@@ -18,7 +24,7 @@ const RuleItem = ({ rule, readOnly }: { rule: IRule, readOnly: boolean}) => {
     if (readOnly) {
         after = (
             rule.isEligible ?
-                <Check style={{ color: "var(--tg-theme-accent-text-color)" }}/> :
+                <Check style={{color: "var(--tg-theme-accent-text-color)"}}/> :
                 <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>Not yet</Text>
         )
     } else {
@@ -32,6 +38,7 @@ const RuleItem = ({ rule, readOnly }: { rule: IRule, readOnly: boolean}) => {
             multiline={false}
             disabled={false}
             after={after}
+            onClick={onClick}
         >
             {title}
         </Cell>

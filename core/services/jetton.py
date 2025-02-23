@@ -2,6 +2,7 @@ import logging
 
 from pytonapi.schema.jettons import JettonInfo
 from pytonapi.utils import to_amount
+from sqlalchemy import desc
 from sqlalchemy.exc import NoResultFound
 
 from core.models.blockchain import Jetton
@@ -51,3 +52,10 @@ class JettonService(BaseService):
 
     def get_whitelisted(self) -> list[Jetton]:
         return self.db_session.query(Jetton).filter(Jetton.is_enabled.is_(True)).all()
+
+    def get_all(self) -> list[Jetton]:
+        return (
+            self.db_session.query(Jetton)
+            .order_by(desc(Jetton.is_enabled), Jetton.created_at)
+            .all()
+        )

@@ -17,7 +17,7 @@ const ChatHeader: FC<PropsWithChildren<{
         <Header>
             <Skeleton visible={isChatDataLoading}>
                 <ImageWithFallback
-                    src={(chat?.logoPath && `/dynamic/chats/${chat?.logoPath}`) || ""}
+                    src={`/dynamic/chats/${chat?.logoPath}`}
                     fallbackSrc={"/welcome.gif"}
                     rounded
                     width={96}

@@ -19,8 +19,7 @@ const ConnectedWalletCell: FC<PropsWithChildren<{
                 {
                     title: "Disconnect wallet",
                     message: (
-                        `Are you sure you want to disconnect the wallet ${shortenWalletAddress} from your account?\n\n
-                        After disconnecting the wallet you'll be kicked out of all the chats you joined through the Gateway`
+                        `Are you sure you want to disconnect the wallet ${shortenWalletAddress} from your account? \n\nAfter disconnecting the wallet you'll be kicked out of all the chats you joined through the Gateway`
                     ),
                     buttons: [
                         {id: "confirm", type: "destructive", text: "Disconnect"},
