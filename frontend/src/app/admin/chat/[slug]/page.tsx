@@ -12,7 +12,7 @@ import RuleItem from "@/components/RuleItem/RuleItem";
 import {CirclePlus, Share} from "lucide-react";
 import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
 import {generateBotJoinLink} from "@/utils/bot";
-import {shareURL, init} from "@telegram-apps/sdk";
+import {shareURL, init} from "@telegram-apps/sdk-react";
 
 
 const ChatPage = ({params}: { params: { slug: string } }) => {
