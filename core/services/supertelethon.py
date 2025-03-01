@@ -28,8 +28,8 @@ class TelethonService:
     async def stop(self) -> None:
         await self.client.disconnect()
 
-    async def get_chat(self, chat_id: int) -> Channel:
-        return await self.client.get_entity(chat_id)
+    async def get_chat(self, entity: int | str) -> Channel:
+        return await self.client.get_entity(entity)
 
     async def get_me(self) -> TelethonUser:
         return await self.client.get_me()

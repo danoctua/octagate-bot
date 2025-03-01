@@ -9,10 +9,10 @@ const SelectableRule = (
     }: {
         items: IJetton[],
         category: string,
-        selectedOption: string,
         onSelect: (address: string) => void,
-        expected: number,
         onExpectedChange: (expected: number) => void,
+        selectedOption: string | undefined,
+        expected: number | undefined,
     }
 ) => {
     return (

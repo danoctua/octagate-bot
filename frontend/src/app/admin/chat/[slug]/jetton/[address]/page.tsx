@@ -18,10 +18,12 @@ const TABS = [
 ]
 
 
-const RulePage = ({params}: { params: { slug: string, address: string } }) => {
+const ConditionPage = ({params}: { params: { slug: string, address?: string } }) => {
     const [selectedTab, setSelectedTab] = useState(TABS[0].type);
     const jettons = useJettonsData()
-    const chatJettonRuleData = useChatJettonRuleData({slug: params.slug, jettonAddress: params.address})
+    const chatJettonRuleData = useChatJettonRuleData(
+        {slug: params.slug, jettonAddress: params.address}
+    )
     const [selectedJettonAddress, setSelectedJettonAddress] = useState<string>("")
     const [expected, setExpected] = useState(0)
 
@@ -51,7 +53,7 @@ const RulePage = ({params}: { params: { slug: string, address: string } }) => {
                     ))
                 }
             </SegmentedControl>
-            {chatJettonRuleData ?
+            {jettons ?
                 <SelectableRule
                     items={jettons}
                     category={"jettons"}
@@ -66,4 +68,4 @@ const RulePage = ({params}: { params: { slug: string, address: string } }) => {
     )
 }
 
-export default RulePage;
+export default ConditionPage;

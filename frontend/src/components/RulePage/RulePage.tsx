@@ -1,6 +1,5 @@
 'use client';
 
-import {Page} from "@/components/Page";
 import {SegmentedControl, Title} from "@telegram-apps/telegram-ui";
 import {
     SegmentedControlItem

@@ -11,6 +11,13 @@ from api.pos.chat import (
     TelegramChatEligibilityRuleFDO,
     BaseTelegramChatFDO,
     BaseTelegramChatEligibilityRuleFDO,
+    AddChatCPO,
+)
+from core.actions.chat import (
+    TelegramChatAction,
+    TelegramChatAlreadyExists,
+    TelegramChatNotSufficientPrivileges,
+    TelegramChatNotExists,
 )
 from core.dtos.chat import TelegramChatEligibilitySummaryDTO, EligibilityCheckType
 from core.services.chat import (
@@ -61,6 +68,56 @@ async def get_chats(
             )
             for chat in chats
         ]
+
+
+@chat_router.post("")
+async def create_chat(
+    chat: AddChatCPO,
+    user_id: int = Depends(validate_access_token),
+) -> BaseTelegramChatFDO:
+    with DBService().db_session() as db_session:
+        user_service = UserService(db_session)
+        requestor = user_service.get(user_id)
+        if not requestor.is_admin:
+            raise HTTPException(
+                detail={
+                    "error": {"message": "You are not allowed to access this resource"}
+                },
+                status_code=403,
+            )
+
+        logger.info(
+            f"Creating chat {chat.chat_identifier!r} of type {type(chat.chat_identifier)}..."
+        )
+
+        telegram_chat_action = TelegramChatAction(db_session)
+        try:
+            telegram_chat = await telegram_chat_action.create(
+                chat_identifier=chat.chat_identifier
+            )
+        except TelegramChatAlreadyExists:
+            raise HTTPException(
+                detail={"error": {"message": "Chat already exists"}},
+                status_code=409,
+            )
+        except TelegramChatNotSufficientPrivileges:
+            raise HTTPException(
+                detail={
+                    "error": {
+                        "message": "You have to add bot to chat with admin rights to invite users first"
+                    }
+                },
+                status_code=409,
+            )
+        except TelegramChatNotExists:
+            raise HTTPException(
+                detail={
+                    "error": {"message": f"Chat '{chat.chat_identifier}' not found"}
+                },
+                status_code=400,
+            )
+
+        return telegram_chat
 
 
 @chat_router.get("/{slug}")

@@ -31,6 +31,11 @@ export const fetchChats = async (): Promise<IBaseChat[]> => {
 }
 
 
+export const createChat = async (chat: {chatIdentifier: string}): Promise<IBaseChat> => {
+    return await apiClient.post("/chats", chat).then(response => response.data);
+}
+
+
 export const fetchJettons = async (): Promise<IJetton[]> => {
     return await apiClient.get("/resources/jettons").then(response => response.data);
 }

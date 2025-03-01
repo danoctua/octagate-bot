@@ -4,10 +4,11 @@ import {useState} from "react";
 import {IRule} from "@/interfaces";
 
 
-const useChatJettonRuleData = ({slug, jettonAddress}: {slug: string, jettonAddress: string}) => {
+const useChatJettonRuleData = ({slug, jettonAddress}: {slug: string, jettonAddress?: string}) => {
   const [chatJettonRuleData, setChatJettonRuleData] = useState<IRule | null>(null);
 
   useClientOnce(() => {
+    if (!jettonAddress) return;
     fetchJettonRule(slug, jettonAddress).then((data) => { setChatJettonRuleData(data) });
   });
 
