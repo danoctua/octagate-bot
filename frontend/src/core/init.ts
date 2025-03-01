@@ -33,8 +33,9 @@ export function init(debug: boolean): void {
   // Define components-related CSS variables.
   miniApp.bindCssVars();
   themeParams.bindCssVars();
-  if (miniApp.setHeaderColor.isAvailable()) {
-    miniApp.setHeaderColor('bg_color')
+  const secondaryBackgroundColor = themeParams.secondaryBackgroundColor();
+  if (miniApp.setHeaderColor.isAvailable() && secondaryBackgroundColor) {
+    miniApp.setHeaderColor(secondaryBackgroundColor)
   }
 
   // Add Eruda if needed.
