@@ -4,3 +4,7 @@ body {
   font-family: 'Inter', sans-serif;
   background: var(--tg-theme-secondary-bg-color, white);
 }
+
+footer.error h6 {
+  color: var(--tgui--destructive_text_color)
+}

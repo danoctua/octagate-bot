@@ -33,6 +33,9 @@ export function init(debug: boolean): void {
   // Define components-related CSS variables.
   miniApp.bindCssVars();
   themeParams.bindCssVars();
+  if (miniApp.setHeaderColor.isAvailable()) {
+    miniApp.setHeaderColor('bg_color')
+  }
 
   // Add Eruda if needed.
   debug && import('eruda')

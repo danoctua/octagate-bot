@@ -3,7 +3,7 @@
 import {useCallback, useState} from "react";
 
 import {Page} from '@/components/Page';
-import {Input, Section} from "@telegram-apps/telegram-ui";
+import {Caption, Input, Section, Info, Text, Subheadline} from "@telegram-apps/telegram-ui";
 import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
 import {createChat} from "@/services";
 import {useRouter} from "next/navigation";
@@ -77,11 +77,39 @@ const NewChatPage = () => {
         [chatIdentifier, router]
     )
 
+    let footerDefaultText = "Сhat or channel should include Gateway bot with admin privileges";
+    let footer = null;
+    if (formError) {
+        footer = (
+            <Section.Footer style={{color: "var(--tgui--destructive_text_color)"}}>
+                {formError}<br/><br/>
+                {footerDefaultText}
+            </Section.Footer>
+        )
+    } else {
+        footer = (
+            <Section.Footer>
+                {footerDefaultText}
+            </Section.Footer>
+        )
+    }
+
     return (
         <Page back={true}>
             <Section
-                header={"Add chat"}
-                footer={"Сhat or channel should include Gateway bot with admin privileges"}
+                header={<Section.Header large>Add chat or channel</Section.Header>}
+                footer={
+                    <div>
+                        {formError &&
+                            <Section.Footer className={"error"}>
+                                {formError}
+                            </Section.Footer>
+                        }
+                        <Section.Footer>
+                            {footerDefaultText}
+                        </Section.Footer>
+                    </div>
+                }
             >
                 <Input
                     placeholder={"Chat or channel ID"}
@@ -89,12 +117,6 @@ const NewChatPage = () => {
                     value={chatIdentifier || ""}
                     onChange={(event) => setChatIdOnChange(event.target.value)}
                 />
-                {
-                    formError &&
-                    <Callout type={"error"} before={<AlertTriangle/>}>
-                        {formError}
-                    </Callout>
-                }
             </Section>
 
             <FixedBottomSection

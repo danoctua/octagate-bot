@@ -15,7 +15,7 @@ const Callout: FC<PropsWithChildren<{
     let textColor = "var(--tgui--text_color)";
 
     if (type === "error") {
-        bgColor = "var(--tgui--destructive_background)";
+        bgColor = "var(--tgui--card_bg_color)";
         textColor = "var(--tgui--destructive_text_color)";
     }
 
