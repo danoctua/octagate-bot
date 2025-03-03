@@ -1,4 +1,4 @@
-import {Avatar, AvatarStack, Skeleton, Text, Title} from "@telegram-apps/telegram-ui";
+import {Avatar, AvatarStack, Info, Skeleton, Text, Title} from "@telegram-apps/telegram-ui";
 import React, {FC, PropsWithChildren} from "react";
 import {IChat} from "@/interfaces";
 
@@ -30,29 +30,15 @@ const ChatHeader: FC<PropsWithChildren<{
                 </Skeleton>
                 <Skeleton visible={isChatDataLoading}>
                     {chat?.description &&
-                        <Text
-                            style={{color: "var(--tg-theme-subtitle-text-color)"}}>{chat.description}
-                        </Text>
+                        <Info type={"avatarStack"}>
+                            {chat.description}
+                        </Info>
                     }
                 </Skeleton>
             </div>
             <Skeleton visible={isChatDataLoading}>
                 <div style={{display: "flex", gap: 6}}>
-                    <AvatarStack>
-                        <Avatar
-                            size={28}
-                            src="https://t.me/i/userpic/160/takoy_sasha.jpg"
-                        />
-                        <Avatar
-                            size={28}
-                            src="https://t.me/i/userpic/160/danoctua.jpg"
-                        />
-                        <Avatar
-                            size={28}
-                            src="https://t.me/i/userpic/160/chak_zefir.jpg"
-                        />
-                    </AvatarStack>
-                    <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>{chat?.membersCount} members</Text>
+                    <Info type={"avatarStack"}>{chat?.membersCount} members</Info>
                 </div>
             </Skeleton>
         </Header>

@@ -50,7 +50,7 @@ const ConnectedWalletCell: FC<PropsWithChildren<{
                             alignItems: "center",
                             justifyContent: "center"
                         }}>
-                            <Wallet strokeWidth={2}/>
+                            <Wallet strokeWidth={2} color={"white"}/>
                         </span>
                 }
                 after={<ChevronRight color={"var(--tg-theme-section-header-text-color)"}/>}
