@@ -3,7 +3,7 @@ import {fetchChatData} from "@/services";
 import {IChatConfiguration} from "@/interfaces";
 
 
-const useChatData = (slug: string | undefined) => {
+const useChatData = (slug: string | undefined, full: boolean = false) => {
     const [chat, setChat] = useState<IChatConfiguration | null>(null);
     const [isChatDataLoading, setIsChatDataLoading] = useState(false);
 
@@ -12,13 +12,13 @@ const useChatData = (slug: string | undefined) => {
             return;
         }
         setIsChatDataLoading(true);
-        return await fetchChatData(slug).then((chatData: IChatConfiguration) => {
+        return await fetchChatData(slug, full).then((chatData: IChatConfiguration) => {
             console.debug("Refreshing chat data", chatData);
             setChat(chatData);
             setIsChatDataLoading(false);
             return chatData;
         });
-    }, [slug])
+    }, [full, slug])
 
     return { chat, setChat, fetchChatData: refreshChatData, isChatDataLoading, setIsChatDataLoading };
 }

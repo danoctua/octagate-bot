@@ -1,11 +1,12 @@
-import {Cell, Input, List, Section, Selectable, Text} from "@telegram-apps/telegram-ui";
+import {Cell, Input, List, Section, Selectable, Switch, Text} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
 import {IJetton} from "@/interfaces";
+import React from "react";
 
 
 const SelectableRule = (
     {
-        items, category, selectedOption, onSelect, expected, onExpectedChange,
+        items, category, selectedOption, onSelect, expected, onExpectedChange, existing, isEnabled = true, onToggle = undefined
     }: {
         items: IJetton[],
         category: string,
@@ -13,10 +14,27 @@ const SelectableRule = (
         onExpectedChange: (expected: number) => void,
         selectedOption: string | undefined,
         expected: number | undefined,
+        existing: boolean,
+        isEnabled?: boolean,
+        onToggle?: (isEnabled: boolean) => void
     }
 ) => {
     return (
         <div style={{padding: "16px 0"}}>
+            {existing && <Section>
+                <Cell
+                    Component={"label"}
+                    after={
+                        <Switch
+                            checked={isEnabled}
+                            onChange={_ => onToggle && onToggle(!isEnabled)}
+                        />
+                    }
+                    description={"Whether the rule is active or not"}
+                >
+                    Is active
+                </Cell>
+            </Section>}
             <Input
                 header={"Required amount"}
                 type={"number"}

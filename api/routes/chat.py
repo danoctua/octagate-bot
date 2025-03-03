@@ -1,6 +1,7 @@
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pytonapi.utils import userfriendly_to_raw
 from sqlalchemy.exc import NoResultFound
 
@@ -12,6 +13,9 @@ from api.pos.chat import (
     BaseTelegramChatFDO,
     BaseTelegramChatEligibilityRuleFDO,
     AddChatCPO,
+    ChatJettonRuleCPO,
+    ToggleChatRuleCPO,
+    TelegramChatCPO,
 )
 from core.actions.chat import (
     TelegramChatAction,
@@ -52,9 +56,6 @@ async def get_chats(
         chat_service = TelegramChatService(db_session)
         chats = chat_service.get_all()
 
-        chat_user_service = TelegramChatUserService(db_session)
-        members_count_by_chat = chat_user_service.get_members_count_by_chat_id()
-
         return [
             BaseTelegramChatFDO(
                 id=chat.id,
@@ -64,7 +65,6 @@ async def get_chats(
                 slug=chat.slug,
                 is_forum=chat.is_forum,
                 logo_path=chat.logo_path,
-                members_count=members_count_by_chat.get(chat.id, 0),
             )
             for chat in chats
         ]
@@ -123,6 +123,7 @@ async def create_chat(
 @chat_router.get("/{slug}")
 async def get_chat(
     slug: str,
+    params: Annotated[TelegramChatCPO, Query()],
     user_id: int = Depends(validate_access_token),
 ) -> TelegramChatWithRulesFDO:
     with DBService().db_session() as db_session:
@@ -136,14 +137,21 @@ async def get_chat(
                 status_code=404,
             )
 
-        telegram_chat_user_service = TelegramChatUserService(db_session)
-        eligibility_rules = telegram_chat_user_service.get_eligibility_rules(
-            chat_id=chat.id
-        )
-        members_count = telegram_chat_user_service.get_members_count(chat.id)
-
         user_service = UserService(db_session)
         user = user_service.get(user_id)
+        if params.full and not user.is_admin:
+            raise HTTPException(
+                detail={
+                    "error": {"message": "You are not allowed to access this resource"}
+                },
+                status_code=403,
+            )
+
+        telegram_chat_user_service = TelegramChatUserService(db_session)
+        eligibility_rules = telegram_chat_user_service.get_eligibility_rules(
+            chat_id=chat.id,
+            enabled_only=not params.full,
+        )
 
         if user.wallet:
             nft_item_service = NftItemService(db_session)
@@ -182,7 +190,6 @@ async def get_chat(
                 join_url=chat.invite_link if is_eligible else None,
                 is_member=is_chat_member,
                 is_eligible=is_eligible,
-                members_count=members_count,
             ),
             rules=[
                 TelegramChatEligibilityRuleFDO(
@@ -193,6 +200,7 @@ async def get_chat(
                     is_eligible=rule.is_eligible,
                     photo_url=None,
                     blockchain_address=rule.address,
+                    is_enabled=rule.is_enabled,
                 )
                 for rule in eligibility_summary.items
             ],
@@ -200,7 +208,7 @@ async def get_chat(
 
 
 @chat_router.get("/{slug}/rules/jettons/{address}")
-async def get_chat_rule(
+async def get_chat_jetton_rule(
     slug: str,
     address: str,
     user_id: int = Depends(validate_access_token),
@@ -246,4 +254,86 @@ async def get_chat_rule(
             expected=rule.threshold,
             photo_url=rule.jetton.logo_path,
             blockchain_address=rule.jetton_address,
+            is_enabled=rule.is_enabled,
         )
+
+
+@chat_router.post("/{slug}/rules/jettons/{address}")
+async def add_chat_jetton_rule(
+    slug: str,
+    address: str,
+    rule: ChatJettonRuleCPO,
+    user_id: int = Depends(validate_access_token),
+) -> BaseTelegramChatEligibilityRuleFDO:
+    with DBService().db_session() as db_session:
+        user_service = UserService(db_session)
+        requestor = user_service.get(user_id)
+        if not requestor.is_admin:
+            raise HTTPException(
+                detail={
+                    "error": {"message": "You are not allowed to access this resource"}
+                },
+                status_code=403,
+            )
+
+        telegram_chat_action = TelegramChatAction(db_session)
+        result = telegram_chat_action.add_jetton_rule(
+            slug=slug,
+            address=address,
+            expected=rule.expected,
+        )
+        return result
+
+
+@chat_router.put("/{slug}/rules/jettons/{address}")
+async def update_chat_jetton_rule(
+    slug: str,
+    address: str,
+    rule: ChatJettonRuleCPO,
+    user_id: int = Depends(validate_access_token),
+) -> BaseTelegramChatEligibilityRuleFDO:
+    with DBService().db_session() as db_session:
+        user_service = UserService(db_session)
+        requestor = user_service.get(user_id)
+        if not requestor.is_admin:
+            raise HTTPException(
+                detail={
+                    "error": {"message": "You are not allowed to access this resource"}
+                },
+                status_code=403,
+            )
+
+        telegram_chat_action = TelegramChatAction(db_session)
+        result = telegram_chat_action.update_jetton_rule(
+            slug=slug,
+            address=address,
+            expected=rule.expected,
+        )
+        return result
+
+
+@chat_router.put("/{slug}/rules/jettons/{address}/toggle")
+async def toggle_chat_jetton_rule(
+    slug: str,
+    address: str,
+    rule: ToggleChatRuleCPO,
+    user_id: int = Depends(validate_access_token),
+) -> BaseTelegramChatEligibilityRuleFDO:
+    with DBService().db_session() as db_session:
+        user_service = UserService(db_session)
+        requestor = user_service.get(user_id)
+        if not requestor.is_admin:
+            raise HTTPException(
+                detail={
+                    "error": {"message": "You are not allowed to access this resource"}
+                },
+                status_code=403,
+            )
+
+        telegram_chat_action = TelegramChatAction(db_session)
+        result = telegram_chat_action.toggle_jetton_rule(
+            slug=slug,
+            address=address,
+            is_enabled=rule.is_enabled,
+        )
+        return result

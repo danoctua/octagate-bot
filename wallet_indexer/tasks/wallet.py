@@ -52,7 +52,7 @@ def fetch_wallet_details(address: str) -> None:
 
     with DBService().db_session() as db_session:
         jetton_service = JettonService(db_session)
-        whitelisted_jettons = jetton_service.get_whitelisted()
+        whitelisted_jettons = jetton_service.get_all(whitelisted_only=False)
 
         jetton_wallet_service = JettonWalletService(db_session)
         jetton_wallet_service.bulk_create_or_update(

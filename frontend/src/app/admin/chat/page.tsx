@@ -3,12 +3,10 @@
 import {useCallback, useState} from "react";
 
 import {Page} from '@/components/Page';
-import {Caption, Input, Section, Info, Text, Subheadline} from "@telegram-apps/telegram-ui";
+import {Input, Section} from "@telegram-apps/telegram-ui";
 import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
 import {createChat} from "@/services";
 import {useRouter} from "next/navigation";
-import {AlertTriangle} from "lucide-react";
-import Callout from "@/components/Callout/Callout";
 
 
 const regex = /^(-?\d+(\.\d+)?)$|^(https:\/\/t\.me\/[a-zA-Z0-9_]{4,32})$/
@@ -78,21 +76,6 @@ const NewChatPage = () => {
     )
 
     let footerDefaultText = "Сhat or channel should include Gateway bot with admin privileges";
-    let footer = null;
-    if (formError) {
-        footer = (
-            <Section.Footer style={{color: "var(--tgui--destructive_text_color)"}}>
-                {formError}<br/><br/>
-                {footerDefaultText}
-            </Section.Footer>
-        )
-    } else {
-        footer = (
-            <Section.Footer>
-                {footerDefaultText}
-            </Section.Footer>
-        )
-    }
 
     return (
         <Page back={true}>

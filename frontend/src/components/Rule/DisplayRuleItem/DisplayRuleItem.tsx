@@ -1,10 +1,10 @@
 import {IRuleEligibility} from "@/interfaces";
 import {Cell, Text} from "@telegram-apps/telegram-ui";
-import {Check, ChevronRight} from "lucide-react";
+import {Check, ChevronRight, EyeOff} from "lucide-react";
 import React from "react";
 
 
-const RuleItem = (
+const DisplayRuleItem = (
     {
         rule, readOnly, onClick
     }: {
@@ -19,6 +19,7 @@ const RuleItem = (
         title = rule.title
     }
 
+    let before = null;
     let after;
 
     if (readOnly) {
@@ -28,6 +29,7 @@ const RuleItem = (
                 <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>Not yet</Text>
         )
     } else {
+        before = rule.isEnabled ? null : <EyeOff/>
         after = <ChevronRight/>
     }
 
@@ -37,6 +39,7 @@ const RuleItem = (
             readOnly={readOnly}
             multiline={false}
             disabled={false}
+            before={before}
             after={after}
             onClick={onClick}
         >
@@ -45,4 +48,4 @@ const RuleItem = (
     );
 }
 
-export default RuleItem;
+export default DisplayRuleItem;

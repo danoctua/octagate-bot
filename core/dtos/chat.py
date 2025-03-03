@@ -1,8 +1,8 @@
 import dataclasses
 import enum
 
-from pydantic import BaseModel, field_serializer
-from pytonapi.utils import raw_to_userfriendly, to_nano
+from pydantic import BaseModel
+from pytonapi.utils import raw_to_userfriendly
 
 from core.models.chat import TelegramChatJetton, TelegramChatNFTCollection
 from core.utils.number import human_friendly_number
@@ -23,8 +23,9 @@ class TelegramChatEligibilityItemDTO(BaseModel):
     category: EligibilityCheckType
     title: str
     address_raw: str
-    current: float = 0.0
-    expected: float
+    current: float | int = 0.0
+    expected: float | int
+    is_enabled: bool
 
     @property
     def address(self):
@@ -70,13 +71,6 @@ class TelegramChatJettonRuleDTO(BaseModel):
     threshold: int
     whale_threshold: int | None = None
     whale_label_template: str | None = None
-
-    @field_serializer("threshold", "whale_threshold")
-    def serialize_threshold(self, val: float | None) -> float:
-        if not val:
-            return val
-
-        return to_nano(val)
 
 
 class TelegramChatNFTCollectionRuleDTO(BaseModel):

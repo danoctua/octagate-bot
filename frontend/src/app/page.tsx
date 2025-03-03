@@ -25,7 +25,7 @@ import ChatHeader from "@/components/ChatHeader/ChatHeader";
 import FixedBottomSection, {ButtonStateProps} from "@/components/FixedBottomSection/FixedBottomSection";
 import useMainButtonState from "@/hooks/useMainButtonState";
 import {useClientOnce} from "@/hooks/useClientOnce";
-import RuleItem from "@/components/RuleItem/RuleItem";
+import DisplayRuleItem from "@/components/Rule/DisplayRuleItem/DisplayRuleItem";
 
 export default function Home() {
     const {user, setUser, isUserDataLoading, setIsUserDataLoading} = useAuthAndFetchUser();
@@ -160,7 +160,7 @@ export default function Home() {
             Connect wallet
         </Cell>,
         ...chat.rules.map((rule, index) => (
-            <RuleItem
+            <DisplayRuleItem
                 key={`blockchain-rule-${index}`}
                 rule={rule}
                 readOnly

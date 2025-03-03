@@ -8,7 +8,7 @@ import ChatHeader from "@/components/ChatHeader/ChatHeader";
 import {useClientOnce} from "@/hooks/useClientOnce";
 import {notFound, useRouter} from "next/navigation";
 import {useEffect, useMemo, useState} from 'react';
-import RuleItem from "@/components/RuleItem/RuleItem";
+import DisplayRuleItem from "@/components/Rule/DisplayRuleItem/DisplayRuleItem";
 import {CirclePlus, Share} from "lucide-react";
 import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
 import {generateBotJoinLink} from "@/utils/bot";
@@ -17,7 +17,7 @@ import {shareURL, init} from "@telegram-apps/sdk-react";
 
 const ChatPage = ({params}: { params: { slug: string } }) => {
 
-    const {chat, isChatDataLoading, fetchChatData} = useChatData(params.slug);
+    const {chat, isChatDataLoading, fetchChatData} = useChatData(params.slug, true);
     const [description, setDescription] = useState<string>("");
     const router = useRouter();
 
@@ -39,12 +39,23 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
     }
 
     const chatJoinRules = useMemo(() => {
-        return ([
-                ...(chat?.rules.map((rule) => (
-                    <RuleItem key={rule.title} rule={rule} readOnly={false}
-                              onClick={() => router.push(`/admin/chat/${chat?.chat.slug}/${rule.category}/${rule.blockchainAddress}`)}/>
-                )) || []),
-                <ButtonCell key={"--new"} before={<CirclePlus/>}>
+        return (
+            [
+                ...(
+                    chat?.rules.map((rule) => (
+                        <DisplayRuleItem
+                            key={rule.title}
+                            rule={rule}
+                            readOnly={false}
+                            onClick={() => router.push(`/admin/chat/${chat?.chat.slug}/rule/${rule.category}/${rule.blockchainAddress}`)}
+                        />
+                    )) || []
+                ),
+                <ButtonCell
+                    key={"--new"}
+                    before={<CirclePlus/>}
+                    onClick={() => router.push(`/admin/chat/${chat?.chat.slug}/rule`)}
+                >
                     Add condition
                 </ButtonCell>
             ]

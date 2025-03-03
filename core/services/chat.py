@@ -1,9 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
 
-from pytonapi.utils import to_amount
 from slugify import slugify
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from sqlalchemy.exc import NoResultFound
 from telethon.tl.types import Channel
 
@@ -175,18 +174,25 @@ class TelegramChatUserService(BaseService):
             )
             return self.create(chat_id, user_id, is_admin, is_whale_admin)
 
-    def get_eligibility_rules(self, chat_id: int) -> TelegramChatEligibilityRulesDTO:
+    def get_eligibility_rules(
+        self, chat_id: int, enabled_only: bool = True
+    ) -> TelegramChatEligibilityRulesDTO:
         """
         Get eligibility rules for the chat based on the database records
-        :param chat_id:
-        :return:
+        :param chat_id: Chat ID for which the rules are to be fetched
+        :param enabled_only: Fetch only enabled rules. Set to False if you request rules for management purposes
+        :return: Eligibility rules for the chat
         """
         telegram_chat_jetton_service = TelegramChatJettonService(self.db_session)
-        all_jetton_rules = telegram_chat_jetton_service.get_all(chat_id)
+        all_jetton_rules = telegram_chat_jetton_service.get_all(
+            chat_id, enabled_only=enabled_only
+        )
         telegram_chat_nft_collection_service = TelegramChatNFTCollectionService(
             self.db_session
         )
-        all_nft_collections = telegram_chat_nft_collection_service.get_all(chat_id)
+        all_nft_collections = telegram_chat_nft_collection_service.get_all(
+            chat_id, enabled_only=enabled_only
+        )
         return TelegramChatEligibilityRulesDTO(
             jettons=all_jetton_rules,
             nft_collections=all_nft_collections,
@@ -219,11 +225,11 @@ class TelegramChatUserService(BaseService):
             [
                 TelegramChatEligibilityItemDTO(
                     category=EligibilityCheckType.JETTON,
-                    expected=to_amount(rule.threshold),
+                    expected=rule.threshold,
                     title=rule.jetton.name,
                     address_raw=rule.jetton_address,
                     current=(
-                        to_amount(user_jetton_wallet.balance)
+                        user_jetton_wallet.balance
                         if (
                             user_jetton_wallet := user_jettons_by_master_address.get(
                                 rule.jetton_address
@@ -231,6 +237,7 @@ class TelegramChatUserService(BaseService):
                         )
                         else 0
                     ),
+                    is_enabled=rule.is_enabled,
                 )
                 for rule in eligibility_rules.jettons
             ]
@@ -251,6 +258,7 @@ class TelegramChatUserService(BaseService):
                             ]
                         )
                     ),
+                    is_enabled=rule.is_enabled,
                 )
                 for rule in eligibility_rules.nft_collections
             ]
@@ -322,7 +330,7 @@ class TelegramChatRuleBaseService(BaseService, ABC):
         ...
 
     def get_all(
-        self, chat_id: int | None = None, enabled_only: bool = False
+        self, chat_id: int | None = None, enabled_only: bool = True
     ) -> list[TelegramChatRuleType]:
         query = self.db_session.query(self.model)
         if chat_id is not None:
@@ -331,7 +339,17 @@ class TelegramChatRuleBaseService(BaseService, ABC):
         if enabled_only:
             query = query.filter(self.model.is_enabled.is_(True))
 
+        query = query.order_by(desc(self.model.is_enabled), self.model.created_at)
         return query.all()
+
+    def toggle_rule(
+        self, chat_id: int, address: str, is_enabled: bool
+    ) -> TelegramChatRuleType:
+        rule = self.get(chat_id, address)
+        rule.is_enabled = is_enabled
+        self.db_session.commit()
+        logger.debug(f"Telegram Chat Rule {rule!r} toggled.")
+        return rule
 
     def enable_rule(self, chat_id: int, address: str) -> None:
         rule = self.get(chat_id, address)
@@ -350,20 +368,14 @@ class TelegramChatJettonService(TelegramChatRuleBaseService):
     model = TelegramChatJetton
     dto = TelegramChatJettonRuleDTO
 
-    def update(
-        self,
-        chat_id: int,
-        address: str,
-        threshold: int,
-        whale_threshold: int | None = None,
-        whale_label_template: str | None = None,
-    ) -> None:
-        telegram_chat_jetton = self.get(chat_id, address)
-        telegram_chat_jetton.threshold = threshold
-        telegram_chat_jetton.whale_threshold = whale_threshold
-        telegram_chat_jetton.whale_label_template = whale_label_template
+    def update(self, chat: TelegramChatJettonRuleDTO) -> TelegramChatJetton:
+        telegram_chat_jetton = self.get(chat.chat_id, chat.jetton_address)
+        telegram_chat_jetton.threshold = chat.threshold
+        telegram_chat_jetton.whale_threshold = chat.whale_threshold
+        telegram_chat_jetton.whale_label_template = chat.whale_label_template
         self.db_session.commit()
         logger.debug(f"Telegram Chat Jetton {telegram_chat_jetton!r} updated.")
+        return telegram_chat_jetton
 
     def get(self, chat_id: int, jetton_address: str) -> TelegramChatJetton:
         return (

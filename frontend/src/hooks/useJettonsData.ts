@@ -1,17 +1,25 @@
 import {useState} from "react";
 import {IJetton} from "@/interfaces";
-import {fetchJettons} from "@/services";
+import {fetchAllJettons, fetchWhitelistedJettons} from "@/services";
 import {useClientOnce} from "@/hooks/useClientOnce";
 
 
-const useJettonsData = () => {
-  const [jettons, setJettons] = useState<IJetton[]>([]);
+const useJettonsData = ({whitelistedOnly = true}: {whitelistedOnly: boolean}) => {
+  const [jettons, setJettons] = useState<IJetton[] | undefined>(undefined);
+  const [ isLoading, setIsLoading ] = useState(true);
 
   useClientOnce(() => {
-    fetchJettons().then((data) => { setJettons(data) });
+    if (whitelistedOnly) {
+      fetchWhitelistedJettons().then((data) => { setIsLoading(false); setJettons(data) });
+    } else {
+      fetchAllJettons().then((data) => {
+        setIsLoading(false);
+        setJettons(data)
+      });
+    }
   });
 
-  return jettons;
+  return { jettons, isLoading };
 }
 
 export default useJettonsData;

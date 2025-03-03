@@ -6,7 +6,6 @@ export interface IBaseChat {
     slug: string,
     isForum: boolean,
     logoPath: string,
-    membersCount: number,
 }
 
 
@@ -24,6 +23,7 @@ export interface IRule {
     promoteUrl: string,
     expected: number,
     photoUrl: string,
+    isEnabled: boolean,
 }
 
 

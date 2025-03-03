@@ -4,7 +4,7 @@ import {IBaseChat} from "@/interfaces";
 import {useClientOnce} from "@/hooks/useClientOnce";
 
 
-const useChats = () => {
+const useChatsData = () => {
     const [ chats, setChats ] = useState<IBaseChat[] | null>(null);
     const [ isChatsLoading, setIsChatsLoading ] = useState(true);
 
@@ -19,4 +19,4 @@ const useChats = () => {
     return { chats, isChatsLoading };
 }
 
-export default useChats;
+export default useChatsData;

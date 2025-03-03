@@ -36,11 +36,11 @@ const ChatHeader: FC<PropsWithChildren<{
                     }
                 </Skeleton>
             </div>
-            <Skeleton visible={isChatDataLoading}>
-                <div style={{display: "flex", gap: 6}}>
-                    <Info type={"avatarStack"}>{chat?.membersCount} members</Info>
-                </div>
-            </Skeleton>
+            {/*<Skeleton visible={isChatDataLoading}>*/}
+            {/*    <div style={{display: "flex", gap: 6}}>*/}
+            {/*        <Info type={"avatarStack"}>{chat?.membersCount} members</Info>*/}
+            {/*    </div>*/}
+            {/*</Skeleton>*/}
         </Header>
     )
 }

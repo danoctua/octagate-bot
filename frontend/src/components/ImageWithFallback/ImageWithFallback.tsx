@@ -1,10 +1,15 @@
-import {FC, PropsWithChildren, useState} from "react";
+import {FC, PropsWithChildren, useEffect, useState} from "react";
 import Image from "next/image";
 
 const ImageWithFallback: FC<PropsWithChildren<{
     src: string, fallbackSrc: string, width: number, height: number, rounded?: boolean,
 }>> = ({src, fallbackSrc, width, height, rounded = false, ...props}) => {
     const [imgSrc, setImgSrc] = useState(src);
+
+    useEffect(() => {
+        setImgSrc(src)
+    }, [src]);
+
     const onError = () => {
         setImgSrc(fallbackSrc);
     };

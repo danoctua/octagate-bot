@@ -37,6 +37,13 @@ class JettonService(BaseService):
         logger.info(f"Jetton {jetton.name!r} updated.")
         return jetton
 
+    def update_status(self, address: str, is_enabled: bool) -> Jetton:
+        jetton = self.get(address=address)
+        jetton.is_enabled = is_enabled
+        self.db_session.commit()
+        logger.info(f"Jetton {jetton.name!r} status updated.")
+        return jetton
+
     def create_or_update(self, jetton_info: JettonInfo, logo_path: str) -> Jetton:
         try:
             jetton = self.get(address=jetton_info.metadata.address.to_raw())
@@ -51,11 +58,19 @@ class JettonService(BaseService):
         return self.db_session.query(Jetton).filter(Jetton.address == address).one()
 
     def get_whitelisted(self) -> list[Jetton]:
-        return self.db_session.query(Jetton).filter(Jetton.is_enabled.is_(True)).all()
-
-    def get_all(self) -> list[Jetton]:
         return (
             self.db_session.query(Jetton)
-            .order_by(desc(Jetton.is_enabled), Jetton.created_at)
+            .filter(Jetton.is_enabled.is_(True))
+            .order_by(Jetton.created_at)
             .all()
         )
+
+    def get_all(self, whitelisted_only: bool) -> list[Jetton]:
+        query = self.db_session.query(Jetton)
+        if whitelisted_only:
+            query = query.filter(Jetton.is_enabled.is_(True))
+            query = query.order_by(Jetton.created_at)
+        else:
+            query = query.order_by(desc(Jetton.is_enabled), Jetton.created_at)
+
+        return query.all()

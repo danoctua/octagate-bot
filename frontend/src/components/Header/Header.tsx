@@ -9,7 +9,6 @@ const Header: FC<PropsWithChildren<{}>> = ({children}) => {
             justifyContent: 'center',
             flexDirection: 'column',
             padding: "40px 16px",
-            paddingTop: 48,
             gap: 12,
             textAlign: "center"
         }}>

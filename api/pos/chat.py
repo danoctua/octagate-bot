@@ -1,8 +1,16 @@
 import re
 from typing import Annotated
 
-from pydantic import BaseModel, computed_field, ConfigDict, AfterValidator
+from pydantic import (
+    BaseModel,
+    computed_field,
+    ConfigDict,
+    AfterValidator,
+    field_serializer,
+    field_validator,
+)
 from pydantic.alias_generators import to_camel
+from pytonapi.utils import to_amount, to_nano
 
 from api.pos.base import BaseFDO
 from core.dtos.chat import EligibilityCheckType
@@ -27,7 +35,10 @@ class BaseTelegramChatFDO(BaseFDO):
     slug: str
     is_forum: bool
     logo_path: str | None
-    members_count: int
+
+
+class TelegramChatCPO(BaseModel):
+    full: bool = False
 
 
 class TelegramChatFDO(BaseTelegramChatFDO):
@@ -56,20 +67,36 @@ class AddChatCPO(BaseModel):
     )
 
 
+class ChatJettonRuleCPO(BaseModel):
+    expected: float | int
+
+    @field_validator("expected")
+    @classmethod
+    def preprocess_expected(cls, v: float | int) -> float | int:
+        if not v:
+            return v
+
+        return to_nano(v)
+
+
+class ToggleChatRuleCPO(BaseFDO):
+    is_enabled: bool
+
+
 class BaseTelegramChatEligibilityRuleFDO(BaseFDO):
     category: EligibilityCheckType
     title: str
-    expected: float | int
+    expected: int
     photo_url: str | None
     blockchain_address: str | None
+    is_enabled: bool
 
-    # TODO properly parse to amount
-    # @field_validator("expected", mode="before")
-    # def preprocess_expected(cls, v: float | int) -> float | int:
-    #     if not v:
-    #         return v
-    #
-    #     return to_amount(v)
+    @field_serializer("expected", return_type=float | int)
+    def preprocess_expected(self, v: int) -> float | int:
+        if not v or self.category != EligibilityCheckType.JETTON:
+            return v
+
+        return to_amount(v)
 
     @computed_field
     def promote_url(self) -> str | None:

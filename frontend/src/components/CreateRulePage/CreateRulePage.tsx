@@ -14,7 +14,7 @@ const TABS = [
 ]
 
 
-const RulePage: FC<PropsWithChildren<{ruleData: IRule, type: string}>> = ({ruleData, type, children}) => {
+const CreateRulePage: FC<PropsWithChildren<{ruleData: IRule, type: string}>> = ({ruleData, type, children}) => {
     const [selectedTab, setSelectedTab] = useState(type);
 
     return (
@@ -42,4 +42,4 @@ const RulePage: FC<PropsWithChildren<{ruleData: IRule, type: string}>> = ({ruleD
     )
 }
 
-export default RulePage
+export default CreateRulePage
