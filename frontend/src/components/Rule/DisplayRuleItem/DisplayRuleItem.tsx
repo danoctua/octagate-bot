@@ -13,7 +13,7 @@ const DisplayRuleItem = (
 ) => {
     let title = ''
 
-    if (rule.category === "jetton" || rule.category === "nft-collection") {
+    if (rule.category === "jetton" || rule.category === "nft_collection") {
         title = `Hold ${rule.expected} ${rule.title}`
     } else {
         title = rule.title

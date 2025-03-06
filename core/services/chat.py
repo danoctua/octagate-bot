@@ -227,12 +227,12 @@ class TelegramChatUserService(BaseService):
                     category=EligibilityCheckType.JETTON,
                     expected=rule.threshold,
                     title=rule.jetton.name,
-                    address_raw=rule.jetton_address,
+                    address_raw=rule.address,
                     current=(
                         user_jetton_wallet.balance
                         if (
                             user_jetton_wallet := user_jettons_by_master_address.get(
-                                rule.jetton_address
+                                rule.address
                             )
                         )
                         else 0
@@ -247,13 +247,13 @@ class TelegramChatUserService(BaseService):
             [
                 TelegramChatEligibilityItemDTO(
                     category=EligibilityCheckType.NFT_COLLECTION,
-                    expected=1,
+                    expected=rule.threshold,
                     title=rule.nft_collection.name,
-                    address_raw=rule.collection_address,
+                    address_raw=rule.address,
                     current=(
                         len(
                             [
-                                nft_item.collection_address == rule.collection_address
+                                nft_item.collection_address == rule.address
                                 for nft_item in user_nft_items
                             ]
                         )
@@ -329,6 +329,13 @@ class TelegramChatRuleBaseService(BaseService, ABC):
     def get(self, chat_id: int, address: str) -> TelegramChatRuleType:
         ...
 
+    def update(self, chat: TelegramChatRuleDTOType) -> TelegramChatRuleType:
+        rule = self.get(chat.chat_id, chat.address)
+        rule.threshold = chat.threshold
+        self.db_session.commit()
+        logger.debug(f"{rule!r} updated.")
+        return rule
+
     def get_all(
         self, chat_id: int | None = None, enabled_only: bool = True
     ) -> list[TelegramChatRuleType]:
@@ -368,30 +375,15 @@ class TelegramChatJettonService(TelegramChatRuleBaseService):
     model = TelegramChatJetton
     dto = TelegramChatJettonRuleDTO
 
-    def update(self, chat: TelegramChatJettonRuleDTO) -> TelegramChatJetton:
-        telegram_chat_jetton = self.get(chat.chat_id, chat.jetton_address)
-        telegram_chat_jetton.threshold = chat.threshold
-        telegram_chat_jetton.whale_threshold = chat.whale_threshold
-        telegram_chat_jetton.whale_label_template = chat.whale_label_template
-        self.db_session.commit()
-        logger.debug(f"Telegram Chat Jetton {telegram_chat_jetton!r} updated.")
-        return telegram_chat_jetton
-
     def get(self, chat_id: int, jetton_address: str) -> TelegramChatJetton:
         return (
             self.db_session.query(TelegramChatJetton)
             .filter(
                 TelegramChatJetton.chat_id == chat_id,
-                TelegramChatJetton.jetton_address == jetton_address,
+                TelegramChatJetton.address == jetton_address,
             )
             .one()
         )
-
-    @classmethod
-    def is_chat_whale(
-        cls, chat_jetton_rule: TelegramChatJetton, user_jetton_wallet: JettonWallet
-    ) -> bool:
-        return bool(user_jetton_wallet.balance >= chat_jetton_rule.whale_threshold)
 
 
 class TelegramChatNFTCollectionService(TelegramChatRuleBaseService):
@@ -403,7 +395,7 @@ class TelegramChatNFTCollectionService(TelegramChatRuleBaseService):
             self.db_session.query(TelegramChatNFTCollection)
             .filter(
                 TelegramChatNFTCollection.chat_id == chat_id,
-                TelegramChatNFTCollection.collection_address == collection_address,
+                TelegramChatNFTCollection.address == collection_address,
             )
             .one()
         )

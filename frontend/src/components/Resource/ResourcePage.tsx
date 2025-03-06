@@ -24,15 +24,15 @@ const ResourcePage: FC<PropsWithChildren<{
     resourceType: "NFT collection" | "jetton",
     onNewResourceCreated: (address: string) => void,
 }>> = ({
-    inputAddress,
-    resource,
-    isLoading,
-    addResource,
-    toggleResource,
-    resourceStaticPath,
-    resourceType,
-    onNewResourceCreated,
-}) => {
+           inputAddress,
+           resource,
+           isLoading,
+           addResource,
+           toggleResource,
+           resourceStaticPath,
+           resourceType,
+           onNewResourceCreated,
+       }) => {
     const [address, setAddress] = useState<string>(inputAddress || "");
     const [addressError, setAddressError] = useState<string | undefined>(undefined);
     const [isEnabled, setIsEnabled] = useState<boolean>(false);
@@ -48,9 +48,10 @@ const ResourcePage: FC<PropsWithChildren<{
 
     const onAddressChange = useCallback(
         (e: ChangeEvent<HTMLInputElement>) => {
-            if (address) return
+            if (inputAddress) return
 
             const newAddress = e.target.value
+            console.log(newAddress)
             setAddress(newAddress)
             if (addressRegex.test(newAddress)) {
                 setIsFormValid(true)
@@ -76,10 +77,10 @@ const ResourcePage: FC<PropsWithChildren<{
 
     const renderHeader = useMemo(
         () => {
-            if (resource) {
-                return (
-                    <Header>
-                        <Skeleton visible={isLoading}>
+            return (
+                <Header>
+                    <Skeleton visible={isLoading}>
+                        {resource?.logoPath &&
                             <ImageWithFallback
                                 src={`${resourceStaticPath}/${resource.logoPath}`}
                                 fallbackSrc={"/welcome.gif"}
@@ -87,40 +88,41 @@ const ResourcePage: FC<PropsWithChildren<{
                                 width={96}
                                 height={96}
                             />
-                        </Skeleton>
-                        <div style={{display: "flex", flexDirection: "column", gap: 8}}>
-                            <Skeleton visible={isLoading}>
-                                <Title level={"2"} weight={"2"} plain>
-                                    {resource.name}
-                                </Title>
+                        }
+                    </Skeleton>
+                    <div style={{display: "flex", flexDirection: "column", gap: 8}}>
+                        <Skeleton visible={isLoading}>
+                            <Title level={"2"} weight={"2"} plain>
+                                {resource?.name || `Add new ${resourceType}`}
+                            </Title>
+                            {resource?.address &&
                                 <Subheadline>
                                     <Link
-                                        href={`https://tonviewer.com/${resource.address}`}
-                                        style={{display: "flex", gap: 4, justifyContent: "center", alignItems: "center"}}
+                                        href={`https://tonviewer.com/${resource?.address}`}
+                                        style={{
+                                            display: "flex",
+                                            gap: 4,
+                                            justifyContent: "center",
+                                            alignItems: "center"
+                                        }}
                                     >
                                         View in explorer
                                         <ExternalLink size={"16"}/>
                                     </Link>
                                 </Subheadline>
-                            </Skeleton>
-                            <Skeleton visible={isLoading}>
-                                {resource?.description &&
-                                    <Info type={"avatarStack"}>
-                                        {resource.description}
-                                    </Info>
-                                }
-                            </Skeleton>
-                        </div>
-                    </Header>
-                )
-            } else {
-                return (
-                    <Header>
-                        <Title level={"2"} weight={"2"} plain>Add new {resourceType}</Title>
-                    </Header>
-                )
-            }
-        }, [isLoading, resource, resourceStaticPath, resourceType]
+                            }
+                        </Skeleton>
+                        <Skeleton visible={isLoading}>
+                            {resource?.description &&
+                                <Info type={"avatarStack"}>
+                                    {resource.description}
+                                </Info>
+                            }
+                        </Skeleton>
+                    </div>
+                </Header>
+            )
+        }, [inputAddress, isLoading, resource, resourceStaticPath, resourceType]
     )
 
     const renderForm = useMemo(
@@ -148,7 +150,7 @@ const ResourcePage: FC<PropsWithChildren<{
                             <>
                                 <Input
                                     value={resource.name}
-                                    header={"ANON"}
+                                    header={"Name"}
                                     readOnly
                                     disabled
                                 />

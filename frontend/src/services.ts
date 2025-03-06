@@ -90,3 +90,15 @@ export const createNftCollection = async (address: string): Promise<INftCollecti
 export const updateNftCollection = async (address: string, isEnabled: boolean): Promise<INftCollection> => {
     return await apiClient.put(`/admin/resources/nft-collections/${address}`, {isEnabled: isEnabled}).then(response => response.data);
 }
+
+export const fetchNftCollectionRule = async (slug: string, nftCollectionAddress: string): Promise<IRule> => {
+    return await apiClient.get(`/admin/chats/${slug}/rules/nft-collections/${nftCollectionAddress}`).then(response => response.data);
+}
+
+export const createNftCollectionRule = async (slug: string, nftCollectionAddress: string, expected: number): Promise<IRule> => {
+    return await apiClient.post(`/admin/chats/${slug}/rules/nft-collections/${nftCollectionAddress}`, {expected}).then(response => response.data);
+}
+
+export const updateNftCollectionRule = async (slug: string, nftCollectionAddress: string, expected: number, isEnabled: boolean): Promise<IRule> => {
+    return await apiClient.put(`/admin/chats/${slug}/rules/nft-collections/${nftCollectionAddress}`, {expected, isEnabled}).then(response => response.data);
+}

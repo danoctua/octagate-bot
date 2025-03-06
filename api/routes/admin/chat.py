@@ -8,17 +8,20 @@ from sqlalchemy.orm import Session
 from api.deps import get_db_session
 from api.pos.chat import (
     BaseTelegramChatEligibilityRuleFDO,
-    ChatJettonRuleCPO,
+    TelegramChatJettonRuleCPO,
     ToggleChatRuleCPO,
     AddChatCPO,
     BaseTelegramChatFDO,
     TelegramChatWithRulesFDO,
+    TelegramChatNFTCollectionRuleCPO,
 )
 from core.actions.chat import (
     TelegramChatAction,
     TelegramChatAlreadyExists,
     TelegramChatNotSufficientPrivileges,
     TelegramChatNotExists,
+    TelegramChatJettonAction,
+    TelegramChatNFTCollectionAction,
 )
 from core.dtos.chat import EligibilityCheckType
 from core.services.chat import TelegramChatService, TelegramChatJettonService
@@ -121,7 +124,7 @@ async def get_chat_jetton_rule(
         title=rule.jetton.name,
         expected=rule.threshold,
         photo_url=rule.jetton.logo_path,
-        blockchain_address=rule.jetton_address,
+        blockchain_address=rule.address,
         is_enabled=rule.is_enabled,
     )
 
@@ -130,14 +133,15 @@ async def get_chat_jetton_rule(
 async def add_chat_jetton_rule(
     slug: str,
     address: str,
-    rule: ChatJettonRuleCPO,
+    rule: TelegramChatJettonRuleCPO,
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatEligibilityRuleFDO:
-    telegram_chat_action = TelegramChatAction(db_session)
-    result = telegram_chat_action.add_jetton_rule(
+    action = TelegramChatJettonAction(db_session)
+    address_raw = userfriendly_to_raw(address)
+    result = action.create(
         slug=slug,
-        address=address,
-        expected=rule.expected,
+        address_raw=address_raw,
+        threshold=rule.expected,
     )
     return result
 
@@ -146,13 +150,14 @@ async def add_chat_jetton_rule(
 async def update_chat_jetton_rule(
     slug: str,
     address: str,
-    rule: ChatJettonRuleCPO,
+    rule: TelegramChatJettonRuleCPO,
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatEligibilityRuleFDO:
-    telegram_chat_action = TelegramChatAction(db_session)
-    result = telegram_chat_action.update_jetton_rule(
+    action = TelegramChatJettonAction(db_session)
+    address_raw = userfriendly_to_raw(address)
+    result = action.update(
         slug=slug,
-        address=address,
+        address_raw=address_raw,
         expected=rule.expected,
     )
     return result
@@ -165,10 +170,36 @@ async def toggle_chat_jetton_rule(
     rule: ToggleChatRuleCPO,
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatEligibilityRuleFDO:
-    telegram_chat_action = TelegramChatAction(db_session)
-    result = telegram_chat_action.toggle_jetton_rule(
+    action = TelegramChatJettonAction(db_session)
+    address_raw = userfriendly_to_raw(address)
+    result = action.toggle(
         slug=slug,
-        address=address,
+        address_raw=address_raw,
         is_enabled=rule.is_enabled,
     )
     return result
+
+
+@admin_chat_router.get("/{slug}/rules/nft-collections/{address}")
+async def get_chat_nft_collection_rule(
+    slug: str,
+    address: str,
+    db_session: Session = Depends(get_db_session),
+) -> BaseTelegramChatEligibilityRuleFDO:
+    action = TelegramChatNFTCollectionAction(db_session)
+    return action.read(slug=slug, address_raw=userfriendly_to_raw(address))
+
+
+@admin_chat_router.post("/{slug}/rules/nft-collections/{address}")
+async def add_chat_nft_collection_rule(
+    slug: str,
+    address: str,
+    rule: TelegramChatNFTCollectionRuleCPO,
+    db_session: Session = Depends(get_db_session),
+) -> BaseTelegramChatEligibilityRuleFDO:
+    action = TelegramChatNFTCollectionAction(db_session)
+    return action.create(
+        slug=slug,
+        address_raw=userfriendly_to_raw(address),
+        threshold=rule.expected,
+    )

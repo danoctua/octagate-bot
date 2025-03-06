@@ -4,6 +4,7 @@ import {Page} from "@/components/Page";
 import {SegmentedControl, Title} from "@telegram-apps/telegram-ui";
 import {useState} from "react";
 import JettonRule from "@/components/Rule/JettonRule/JettonRule";
+import NftCollectionRule from "@/components/Rule/NftCollectionRule/NftCollectionRule";
 
 
 const TABS = [
@@ -39,7 +40,9 @@ const NewRulePage = ({params}: { params: { slug: string } }) => {
             {
                 selectedTab === "jetton" ?
                     <JettonRule chatSlug={params.slug}/> :
-                    null
+                    selectedTab === "nftCollection" ?
+                        <NftCollectionRule chatSlug={params.slug}/> :
+                        null
             }
             {/*Not fixed bottom section as they should be owned by each tab*/}
         </Page>

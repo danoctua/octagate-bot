@@ -1,8 +1,9 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.params import Query
+from pytonapi.exceptions import TONAPINotFoundError
 from pytonapi.utils import userfriendly_to_raw
 from sqlalchemy.orm import Session
 
@@ -56,8 +57,14 @@ async def add_jetton(
 ) -> JettonFDO:
     jetton_action = JettonAction(db_session)
     jetton_address_raw = userfriendly_to_raw(jetton.address)
-    jetton = await jetton_action.create(address_raw=jetton_address_raw)
-    return jetton
+    try:
+        jetton = await jetton_action.create(address_raw=jetton_address_raw)
+        return jetton
+    except TONAPINotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Jetton not found",
+        )
 
 
 @admin_resource_router.put("/jettons/{jetton_address}")
@@ -99,7 +106,15 @@ async def add_nft_collection(
     db_session: Session = Depends(get_db_session),
 ) -> NftCollectionFDO:
     nft_collection_action = NftCollectionAction(db_session)
-    return await nft_collection_action.create(address_raw=nft_collection_data.address)
+    try:
+        return await nft_collection_action.create(
+            address_raw=nft_collection_data.address
+        )
+    except TONAPINotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="NFT collection not found",
+        )
 
 
 @admin_resource_router.put("/nft-collections/{nft_collection_address}")

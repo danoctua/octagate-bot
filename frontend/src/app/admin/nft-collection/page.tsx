@@ -31,6 +31,7 @@ const NftCollectionsPage = () => {
                                     />
                                 }
                                 after={<ChevronRight/>}
+                                subtitle={nftCollection.description}
                                 onClick={() => router.push(`/admin/nft-collection/${nftCollection.address}`)}
                                 key={nftCollection.address}
                             >
@@ -41,7 +42,7 @@ const NftCollectionsPage = () => {
                     <ButtonCell
                         key={"--new"}
                         before={<CirclePlus/>}
-                        onClick={() => router.push(`/admin/nft-collection`)}>
+                        onClick={() => router.push(`/admin/nft-collection/new`)}>
                         Add NFT collection
                     </ButtonCell>
                 ]

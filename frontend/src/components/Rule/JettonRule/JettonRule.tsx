@@ -66,6 +66,7 @@ const JettonRule: FC<PropsWithChildren<{
             {jettons ?
                 jettons.length ?
                     <SelectableRule
+                        title={"Jetton"}
                         items={jettons}
                         category={"jettons"}
                         selectedOption={selectedJettonAddress}

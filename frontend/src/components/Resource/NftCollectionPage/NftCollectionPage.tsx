@@ -12,8 +12,8 @@ const NftCollectionPage: FC<PropsWithChildren<{ address?: string }>> = ({address
     const router = useRouter();
 
     const onNftCollectionCreated = useCallback(
-        (address: string) => {
-            router.push(`/admin/nft-collection/${address}`)
+        (_: string) => {
+            router.push(`/admin/nft-collection`)
         }, [router]
     )
 

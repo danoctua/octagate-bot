@@ -12,8 +12,8 @@ const JettonPage: FC<PropsWithChildren<{ address?: string }>> = ({address, child
 
 
     const onJettonCreated = useCallback(
-        (address: string) => {
-            router.push(`/admin/jetton/${address}`)
+        (_: string) => {
+            router.push(`/admin/jetton`)
         },
         [router]
     )

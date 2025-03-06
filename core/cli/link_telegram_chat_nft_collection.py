@@ -3,8 +3,8 @@ import logging
 
 import click
 
-from core.actions.chat import TelegramChatAction
-from core.dtos.chat import TelegramChatNFTCollectionRuleDTO
+from core.actions.chat import TelegramChatNFTCollectionAction
+from core.services.chat import TelegramChatService
 from core.services.db import DBService
 
 logger = logging.getLogger(__name__)
@@ -15,12 +15,13 @@ async def link_telegram_chat_nft_collection(
     collection_address: str,
 ) -> None:
     with DBService().db_session() as db_session:
-        telegram_chat_action = TelegramChatAction(db_session)
-        telegram_chat_action.add_nft_collection_rule(
-            TelegramChatNFTCollectionRuleDTO(
-                chat_id=chat_id,
-                collection_address=collection_address,
-            )
+        telegram_chat_service = TelegramChatService(db_session)
+        chat = telegram_chat_service.get(chat_id=chat_id)
+        telegram_chat_nft_collection_action = TelegramChatNFTCollectionAction(
+            db_session
+        )
+        telegram_chat_nft_collection_action.create(
+            slug=chat.slug, address_raw=collection_address, threshold=1
         )
 
 

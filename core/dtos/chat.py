@@ -67,12 +67,11 @@ class TelegramChatEligibilitySummaryDTO(BaseModel):
 
 class TelegramChatJettonRuleDTO(BaseModel):
     chat_id: int
-    jetton_address: str
+    address: str
     threshold: int
-    whale_threshold: int | None = None
-    whale_label_template: str | None = None
 
 
 class TelegramChatNFTCollectionRuleDTO(BaseModel):
     chat_id: int
-    collection_address: str
+    address: str
+    threshold: int

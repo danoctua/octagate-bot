@@ -31,6 +31,7 @@ const JettonsPage = () => {
                                         rounded
                                     />
                                 }
+                                subtitle={jetton.description}
                                 after={<ChevronRight/>}
                                 onClick={() => router.push(`/admin/jetton/${jetton.address}`)}
                                 key={jetton.address}

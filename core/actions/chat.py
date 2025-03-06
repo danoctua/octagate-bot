@@ -54,10 +54,6 @@ class TelegramChatAction(BaseAction):
         super().__init__(db_session)
         self.telegram_chat_service = TelegramChatService(db_session)
         self.telegram_chat_user_service = TelegramChatUserService(db_session)
-        self.telegram_chat_jetton_service = TelegramChatJettonService(db_session)
-        self.telegram_chat_nft_collection_service = TelegramChatNFTCollectionService(
-            db_session
-        )
 
     async def create(self, chat_identifier: str | int) -> BaseTelegramChatFDO:
         telethon_service = TelethonService()
@@ -250,11 +246,92 @@ class TelegramChatAction(BaseAction):
             ],
         )
 
-    def add_jetton_rule(
+
+class TelegramChatNFTCollectionAction(BaseAction):
+    def __init__(self, db_session: Session):
+        super().__init__(db_session)
+        self.telegram_chat_service = TelegramChatService(db_session)
+        self.telegram_chat_nft_collection_service = TelegramChatNFTCollectionService(
+            db_session
+        )
+
+    def read(
+        self,
+        slug: str,
+        address_raw: str,
+    ) -> BaseTelegramChatEligibilityRuleFDO:
+        chat = self.telegram_chat_service.get_by_slug(slug)
+        rule = self.telegram_chat_nft_collection_service.get(
+            chat_id=chat.id, collection_address=address_raw
+        )
+        return BaseTelegramChatEligibilityRuleFDO(
+            category=EligibilityCheckType.NFT_COLLECTION,
+            title=rule.nft_collection.name,
+            expected=rule.threshold,
+            photo_url=rule.nft_collection.logo_path,
+            blockchain_address=rule.address,
+            is_enabled=rule.is_enabled,
+        )
+
+    def create(
+        self,
+        slug: str,
+        address_raw: str,
+        threshold: int,
+    ) -> BaseTelegramChatEligibilityRuleFDO:
+        chat = self.telegram_chat_service.get_by_slug(slug)
+        new_rule = self.telegram_chat_nft_collection_service.create(
+            TelegramChatNFTCollectionRuleDTO(
+                chat_id=chat.id,
+                address=address_raw,
+                threshold=threshold,
+            )
+        )
+        logger.info(f"Chat {chat.id!r} linked to NFT collection {address_raw!r}")
+        return BaseTelegramChatEligibilityRuleFDO(
+            category=EligibilityCheckType.NFT_COLLECTION,
+            title=new_rule.nft_collection.name,
+            expected=new_rule.threshold,
+            photo_url=new_rule.nft_collection.logo_path,
+            blockchain_address=new_rule.address,
+            is_enabled=new_rule.is_enabled,
+        )
+
+    def update(
         self,
         slug: str,
         address: str,
-        expected: float | int,
+        expected: int,
+    ) -> BaseTelegramChatEligibilityRuleFDO:
+        chat = self.telegram_chat_service.get_by_slug(slug)
+        rule = self.telegram_chat_nft_collection_service.update(
+            TelegramChatNFTCollectionRuleDTO(
+                chat_id=chat.id,
+                address=address,
+                threshold=expected,
+            )
+        )
+        return BaseTelegramChatEligibilityRuleFDO(
+            category=EligibilityCheckType.NFT_COLLECTION,
+            title=rule.nft_collection.name,
+            expected=rule.threshold,
+            photo_url=rule.nft_collection.logo_path,
+            blockchain_address=rule.address,
+            is_enabled=rule.is_enabled,
+        )
+
+
+class TelegramChatJettonAction(BaseAction):
+    def __init__(self, db_session: Session):
+        super().__init__(db_session)
+        self.telegram_chat_service = TelegramChatService(db_session)
+        self.telegram_chat_jetton_service = TelegramChatJettonService(db_session)
+
+    def create(
+        self,
+        slug: str,
+        address_raw: str,
+        threshold: float | int,
     ) -> BaseTelegramChatEligibilityRuleFDO:
         try:
             chat = self.telegram_chat_service.get_by_slug(slug)
@@ -267,7 +344,7 @@ class TelegramChatAction(BaseAction):
 
         try:
             self.telegram_chat_jetton_service.get(
-                chat_id=chat.id, jetton_address=address
+                chat_id=chat.id, jetton_address=address_raw
             )
             raise HTTPException(
                 detail={"error": {"message": "Rule already exists"}},
@@ -279,24 +356,24 @@ class TelegramChatAction(BaseAction):
         new_rule = self.telegram_chat_jetton_service.create(
             TelegramChatJettonRuleDTO(
                 chat_id=chat.id,
-                jetton_address=address,
-                threshold=expected,
+                address=address_raw,
+                threshold=threshold,
             )
         )
-        logger.info(f"Chat {chat.id!r} linked to jetton {address!r}")
+        logger.info(f"Chat {chat.id!r} linked to jetton {address_raw!r}")
         return BaseTelegramChatEligibilityRuleFDO(
             category=EligibilityCheckType.JETTON,
             title=new_rule.jetton.name,
             expected=new_rule.threshold,
             photo_url=new_rule.jetton.logo_path,
-            blockchain_address=new_rule.jetton_address,
+            blockchain_address=new_rule.address,
             is_enabled=new_rule.is_enabled,
         )
 
-    def update_jetton_rule(
+    def update(
         self,
         slug: str,
-        address: str,
+        address_raw: str,
         expected: int | float,
     ) -> BaseTelegramChatEligibilityRuleFDO:
         try:
@@ -311,7 +388,7 @@ class TelegramChatAction(BaseAction):
             rule = self.telegram_chat_jetton_service.update(
                 TelegramChatJettonRuleDTO(
                     chat_id=chat.id,
-                    jetton_address=address,
+                    address=address_raw,
                     threshold=expected,
                 )
             )
@@ -325,14 +402,14 @@ class TelegramChatAction(BaseAction):
             title=rule.jetton.name,
             expected=rule.threshold,
             photo_url=rule.jetton.logo_path,
-            blockchain_address=rule.jetton_address,
+            blockchain_address=rule.address,
             is_enabled=rule.is_enabled,
         )
 
-    def toggle_jetton_rule(
+    def toggle(
         self,
         slug: str,
-        address: str,
+        address_raw: str,
         is_enabled: bool,
     ) -> BaseTelegramChatEligibilityRuleFDO:
         try:
@@ -347,7 +424,7 @@ class TelegramChatAction(BaseAction):
         try:
             rule = self.telegram_chat_jetton_service.toggle_rule(
                 chat_id=chat.id,
-                address=address,
+                address=address_raw,
                 is_enabled=is_enabled,
             )
         except NoResultFound:
@@ -361,19 +438,6 @@ class TelegramChatAction(BaseAction):
             title=rule.jetton.name,
             expected=rule.threshold,
             photo_url=rule.jetton.logo_path,
-            blockchain_address=rule.jetton_address,
+            blockchain_address=rule.address,
             is_enabled=rule.is_enabled,
-        )
-
-    def add_nft_collection_rule(
-        self,
-        dto: TelegramChatNFTCollectionRuleDTO,
-    ) -> None:
-        telegram_chat_nft_collection_service = TelegramChatNFTCollectionService(
-            self.db_session
-        )
-        telegram_chat_nft_collection_service.create(dto)
-
-        logger.info(
-            f"Chat {dto.chat_id!r} linked to NFT collection {dto.collection_address!r}"
         )

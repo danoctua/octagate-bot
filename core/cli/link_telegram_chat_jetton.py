@@ -3,8 +3,8 @@ import logging
 
 import click
 
-from core.actions.chat import TelegramChatAction
-from core.dtos.chat import TelegramChatJettonRuleDTO
+from core.actions.chat import TelegramChatJettonAction
+from core.services.chat import TelegramChatService
 from core.services.db import DBService
 
 logger = logging.getLogger(__name__)
@@ -14,19 +14,14 @@ async def link_telegram_chat_jetton(
     chat_id: int,
     jetton_address: str,
     threshold: int,
-    whale_threshold: int,
-    whale_label_template: str,
 ) -> None:
     with DBService().db_session() as db_session:
-        telegram_chat_action = TelegramChatAction(db_session)
-        telegram_chat_action.add_jetton_rule(
-            TelegramChatJettonRuleDTO(
-                chat_id=chat_id,
-                jetton_address=jetton_address,
-                threshold=threshold,
-                whale_threshold=whale_threshold,
-                whale_label_template=whale_label_template,
-            )
+        chat = TelegramChatService(db_session).get(chat_id)
+        action = TelegramChatJettonAction(db_session)
+        action.create(
+            slug=chat.slug,
+            address_raw=jetton_address,
+            threshold=threshold,
         )
 
 
@@ -34,14 +29,10 @@ async def link_telegram_chat_jetton(
 @click.option("--chat-id", type=int, required=True)
 @click.option("--jetton-address", type=str, required=True)
 @click.option("--threshold", type=int, required=True)
-@click.option("--whale-threshold", type=int, required=False, default=None)
-@click.option("--whale-label-template", type=str, required=False, default=None)
 def main(
     chat_id: int,
     jetton_address: str,
     threshold: int,
-    whale_threshold: int,
-    whale_label_template: str,
 ) -> None:
     """
     CLI command to load a Telegram chat.
@@ -51,7 +42,5 @@ def main(
             chat_id=chat_id,
             jetton_address=jetton_address,
             threshold=threshold,
-            whale_threshold=whale_threshold,
-            whale_label_template=whale_label_template,
         )
     )

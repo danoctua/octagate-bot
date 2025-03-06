@@ -25,33 +25,27 @@ class TelegramChat(Base):
         return f"<TelegramChat(id={self.id}, title={self.title})>"
 
 
-class TelegramChatJetton(Base):
-    __tablename__ = "telegram_chat_jetton"
+class TelegramChatRuleBase(Base):
+    __abstract__ = True
 
-    jetton_address = mapped_column(
-        ForeignKey("jetton.address", ondelete="CASCADE"), primary_key=True
-    )
     chat_id = mapped_column(
         ForeignKey("telegram_chat.id", ondelete="CASCADE"), primary_key=True
     )
     threshold = mapped_column(
-        BigInteger, nullable=False, doc="Minimum amount of jettons to hold in nano"
-    )
-    whale_threshold = mapped_column(
-        BigInteger,
-        nullable=True,
-        doc="Minimum amount of jettons to hold in nano to be considered a whale",
-    )
-    whale_label_template = mapped_column(
-        String(25),
-        nullable=True,
-        doc="Label to be assigned to the user if they are a whale",
+        BigInteger, nullable=False, doc="Minimum amount of items to hold"
     )
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
+
+class TelegramChatJetton(TelegramChatRuleBase):
+    __tablename__ = "telegram_chat_jetton"
+
+    address = mapped_column(
+        ForeignKey("jetton.address", ondelete="CASCADE"), primary_key=True
+    )
     jetton = relationship(
         "Jetton",
         back_populates="telegram_chat_jettons",
@@ -59,21 +53,14 @@ class TelegramChatJetton(Base):
     )
 
     def __repr__(self):
-        return f"<TelegramChatJetton(jetton_address={self.jetton_address}, chat_id={self.chat_id})>"
+        return f"<TelegramChatJetton({self.address=}, {self.chat_id=})>"
 
 
-class TelegramChatNFTCollection(Base):
+class TelegramChatNFTCollection(TelegramChatRuleBase):
     __tablename__ = "telegram_chat_nft_collection"
 
-    collection_address = mapped_column(
+    address = mapped_column(
         ForeignKey("nft_collection.address", ondelete="CASCADE"), primary_key=True
-    )
-    chat_id = mapped_column(
-        ForeignKey("telegram_chat.id", ondelete="CASCADE"), primary_key=True
-    )
-    is_enabled = mapped_column(Boolean, nullable=False, default=True)
-    created_at = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
     nft_collection = relationship(
@@ -83,7 +70,7 @@ class TelegramChatNFTCollection(Base):
     )
 
     def __repr__(self):
-        return f"<TelegramChatNFTCollection(collection_address={self.collection_address}, chat_id={self.chat_id})>"
+        return f"<TelegramChatNFTCollection({self.address=}, {self.chat_id=})>"
 
 
 # class TelegramChatExternalSource(Base):

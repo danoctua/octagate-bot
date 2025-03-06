@@ -1,14 +1,15 @@
 import {Cell, Input, List, Section, Selectable, Switch, Text} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
-import {IJetton} from "@/interfaces";
+import {IJetton, INftCollection} from "@/interfaces";
 import React from "react";
 
 
 const SelectableRule = (
     {
-        items, category, selectedOption, onSelect, expected, onExpectedChange, existing, isEnabled = true, onToggle = undefined
+        title, items, category, selectedOption, onSelect, expected, onExpectedChange, existing, isEnabled = true, onToggle = undefined
     }: {
-        items: IJetton[],
+        title: string,
+        items: IJetton[] | INftCollection[],
         category: string,
         onSelect: (address: string) => void,
         onExpectedChange: (expected: number) => void,
@@ -43,7 +44,7 @@ const SelectableRule = (
             />
             <Section
                 style={{padding: "16px 0"}}
-                header={"Token"}
+                header={title}
             >
                 <List>
                     {items.map((item, index) => (

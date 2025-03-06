@@ -14,7 +14,7 @@ from pytonapi.utils import to_amount, to_nano, raw_to_userfriendly
 
 from api.pos.base import BaseFDO
 from core.dtos.chat import EligibilityCheckType
-from core.models import TelegramChatJetton, TelegramChatNFTCollection
+from core.models.chat import TelegramChatJetton, TelegramChatNFTCollection
 from core.utils.number import human_friendly_number
 
 
@@ -80,7 +80,7 @@ class AddChatCPO(BaseModel):
     )
 
 
-class ChatJettonRuleCPO(BaseModel):
+class TelegramChatJettonRuleCPO(BaseModel):
     expected: float | int
 
     @field_validator("expected")
@@ -90,6 +90,10 @@ class ChatJettonRuleCPO(BaseModel):
             return v
 
         return to_nano(v)
+
+
+class TelegramChatNFTCollectionRuleCPO(BaseModel):
+    expected: int
 
 
 class ToggleChatRuleCPO(BaseFDO):
@@ -110,6 +114,13 @@ class BaseTelegramChatEligibilityRuleFDO(BaseFDO):
             return v
 
         return to_amount(v)
+
+    @field_serializer("blockchain_address", return_type=str)
+    def preprocess_blockchain_address(self, v: str) -> str:
+        if not v:
+            return v
+
+        return raw_to_userfriendly(v)
 
     @computed_field
     def promote_url(self) -> str | None:
@@ -149,9 +160,11 @@ class TelegramChatEligibilityRuleFDO(BaseTelegramChatEligibilityRuleFDO):
         return cls(
             category=EligibilityCheckType.NFT_COLLECTION,
             title=nft_collection_rule.nft_collection.name,
-            expected=1,
+            expected=nft_collection_rule.threshold,
             photo_url=nft_collection_rule.nft_collection.logo_path,
-            blockchain_address=nft_collection_rule.nft_collection.address,
+            blockchain_address=raw_to_userfriendly(
+                nft_collection_rule.nft_collection.address
+            ),
             is_enabled=nft_collection_rule.is_enabled,
         )
 

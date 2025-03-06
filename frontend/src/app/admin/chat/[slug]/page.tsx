@@ -15,6 +15,12 @@ import {shareURL, init} from "@telegram-apps/sdk-react";
 import useAdminChatData from "@/hooks/data/useAdminChatData";
 
 
+const RULE_CATEGORY_MAPPING: { [key: string]: string } = {
+    jetton: "jetton",
+    nft_collection: "nft-collection"
+}
+
+
 const ChatPage = ({params}: { params: { slug: string } }) => {
 
     const {chat, isChatDataLoading, fetchChatData} = useAdminChatData(params.slug);
@@ -47,7 +53,7 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                             key={rule.title}
                             rule={rule}
                             readOnly={false}
-                            onClick={() => router.push(`/admin/chat/${chat?.chat.slug}/rule/${rule.category}/${rule.blockchainAddress}`)}
+                            onClick={() => router.push(`/admin/chat/${chat?.chat.slug}/rule/${RULE_CATEGORY_MAPPING[rule.category]}/${rule.blockchainAddress}`)}
                         />
                     )) || []
                 ),
