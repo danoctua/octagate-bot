@@ -115,13 +115,6 @@ class BaseTelegramChatEligibilityRuleFDO(BaseFDO):
 
         return to_amount(v)
 
-    @field_serializer("blockchain_address", return_type=str)
-    def preprocess_blockchain_address(self, v: str) -> str:
-        if not v:
-            return v
-
-        return raw_to_userfriendly(v)
-
     @computed_field
     def promote_url(self) -> str | None:
         if self.category == EligibilityCheckType.JETTON:
@@ -133,16 +126,6 @@ class BaseTelegramChatEligibilityRuleFDO(BaseFDO):
                 collection_address=self.blockchain_address
             )
         return None
-
-
-class TelegramChatEligibilityRuleFDO(BaseTelegramChatEligibilityRuleFDO):
-    actual: float | None = None
-    photo_url: str | None = None
-    is_eligible: bool = False
-
-    @property
-    def expected_human_friendly(self) -> str:
-        return human_friendly_number(self.expected)
 
     @classmethod
     def from_jetton_rule(cls, jetton_rule: TelegramChatJetton):
@@ -167,6 +150,15 @@ class TelegramChatEligibilityRuleFDO(BaseTelegramChatEligibilityRuleFDO):
             ),
             is_enabled=nft_collection_rule.is_enabled,
         )
+
+
+class TelegramChatEligibilityRuleFDO(BaseTelegramChatEligibilityRuleFDO):
+    actual: float | None = None
+    is_eligible: bool = False
+
+    @property
+    def expected_human_friendly(self) -> str:
+        return human_friendly_number(self.expected)
 
 
 class TelegramChatWithRulesFDO(BaseModel):

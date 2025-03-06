@@ -23,7 +23,6 @@ from core.actions.chat import (
     TelegramChatJettonAction,
     TelegramChatNFTCollectionAction,
 )
-from core.dtos.chat import EligibilityCheckType
 from core.services.chat import TelegramChatService, TelegramChatJettonService
 
 admin_chat_router = APIRouter(prefix="/chats")
@@ -119,14 +118,7 @@ async def get_chat_jetton_rule(
             status_code=404,
         )
 
-    return BaseTelegramChatEligibilityRuleFDO(
-        category=EligibilityCheckType.JETTON,
-        title=rule.jetton.name,
-        expected=rule.threshold,
-        photo_url=rule.jetton.logo_path,
-        blockchain_address=rule.address,
-        is_enabled=rule.is_enabled,
-    )
+    return BaseTelegramChatEligibilityRuleFDO.from_jetton_rule(rule)
 
 
 @admin_chat_router.post("/{slug}/rules/jettons/{address}")
