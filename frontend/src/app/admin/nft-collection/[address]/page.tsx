@@ -1,0 +1,11 @@
+import NftCollectionPage from "@/components/Resource/NftCollectionPage/NftCollectionPage";
+
+const EditNftCollectionPage = ({params}: {params: {address: string}}) => {
+    return (
+        <div>
+            <NftCollectionPage address={params.address} />
+        </div>
+    );
+}
+
+export default EditNftCollectionPage;

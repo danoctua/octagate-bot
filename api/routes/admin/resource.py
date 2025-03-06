@@ -7,8 +7,18 @@ from pytonapi.utils import userfriendly_to_raw
 from sqlalchemy.orm import Session
 
 from api.deps import get_db_session
-from api.pos.ton import JettonFDO, CreateJettonCPO, UpdateJettonCPO, GetJettonCPO
+from api.pos.ton import (
+    JettonFDO,
+    CreateJettonCPO,
+    UpdateJettonCPO,
+    GetJettonCPO,
+    NftCollectionFDO,
+    CreateNftCollectionCPO,
+    GetNftCollectionCPO,
+    UpdateNftCollectionCPO,
+)
 from core.actions.jetton import JettonAction
+from core.actions.nft_collection import NftCollectionAction
 from core.services.jetton import JettonService
 
 logger = logging.getLogger(__name__)
@@ -45,7 +55,8 @@ async def add_jetton(
     db_session: Session = Depends(get_db_session),
 ) -> JettonFDO:
     jetton_action = JettonAction(db_session)
-    jetton = await jetton_action.create(jetton_address=jetton.address)
+    jetton_address_raw = userfriendly_to_raw(jetton.address)
+    jetton = await jetton_action.create(address_raw=jetton_address_raw)
     return jetton
 
 
@@ -58,6 +69,47 @@ async def update_jetton(
     jetton_action = JettonAction(db_session)
     jetton_address_raw = userfriendly_to_raw(jetton_address)
     jetton = await jetton_action.update(
-        jetton_address=jetton_address_raw, is_enabled=jetton.is_enabled
+        address_raw=jetton_address_raw, is_enabled=jetton.is_enabled
     )
     return jetton
+
+
+@admin_resource_router.get("/nft-collections")
+async def get_nft_collections(
+    param: Annotated[GetNftCollectionCPO, Query()],
+    db_session: Session = Depends(get_db_session),
+) -> list[NftCollectionFDO]:
+    nft_collection_action = NftCollectionAction(db_session)
+    return nft_collection_action.get_all(whitelisted_only=param.whitelisted_only)
+
+
+@admin_resource_router.get("/nft-collections/{nft_collection_address}")
+async def get_nft_collection(
+    nft_collection_address: str,
+    db_session: Session = Depends(get_db_session),
+) -> NftCollectionFDO:
+    nft_collection_action = NftCollectionAction(db_session)
+    address_raw = userfriendly_to_raw(nft_collection_address)
+    return nft_collection_action.get(address_raw=address_raw)
+
+
+@admin_resource_router.post("/nft-collections")
+async def add_nft_collection(
+    nft_collection_data: CreateNftCollectionCPO,
+    db_session: Session = Depends(get_db_session),
+) -> NftCollectionFDO:
+    nft_collection_action = NftCollectionAction(db_session)
+    return await nft_collection_action.create(address_raw=nft_collection_data.address)
+
+
+@admin_resource_router.put("/nft-collections/{nft_collection_address}")
+async def update_nft_collection(
+    nft_collection_address: str,
+    nft_collection_data: UpdateNftCollectionCPO,
+    db_session: Session = Depends(get_db_session),
+) -> NftCollectionFDO:
+    nft_collection_action = NftCollectionAction(db_session)
+    address_raw = userfriendly_to_raw(nft_collection_address)
+    return await nft_collection_action.update(
+        address_raw=address_raw, is_enabled=nft_collection_data.is_enabled
+    )

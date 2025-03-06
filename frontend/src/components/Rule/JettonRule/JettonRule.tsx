@@ -3,9 +3,9 @@
 import {Cell, Placeholder, Skeleton, Switch} from "@telegram-apps/telegram-ui";
 import React, {FC, PropsWithChildren, useCallback, useEffect, useState} from "react";
 import SelectableRule from "@/components/Rule/SelectableRule/SelectableRule";
-import useJettonsData from "@/hooks/useJettonsData";
+import useJettonsData from "@/hooks/data/useJettonsData";
 import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
-import useChatJettonRuleData from "@/hooks/useChatJettonRuleData";
+import useChatJettonRuleData from "@/hooks/data/useChatJettonRuleData";
 import Image from "next/image";
 import {useRouter} from "next/navigation";
 

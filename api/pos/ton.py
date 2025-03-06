@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, field_validator
 from pytonapi.utils import userfriendly_to_raw, raw_to_userfriendly
 
 from api.pos.base import BaseFDO
-from core.models.blockchain import Jetton
+from core.models.blockchain import Jetton, NFTCollection
 
 
 class TonProofDomainPO(BaseModel):
@@ -46,7 +46,11 @@ class GetJettonCPO(BaseFDO):
     whitelisted_only: bool = True
 
 
-class CreateJettonCPO(BaseModel):
+class GetNftCollectionCPO(BaseFDO):
+    whitelisted_only: bool = True
+
+
+class BaseCreateBlockchainItemCPO(BaseModel):
     address: str
 
     @classmethod
@@ -58,5 +62,39 @@ class CreateJettonCPO(BaseModel):
         return userfriendly_to_raw(v)
 
 
-class UpdateJettonCPO(BaseFDO):
+class CreateJettonCPO(BaseCreateBlockchainItemCPO):
+    ...
+
+
+class BaseUpdateBlockchainItemCPO(BaseFDO):
     is_enabled: bool
+
+
+class UpdateJettonCPO(BaseUpdateBlockchainItemCPO):
+    ...
+
+
+class NftCollectionFDO(BaseFDO):
+    address: str
+    name: str
+    description: str | None
+    logo_path: str | None
+    is_enabled: bool
+
+    @classmethod
+    def from_orm(cls, obj: NFTCollection) -> Self:
+        return cls(
+            address=raw_to_userfriendly(obj.address),
+            name=obj.name,
+            description=obj.description,
+            logo_path=obj.logo_path,
+            is_enabled=obj.is_enabled,
+        )
+
+
+class CreateNftCollectionCPO(BaseCreateBlockchainItemCPO):
+    ...
+
+
+class UpdateNftCollectionCPO(BaseUpdateBlockchainItemCPO):
+    ...

@@ -1,54 +1,52 @@
 'use client';
 
-import useChatsData from "@/hooks/data/useChatsData";
+import useNftCollectionsData from "@/hooks/data/useNftCollectionsData";
+import {useRouter} from "next/navigation";
 import {useMemo} from "react";
 import {ButtonCell, Cell, List, Section, Skeleton} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
 import {ChevronRight, CirclePlus} from "lucide-react";
-import {useRouter} from "next/navigation";
+import {Page} from "@/components/Page";
 import Header from "@/components/Header/Header";
 import Image from "next/image";
-import {Page} from "@/components/Page";
 
-
-const ChatsPage = () => {
-    const {chats, isChatsLoading} = useChatsData();
+const NftCollectionsPage = () => {
+    const {nftCollections, isLoading: isNftCollectionsLoading} = useNftCollectionsData({whitelistedOnly: false});
     const router = useRouter();
 
-    const renderChats = useMemo(
+    const renderNftCollections = useMemo(
         () => {
             return (
                 [
                     ...(
-                        chats?.map((chat) => (
+                        nftCollections?.map((nftCollection) => (
                             <Cell
                                 before={
                                     <ImageWithFallback
-                                        src={`/dynamic/chats/${chat.logoPath}`}
+                                        src={`/dynamic/nfts/${nftCollection.logoPath}`}
                                         fallbackSrc={"/welcome.gif"}
                                         width={40}
                                         height={40}
                                         rounded
                                     />
                                 }
-                                onClick={() => router.push(`/admin/chat/${chat.slug}`)}
-                                subtitle={chat.description}
                                 after={<ChevronRight/>}
-                                key={chat.id}
+                                onClick={() => router.push(`/admin/nft-collection/${nftCollection.address}`)}
+                                key={nftCollection.address}
                             >
-                                {chat.title}
+                                {nftCollection.name}
                             </Cell>
                         )) || []
                     ),
                     <ButtonCell
-                        key={"--new-chat"}
+                        key={"--new"}
                         before={<CirclePlus/>}
-                        onClick={() => router.push('/admin/chat/new')}>
-                        Add chat
+                        onClick={() => router.push(`/admin/nft-collection`)}>
+                        Add NFT collection
                     </ButtonCell>
                 ]
             )
-        }, [chats, router]
+        }, [nftCollections, router]
     )
 
     return (
@@ -56,19 +54,15 @@ const ChatsPage = () => {
             <Header>
                 <Image src={"/lock-chat.png"} alt={""} width={120} height={120}/>
             </Header>
-
-
-            <Skeleton visible={isChatsLoading}>
-                <Section
-                    header={"Groups and settings"}
-                >
+            <Section header={"NFT Collections"}>
+                <Skeleton visible={isNftCollectionsLoading}>
                     <List>
-                        {renderChats}
+                        {renderNftCollections}
                     </List>
-                </Section>
-            </Skeleton>
+                </Skeleton>
+            </Section>
         </Page>
     )
 }
 
-export default ChatsPage;
+export default NftCollectionsPage;

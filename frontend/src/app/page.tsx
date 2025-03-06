@@ -17,7 +17,7 @@ import {mainButton, secondaryButton, useLaunchParams} from '@telegram-apps/sdk-r
 import {Check} from "lucide-react";
 import useTonConnect from '@/hooks/useTonConnect';
 import {Address} from "@ton/core";
-import useChatData from '@/hooks/useChatData';
+import useChatData from '@/hooks/data/useChatData';
 import Image from "next/image";
 import {disconnectUserWallet, fetchTaskStatus, updateUserWallet} from "@/services";
 import ConnectedWalletCell from "@/components/ConnectedWalletCell/ConnectedWalletCell";

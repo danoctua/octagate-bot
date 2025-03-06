@@ -56,3 +56,11 @@ export interface IJetton {
     logoPath?: string,
     isEnabled: boolean,
 }
+
+export interface INftCollection {
+    address: string,
+    name: string,
+    description?: string,
+    logoPath?: string,
+    isEnabled: boolean,
+}

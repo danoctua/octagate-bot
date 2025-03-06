@@ -1,5 +1,5 @@
 import apiClient from "@/utils/apiClient";
-import {IBaseChat, IChatConfiguration, IJetton, IRule, IUser} from "@/interfaces";
+import {IBaseChat, IChatConfiguration, IJetton, INftCollection, IRule, IUser} from "@/interfaces";
 
 
 export const fetchTaskStatus = async (asyncTaskId: string) => {
@@ -69,4 +69,24 @@ export const updateJettonRule = async (slug: string, jettonAddress: string, expe
 
 export const toggleJettonRule = async (slug: string, jettonAddress: string, isEnabled: boolean): Promise<IRule> => {
     return await apiClient.put(`/admin/chats/${slug}/rules/jettons/${jettonAddress}/toggle`, {isEnabled: isEnabled}).then(response => response.data);
+}
+
+export const fetchAllNftCollections = async (): Promise<INftCollection[]> => {
+    return await apiClient.get("/admin/resources/nft-collections?whitelistedOnly=false").then(response => response.data);
+}
+
+export const fetchWhiteListedNftCollections = async (): Promise<INftCollection[]> => {
+    return await apiClient.get("/admin/resources/nft-collections?whitelistedOnly=true").then(response => response.data);
+}
+
+export const fetchNftCollection = async (address: string): Promise<INftCollection> => {
+    return await apiClient.get(`/admin/resources/nft-collections/${address}`).then(response => response.data);
+}
+
+export const createNftCollection = async (address: string): Promise<INftCollection> => {
+    return await apiClient.post(`/admin/resources/nft-collections`, {address: address}).then(response => response.data);
+}
+
+export const updateNftCollection = async (address: string, isEnabled: boolean): Promise<INftCollection> => {
+    return await apiClient.put(`/admin/resources/nft-collections/${address}`, {isEnabled: isEnabled}).then(response => response.data);
 }

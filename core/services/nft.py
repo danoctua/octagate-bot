@@ -34,6 +34,13 @@ class NftCollectionService(BaseService):
         logger.info(f"NFT Collection {nft.name!r} updated.")
         return nft
 
+    def update_status(self, address: str, is_enabled: bool) -> NFTCollection:
+        nft_collection = self.get(address=address)
+        nft_collection.is_enabled = is_enabled
+        self.db_session.commit()
+        logger.info(f"NFT Collection {nft_collection.name!r} status updated.")
+        return nft_collection
+
     def create_or_update(
         self, nft_collection: NftCollection, logo_path: str
     ) -> NFTCollection:
@@ -60,12 +67,13 @@ class NftCollectionService(BaseService):
             .all()
         )
 
-    def get_all(self) -> list[NFTCollection]:
-        return (
-            self.db_session.query(NFTCollection)
-            .order_by(desc(NFTCollection.is_enabled), NFTCollection.created_at)
-            .all()
-        )
+    def get_all(self, whitelisted_only: bool) -> list[NFTCollection]:
+        query = self.db_session.query(NFTCollection)
+        if whitelisted_only:
+            query = query.filter(NFTCollection.is_enabled.is_(True))
+        return query.order_by(
+            desc(NFTCollection.is_enabled), NFTCollection.created_at
+        ).all()
 
 
 class NftItemService(BaseService):

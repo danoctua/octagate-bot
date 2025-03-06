@@ -21,17 +21,15 @@ class JettonAction(BaseAction):
         super().__init__(db_session)
         self.jetton_service = JettonService(db_session)
 
-    async def create(self, jetton_address: str) -> JettonFDO:
+    async def create(self, address_raw: str) -> JettonFDO:
         blockchain_service = TonApiService()
-        jetton_info: JettonInfo = await blockchain_service.get_jetton_info(
-            jetton_address
-        )
+        jetton_info: JettonInfo = await blockchain_service.get_jetton_info(address_raw)
 
         jetton_logo = jetton_info.metadata.image
 
         if jetton_logo:
             logo_name = download_media(
-                jetton_logo, subdirectory=JETTON_LOGO_SUB_PATH, name=jetton_address
+                jetton_logo, subdirectory=JETTON_LOGO_SUB_PATH, name=address_raw
             )
         else:
             logo_name = DEFAULT_JETTON_LOGO_PATH
@@ -51,7 +49,7 @@ class JettonAction(BaseAction):
 
         return JettonFDO.from_orm(jetton)
 
-    async def update(self, jetton_address: str, is_enabled: bool) -> JettonFDO:
-        jetton = self.jetton_service.update_status(jetton_address, is_enabled)
+    async def update(self, address_raw: str, is_enabled: bool) -> JettonFDO:
+        jetton = self.jetton_service.update_status(address_raw, is_enabled)
         logger.info("Jetton %s updated", jetton.name)
         return JettonFDO.from_orm(jetton)
