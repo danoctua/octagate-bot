@@ -61,7 +61,7 @@ const ResourcePage: FC<PropsWithChildren<{
                 setAddressError(`Invalid ${resourceType} address. It should be a valid bounceable address`)
             }
 
-        }, [address, resourceType]
+        }, [inputAddress, resourceType]
     )
 
     const onSaveButtonClick = useCallback(

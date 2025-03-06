@@ -2,7 +2,6 @@ import {useClientOnce} from "@/hooks/useClientOnce";
 import {
   createNftCollectionRule,
   fetchNftCollectionRule,
-  toggleNftCollectionRule,
   updateNftCollectionRule
 } from "@/services";
 import {useState} from "react";
@@ -31,13 +30,6 @@ const useChatNftCollectionRuleData = ({slug, collectionAddress}: {slug: string, 
   const updateChatNftCollectionRule = async (expected: number, blockchainAddress: string, isEnabled: boolean) => {
     setIsLoading(true);
     updateNftCollectionRule(slug, blockchainAddress, expected, isEnabled).then(
-        (data) => { setChatNftCollectionRuleData(data) }
-    ).finally(() => setIsLoading(false));
-  }
-
-  const toggleChatNftCollectionRule = async (isEnabled: boolean, blockchainAddress: string) => {
-    setIsLoading(true);
-    toggleNftCollectionRule(slug, blockchainAddress, isEnabled).then(
         (data) => { setChatNftCollectionRuleData(data) }
     ).finally(() => setIsLoading(false));
   }
