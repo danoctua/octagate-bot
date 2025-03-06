@@ -34,7 +34,7 @@ const useChatNftCollectionRuleData = ({slug, collectionAddress}: {slug: string, 
     ).finally(() => setIsLoading(false));
   }
 
-  return {chatNftCollectionRuleData, createChatNftCollectionRule, updateChatNftCollectionRule, toggleChatNftCollectionRule, isLoading};
+  return {chatNftCollectionRuleData, createChatNftCollectionRule, updateChatNftCollectionRule, isLoading};
 };
 
 export default useChatNftCollectionRuleData;
