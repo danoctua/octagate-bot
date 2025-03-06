@@ -6,22 +6,32 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 from telethon.utils import get_peer_id
 
-from api.pos.chat import BaseTelegramChatFDO, BaseTelegramChatEligibilityRuleFDO
+from api.pos.chat import (
+    BaseTelegramChatFDO,
+    BaseTelegramChatEligibilityRuleFDO,
+    TelegramChatWithRulesFDO,
+    TelegramChatFDO,
+    TelegramChatEligibilityRuleFDO,
+)
 from core.actions.base import BaseAction
 from core.dtos.chat import (
     TelegramChatJettonRuleDTO,
     TelegramChatNFTCollectionRuleDTO,
     EligibilityCheckType,
+    TelegramChatEligibilitySummaryDTO,
 )
 from core.dtos.user import TelegramUserDTO
+from core.models.user import User
 from core.services.chat import (
     TelegramChatService,
     TelegramChatJettonService,
     TelegramChatNFTCollectionService,
     TelegramChatUserService,
 )
+from core.services.nft import NftItemService
 from core.services.supertelethon import TelethonService
 from core.services.user import UserService
+from core.services.wallet import JettonWalletService
 from core.settings import core_settings
 
 logger = logging.getLogger(__name__)
@@ -129,6 +139,115 @@ class TelegramChatAction(BaseAction):
             slug=telegram_chat.slug,
             is_forum=telegram_chat.is_forum,
             logo_path=telegram_chat.logo_path,
+        )
+
+    async def get_with_eligibility_summary(
+        self, slug: str, user: User
+    ) -> TelegramChatWithRulesFDO:
+        """
+        This is non-administrative method to get chat with rules
+        :param slug:
+        :param user:
+        :return:
+        :raises TelegramChatNotExists: if chat with slug not found
+        """
+        try:
+            chat = self.telegram_chat_service.get_by_slug(slug)
+        except NoResultFound:
+            logger.error(f"Chat with slug {slug!r} not found")
+            raise TelegramChatNotExists(f"Chat with slug {slug!r} not found")
+        eligibility_rules = self.telegram_chat_user_service.get_eligibility_rules(
+            chat_id=chat.id,
+            enabled_only=True,
+        )
+
+        if user.wallet:
+            nft_item_service = NftItemService(self.db_session)
+            user_nft_items = nft_item_service.get_all(owner_address=user.wallet.address)
+            jetton_wallet_service = JettonWalletService(self.db_session)
+            user_jettons = jetton_wallet_service.get_all(
+                owner_address=user.wallet.address
+            )
+        else:
+            user_nft_items = []
+            user_jettons = []
+
+        eligibility_summary: TelegramChatEligibilitySummaryDTO = (
+            self.telegram_chat_user_service.is_user_eligible_chat_member(
+                eligibility_rules=eligibility_rules,
+                user_jettons=user_jettons,
+                user_nft_items=user_nft_items,
+                chat_member=None,
+            )
+        )
+        is_chat_member = self.telegram_chat_user_service.is_chat_member(
+            chat_id=chat.id,
+            user_id=user.id,
+        )
+        is_eligible = bool(eligibility_summary)
+
+        return TelegramChatWithRulesFDO(
+            chat=TelegramChatFDO(
+                id=chat.id,
+                username=chat.username,
+                title=chat.title,
+                description=chat.description,
+                slug=chat.slug,
+                is_forum=chat.is_forum,
+                logo_path=chat.logo_path,
+                join_url=chat.invite_link if is_eligible else None,
+                is_member=is_chat_member,
+                is_eligible=is_eligible,
+            ),
+            rules=[
+                TelegramChatEligibilityRuleFDO(
+                    category=rule.category,
+                    title=rule.title,
+                    expected=rule.expected,
+                    actual=rule.current,
+                    is_eligible=rule.is_eligible,
+                    photo_url=None,
+                    blockchain_address=rule.address,
+                    is_enabled=rule.is_enabled,
+                )
+                for rule in eligibility_summary.items
+            ],
+        )
+
+    async def get_with_eligibility_rules(self, slug: str) -> TelegramChatWithRulesFDO:
+        try:
+            chat = self.telegram_chat_service.get_by_slug(slug)
+        except NoResultFound:
+            logger.error(f"Chat with slug {slug!r} not found")
+            raise TelegramChatNotExists(f"Chat with slug {slug!r} not found")
+        eligibility_rules = self.telegram_chat_user_service.get_eligibility_rules(
+            chat_id=chat.id,
+            enabled_only=False,
+        )
+
+        return TelegramChatWithRulesFDO(
+            chat=TelegramChatFDO(
+                id=chat.id,
+                username=chat.username,
+                title=chat.title,
+                description=chat.description,
+                slug=chat.slug,
+                is_forum=chat.is_forum,
+                logo_path=chat.logo_path,
+                join_url=chat.invite_link,
+                is_member=False,
+                is_eligible=False,
+            ),
+            rules=[
+                *(
+                    TelegramChatEligibilityRuleFDO.from_jetton_rule(rule)
+                    for rule in eligibility_rules.jettons
+                ),
+                *(
+                    TelegramChatEligibilityRuleFDO.from_nft_collection_rule(rule)
+                    for rule in eligibility_rules.nft_collections
+                ),
+            ],
         )
 
     def add_jetton_rule(

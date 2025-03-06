@@ -3,7 +3,6 @@
 import {Page} from '@/components/Page';
 import {Skeleton, Input, Section, Button, ButtonCell} from "@telegram-apps/telegram-ui";
 
-import useChatData from "@/hooks/useChatData";
 import ChatHeader from "@/components/ChatHeader/ChatHeader";
 import {useClientOnce} from "@/hooks/useClientOnce";
 import {notFound, useRouter} from "next/navigation";
@@ -13,11 +12,12 @@ import {CirclePlus, Share} from "lucide-react";
 import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
 import {generateBotJoinLink} from "@/utils/bot";
 import {shareURL, init} from "@telegram-apps/sdk-react";
+import useAdminChatData from "@/hooks/useAdminChatData";
 
 
 const ChatPage = ({params}: { params: { slug: string } }) => {
 
-    const {chat, isChatDataLoading, fetchChatData} = useChatData(params.slug, true);
+    const {chat, isChatDataLoading, fetchChatData} = useAdminChatData(params.slug);
     const [description, setDescription] = useState<string>("");
     const router = useRouter();
 

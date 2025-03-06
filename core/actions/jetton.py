@@ -49,23 +49,9 @@ class JettonAction(BaseAction):
             fetch_wallet_details.apply_async(args=(wallet,))
         logger.info("%d tasks queued", len(all_wallets))
 
-        return JettonFDO(
-            address=jetton.address,
-            name=jetton.name,
-            description=jetton.description,
-            symbol=jetton.symbol,
-            logo_path=jetton.logo_path,
-            is_enabled=jetton.is_enabled,
-        )
+        return JettonFDO.from_orm(jetton)
 
     async def update(self, jetton_address: str, is_enabled: bool) -> JettonFDO:
         jetton = self.jetton_service.update_status(jetton_address, is_enabled)
         logger.info("Jetton %s updated", jetton.name)
-        return JettonFDO(
-            address=jetton.address,
-            name=jetton.name,
-            description=jetton.description,
-            symbol=jetton.symbol,
-            logo_path=jetton.logo_path,
-            is_enabled=jetton.is_enabled,
-        )
+        return JettonFDO.from_orm(jetton)

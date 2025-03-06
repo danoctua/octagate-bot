@@ -1,9 +1,9 @@
 import {useCallback, useState} from "react";
-import {fetchChatData} from "@/services";
+import {fetchAdminChatData, fetchChatData} from "@/services";
 import {IChatConfiguration} from "@/interfaces";
 
 
-const useChatData = (slug: string | undefined) => {
+const useAdminChatData = (slug: string | undefined,) => {
     const [chat, setChat] = useState<IChatConfiguration | null>(null);
     const [isChatDataLoading, setIsChatDataLoading] = useState(false);
 
@@ -12,7 +12,7 @@ const useChatData = (slug: string | undefined) => {
             return;
         }
         setIsChatDataLoading(true);
-        return await fetchChatData(slug).then((chatData: IChatConfiguration) => {
+        return await fetchAdminChatData(slug).then((chatData: IChatConfiguration) => {
             console.debug("Refreshing chat data", chatData);
             setChat(chatData);
             setIsChatDataLoading(false);
@@ -23,4 +23,4 @@ const useChatData = (slug: string | undefined) => {
     return { chat, setChat, fetchChatData: refreshChatData, isChatDataLoading, setIsChatDataLoading };
 }
 
-export default useChatData;
+export default useAdminChatData;

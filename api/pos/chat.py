@@ -1,5 +1,5 @@
 import re
-from typing import Annotated
+from typing import Annotated, Any, Self
 
 from pydantic import (
     BaseModel,
@@ -10,10 +10,11 @@ from pydantic import (
     field_validator,
 )
 from pydantic.alias_generators import to_camel
-from pytonapi.utils import to_amount, to_nano
+from pytonapi.utils import to_amount, to_nano, raw_to_userfriendly
 
 from api.pos.base import BaseFDO
 from core.dtos.chat import EligibilityCheckType
+from core.models import TelegramChatJetton, TelegramChatNFTCollection
 from core.utils.number import human_friendly_number
 
 
@@ -35,6 +36,18 @@ class BaseTelegramChatFDO(BaseFDO):
     slug: str
     is_forum: bool
     logo_path: str | None
+
+    @classmethod
+    def from_orm(cls, obj: Any) -> Self:
+        return cls(
+            id=obj.id,
+            username=obj.username,
+            title=obj.title,
+            description=obj.description,
+            slug=obj.slug,
+            is_forum=obj.is_forum,
+            logo_path=obj.logo_path,
+        )
 
 
 class TelegramChatCPO(BaseModel):
@@ -119,6 +132,28 @@ class TelegramChatEligibilityRuleFDO(BaseTelegramChatEligibilityRuleFDO):
     @property
     def expected_human_friendly(self) -> str:
         return human_friendly_number(self.expected)
+
+    @classmethod
+    def from_jetton_rule(cls, jetton_rule: TelegramChatJetton):
+        return cls(
+            category=EligibilityCheckType.JETTON,
+            title=jetton_rule.jetton.name,
+            expected=jetton_rule.threshold,
+            photo_url=jetton_rule.jetton.logo_path,
+            blockchain_address=raw_to_userfriendly(jetton_rule.jetton.address),
+            is_enabled=jetton_rule.is_enabled,
+        )
+
+    @classmethod
+    def from_nft_collection_rule(cls, nft_collection_rule: TelegramChatNFTCollection):
+        return cls(
+            category=EligibilityCheckType.NFT_COLLECTION,
+            title=nft_collection_rule.nft_collection.name,
+            expected=1,
+            photo_url=nft_collection_rule.nft_collection.logo_path,
+            blockchain_address=nft_collection_rule.nft_collection.address,
+            is_enabled=nft_collection_rule.is_enabled,
+        )
 
 
 class TelegramChatWithRulesFDO(BaseModel):

@@ -1,9 +1,10 @@
-from typing import Annotated
+from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, field_validator
-from pytonapi.utils import userfriendly_to_raw
+from pytonapi.utils import userfriendly_to_raw, raw_to_userfriendly
 
 from api.pos.base import BaseFDO
+from core.models.blockchain import Jetton
 
 
 class TonProofDomainPO(BaseModel):
@@ -28,6 +29,17 @@ class JettonFDO(BaseFDO):
     symbol: str
     logo_path: str | None
     is_enabled: bool
+
+    @classmethod
+    def from_orm(cls, obj: Jetton) -> Self:
+        return cls(
+            address=raw_to_userfriendly(obj.address),
+            name=obj.name,
+            description=obj.description,
+            symbol=obj.symbol,
+            logo_path=obj.logo_path,
+            is_enabled=obj.is_enabled,
+        )
 
 
 class GetJettonCPO(BaseFDO):

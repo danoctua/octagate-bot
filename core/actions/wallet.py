@@ -3,6 +3,7 @@ import logging
 from celery.result import AsyncResult
 from sqlalchemy.orm import Session
 
+from api.pos.wallet import WalletDetailsWithProofPO
 from core.actions.base import BaseAction
 from core.constants import (
     DEFAULT_WALLET_TRACK_EXPIRATION,
@@ -10,6 +11,7 @@ from core.constants import (
     DISCONNECTED_WALLETS_SET_NAME,
 )
 from core.services.superredis import RedisService
+from core.services.ton import TonProofService
 from core.services.wallet import (
     WalletService,
     UserWalletExistError,
@@ -25,11 +27,16 @@ class WalletAction(BaseAction):
         super().__init__(db_session)
         self.wallet_service = WalletService(db_session)
 
-    async def connect_wallet(self, user_id: int, wallet_address: str) -> str:
+    async def connect_wallet(
+        self,
+        user_id: int,
+        wallet_details: WalletDetailsWithProofPO,
+    ) -> str:
+        TonProofService.verify_ton_proof(wallet_details=wallet_details)
         try:
             self.wallet_service.connect_user_wallet(
                 user_id=user_id,
-                wallet_address=wallet_address,
+                wallet_address=wallet_details.wallet_address,
             )
         except UserWalletExistError as exc:
             logger.error(str(exc))
@@ -42,7 +49,7 @@ class WalletAction(BaseAction):
         # Run initial wallet data loading
         task_result: AsyncResult = app.send_task(
             "fetch-wallet-details",
-            args=(wallet_address,),
+            args=(wallet_details.wallet_address,),
             queue=CELERY_WALLET_FETCH_QUEUE_NAME,
         )
         # As user connected wallet, remove it from disconnected wallets set in case it was added before
@@ -51,11 +58,13 @@ class WalletAction(BaseAction):
         # Add wallet to tracking
         redis_external_service = RedisService(external=True)
         redis_external_service.set(
-            key=wallet_address,
+            key=wallet_details.wallet_address,
             value="",
             ex=DEFAULT_WALLET_TRACK_EXPIRATION,
         )
-        logger.info(f"User {user_id!r} connected wallet {wallet_address!r}")
+        logger.info(
+            f"User {user_id!r} connected wallet {wallet_details.wallet_address!r}"
+        )
         return task_result.task_id
 
     async def disconnect_wallet(self, telegram_id: int) -> None:
