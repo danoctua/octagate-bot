@@ -48,27 +48,23 @@ export const fetchWhitelistedJettons = async (): Promise<IJetton[]> => {
 }
 
 export const createJetton = async (address: string): Promise<IJetton> => {
-    return await apiClient.post(`/admin/resources/jettons`, {address: address}).then(response => response.data);
+    return await apiClient.post(`/admin/resources/jettons`, {address}).then(response => response.data);
 }
 
 export const updateJetton = async (address: string, isEnabled: boolean): Promise<IJetton> => {
-    return await apiClient.put(`/admin/resources/jettons/${address}`, {isEnabled: isEnabled}).then(response => response.data);
+    return await apiClient.put(`/admin/resources/jettons/${address}`, {isEnabled}).then(response => response.data);
 }
 
-export const fetchJettonRule = async (slug: string, jettonAddress: string): Promise<IRule> => {
-    return await apiClient.get(`/admin/chats/${slug}/rules/jettons/${jettonAddress}`).then(response => response.data);
+export const fetchJettonRule = async (slug: string, ruleId: number): Promise<IRule> => {
+    return await apiClient.get(`/admin/chats/${slug}/rules/jettons/${ruleId}`).then(response => response.data);
 }
 
-export const createJettonRule = async (slug: string, jettonAddress: string, expected: number): Promise<IRule> => {
-    return await apiClient.post(`/admin/chats/${slug}/rules/jettons/${jettonAddress}`, {expected: expected}).then(response => response.data);
+export const createJettonRule = async (slug: string, address: string, expected: number): Promise<IRule> => {
+    return await apiClient.post(`/admin/chats/${slug}/rules/jettons`, {address, expected}).then(response => response.data);
 }
 
-export const updateJettonRule = async (slug: string, jettonAddress: string, expected: number): Promise<IRule> => {
-    return await apiClient.put(`/admin/chats/${slug}/rules/jettons/${jettonAddress}`, {expected: expected}).then(response => response.data);
-}
-
-export const toggleJettonRule = async (slug: string, jettonAddress: string, isEnabled: boolean): Promise<IRule> => {
-    return await apiClient.put(`/admin/chats/${slug}/rules/jettons/${jettonAddress}/toggle`, {isEnabled: isEnabled}).then(response => response.data);
+export const updateJettonRule = async (slug: string, ruleId: number, {address, expected, isEnabled}: {address: string, expected: number, isEnabled: boolean}): Promise<IRule> => {
+    return await apiClient.put(`/admin/chats/${slug}/rules/jettons/${ruleId}`, {address, expected, isEnabled}).then(response => response.data);
 }
 
 export const fetchAllNftCollections = async (): Promise<INftCollection[]> => {
@@ -84,21 +80,21 @@ export const fetchNftCollection = async (address: string): Promise<INftCollectio
 }
 
 export const createNftCollection = async (address: string): Promise<INftCollection> => {
-    return await apiClient.post(`/admin/resources/nft-collections`, {address: address}).then(response => response.data);
+    return await apiClient.post(`/admin/resources/nft-collections`, {address}).then(response => response.data);
 }
 
 export const updateNftCollection = async (address: string, isEnabled: boolean): Promise<INftCollection> => {
-    return await apiClient.put(`/admin/resources/nft-collections/${address}`, {isEnabled: isEnabled}).then(response => response.data);
+    return await apiClient.put(`/admin/resources/nft-collections/${address}`, {isEnabled}).then(response => response.data);
 }
 
-export const fetchNftCollectionRule = async (slug: string, nftCollectionAddress: string): Promise<IRule> => {
-    return await apiClient.get(`/admin/chats/${slug}/rules/nft-collections/${nftCollectionAddress}`).then(response => response.data);
+export const fetchNftCollectionRule = async (slug: string, ruleId: number): Promise<IRule> => {
+    return await apiClient.get(`/admin/chats/${slug}/rules/nft-collections/${ruleId}`).then(response => response.data);
 }
 
-export const createNftCollectionRule = async (slug: string, nftCollectionAddress: string, expected: number): Promise<IRule> => {
-    return await apiClient.post(`/admin/chats/${slug}/rules/nft-collections/${nftCollectionAddress}`, {expected}).then(response => response.data);
+export const createNftCollectionRule = async (slug: string, address: string, expected: number): Promise<IRule> => {
+    return await apiClient.post(`/admin/chats/${slug}/rules/nft-collections`, {address, expected}).then(response => response.data);
 }
 
-export const updateNftCollectionRule = async (slug: string, nftCollectionAddress: string, expected: number, isEnabled: boolean): Promise<IRule> => {
-    return await apiClient.put(`/admin/chats/${slug}/rules/nft-collections/${nftCollectionAddress}`, {expected, isEnabled}).then(response => response.data);
+export const updateNftCollectionRule = async (slug: string, ruleId: number, {address, expected, isEnabled}: {address: string, expected: number, isEnabled: boolean}): Promise<IRule> => {
+    return await apiClient.put(`/admin/chats/${slug}/rules/nft-collections/${ruleId}`, {address, expected, isEnabled}).then(response => response.data);
 }

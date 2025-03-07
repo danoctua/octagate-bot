@@ -24,34 +24,26 @@ const AdminPage = () => {
                 <List>
                     <Cell
                         before={
-                            <MessageCircleMore/>
+                            <MessageCircleMore color={"var(--tg-theme-hint-color)"}/>
                         }
-                        after={<ChevronRight/>}
                         onClick={() => router.push(`/admin/chat`)}
-                        subtitle={"Add and configure chats"}
                     >
                         Groups and settings
                     </Cell>
                     <Cell
-                        before={<Coins/>}
-                        after={<ChevronRight/>}
+                        before={<Coins color={"var(--tg-theme-hint-color)"}/>}
                         onClick={() => router.push(`/admin/jetton`)}
-                        subtitle={"Add and configure jettons"}
                     >
                         Jettons
                     </Cell>
                     <Cell
-                        before={<Images/>}
-                        after={<ChevronRight/>}
+                        before={<Images color={"var(--tg-theme-hint-color)"}/>}
                         onClick={() => router.push(`/admin/nft-collection`)}
-                        subtitle={"Add and configure NFT collections"}
                     >
                         NFT Collections
                     </Cell>
                     <Cell
-                        before={<UserCog/>}
-                        after={<ChevronRight/>}
-                        subtitle={"Promote and manage users"}
+                        before={<UserCog color={"var(--tg-theme-hint-color)"}/>}
                         disabled
                     >
                         Users

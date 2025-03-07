@@ -29,8 +29,8 @@ const DisplayRuleItem = (
                 <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>Not yet</Text>
         )
     } else {
-        before = rule.isEnabled ? null : <EyeOff/>
-        after = <ChevronRight/>
+        before = null
+        after = rule.isEnabled ? null : <EyeOff color={"var(--tg-theme-hint-color)"}/>
     }
 
     return (

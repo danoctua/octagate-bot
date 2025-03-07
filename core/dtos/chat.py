@@ -65,13 +65,15 @@ class TelegramChatEligibilitySummaryDTO(BaseModel):
         return f"<{self.__class__.__name__} ({self.items=}) {self.is_admin=}>"
 
 
-class TelegramChatJettonRuleDTO(BaseModel):
+class CreateTelegramChatJettonRuleDTO(BaseModel):
     chat_id: int
     address: str
     threshold: int
+    is_enabled: bool
 
 
-class TelegramChatNFTCollectionRuleDTO(BaseModel):
+class CreateTelegramChatNFTCollectionRuleDTO(BaseModel):
     chat_id: int
     address: str
     threshold: int
+    is_enabled: bool

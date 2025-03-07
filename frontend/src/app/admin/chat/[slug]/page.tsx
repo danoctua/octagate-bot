@@ -53,7 +53,7 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                             key={rule.title}
                             rule={rule}
                             readOnly={false}
-                            onClick={() => router.push(`/admin/chat/${chat?.chat.slug}/rule/${RULE_CATEGORY_MAPPING[rule.category]}/${rule.blockchainAddress}`)}
+                            onClick={() => router.push(`/admin/chat/${chat?.chat.slug}/rule/${RULE_CATEGORY_MAPPING[rule.category]}/${rule.id}`)}
                         />
                     )) || []
                 ),

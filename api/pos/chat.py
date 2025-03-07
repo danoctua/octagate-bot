@@ -10,7 +10,7 @@ from pydantic import (
     field_validator,
 )
 from pydantic.alias_generators import to_camel
-from pytonapi.utils import to_amount, to_nano, raw_to_userfriendly
+from pytonapi.utils import to_amount, to_nano, raw_to_userfriendly, userfriendly_to_raw
 
 from api.pos.base import BaseFDO
 from core.dtos.chat import EligibilityCheckType
@@ -80,8 +80,15 @@ class AddChatCPO(BaseModel):
     )
 
 
-class TelegramChatJettonRuleCPO(BaseModel):
+class BaseTelegramChatRuleCPO(BaseFDO):
+    address: str
     expected: float | int
+    is_enabled: bool = True
+
+    @field_validator("address")
+    @classmethod
+    def validate_address(cls, v: str) -> str:
+        return userfriendly_to_raw(v)
 
     @field_validator("expected")
     @classmethod
@@ -92,15 +99,16 @@ class TelegramChatJettonRuleCPO(BaseModel):
         return to_nano(v)
 
 
-class TelegramChatNFTCollectionRuleCPO(BaseModel):
-    expected: int
+class TelegramChatJettonRuleCPO(BaseTelegramChatRuleCPO):
+    ...
 
 
-class ToggleChatRuleCPO(BaseFDO):
-    is_enabled: bool
+class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatRuleCPO):
+    ...
 
 
 class BaseTelegramChatEligibilityRuleFDO(BaseFDO):
+    id: int
     category: EligibilityCheckType
     title: str
     expected: int
@@ -130,6 +138,7 @@ class BaseTelegramChatEligibilityRuleFDO(BaseFDO):
     @classmethod
     def from_jetton_rule(cls, jetton_rule: TelegramChatJetton):
         return cls(
+            id=jetton_rule.id,
             category=EligibilityCheckType.JETTON,
             title=jetton_rule.jetton.name,
             expected=jetton_rule.threshold,
@@ -141,6 +150,7 @@ class BaseTelegramChatEligibilityRuleFDO(BaseFDO):
     @classmethod
     def from_nft_collection_rule(cls, nft_collection_rule: TelegramChatNFTCollection):
         return cls(
+            id=nft_collection_rule.id,
             category=EligibilityCheckType.NFT_COLLECTION,
             title=nft_collection_rule.nft_collection.name,
             expected=nft_collection_rule.threshold,

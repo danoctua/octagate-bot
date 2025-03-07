@@ -1,5 +1,5 @@
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from slugify import slugify
 from sqlalchemy import func, desc
@@ -8,8 +8,8 @@ from telethon.tl.types import Channel
 
 from core.dtos.chat import (
     TelegramChatEligibilityRulesDTO,
-    TelegramChatJettonRuleDTO,
-    TelegramChatNFTCollectionRuleDTO,
+    CreateTelegramChatJettonRuleDTO,
+    CreateTelegramChatNFTCollectionRuleDTO,
     TelegramChatEligibilitySummaryDTO,
     TelegramChatEligibilityItemDTO,
     EligibilityCheckType,
@@ -311,12 +311,14 @@ class TelegramChatUserService(BaseService):
 
 
 TelegramChatRuleType = TelegramChatJetton | TelegramChatNFTCollection
-TelegramChatRuleDTOType = TelegramChatJettonRuleDTO | TelegramChatNFTCollectionRuleDTO
+TelegramChatRuleDTOType = (
+    CreateTelegramChatJettonRuleDTO | CreateTelegramChatNFTCollectionRuleDTO
+)
 
 
 class TelegramChatRuleBaseService(BaseService, ABC):
     model: type[TelegramChatRuleType]
-    dto: type[TelegramChatJettonRuleDTO]
+    dto: type[CreateTelegramChatJettonRuleDTO]
 
     def create(self, dto: TelegramChatRuleDTOType) -> TelegramChatRuleType:
         new_rule = self.model(**dto.model_dump())
@@ -325,13 +327,16 @@ class TelegramChatRuleBaseService(BaseService, ABC):
         logger.debug(f"Telegram Chat Rule {new_rule!r} created.")
         return new_rule
 
-    @abstractmethod
-    def get(self, chat_id: int, address: str) -> TelegramChatRuleType:
-        ...
+    def get(self, id_: int) -> TelegramChatRuleType:
+        return self.db_session.query(self.model).filter(self.model.id == id_).one()
 
-    def update(self, chat: TelegramChatRuleDTOType) -> TelegramChatRuleType:
-        rule = self.get(chat.chat_id, chat.address)
-        rule.threshold = chat.threshold
+    def update(
+        self, rule_id: int, address: str, threshold: int, is_enabled: bool
+    ) -> TelegramChatRuleType:
+        rule = self.get(rule_id)
+        rule.address = address
+        rule.threshold = threshold
+        rule.is_enabled = is_enabled
         self.db_session.commit()
         logger.debug(f"{rule!r} updated.")
         return rule
@@ -349,53 +354,12 @@ class TelegramChatRuleBaseService(BaseService, ABC):
         query = query.order_by(desc(self.model.is_enabled), self.model.created_at)
         return query.all()
 
-    def toggle_rule(
-        self, chat_id: int, address: str, is_enabled: bool
-    ) -> TelegramChatRuleType:
-        rule = self.get(chat_id, address)
-        rule.is_enabled = is_enabled
-        self.db_session.commit()
-        logger.debug(f"Telegram Chat Rule {rule!r} toggled.")
-        return rule
-
-    def enable_rule(self, chat_id: int, address: str) -> None:
-        rule = self.get(chat_id, address)
-        rule.is_enabled = True
-        self.db_session.commit()
-        logger.debug(f"Telegram Chat Rule {rule!r} enabled.")
-
-    def disable_rule(self, chat_id: int, address: str) -> None:
-        rule = self.get(chat_id, address)
-        rule.is_enabled = False
-        self.db_session.commit()
-        logger.debug(f"Telegram Chat Rule {rule!r} disabled.")
-
 
 class TelegramChatJettonService(TelegramChatRuleBaseService):
     model = TelegramChatJetton
-    dto = TelegramChatJettonRuleDTO
-
-    def get(self, chat_id: int, jetton_address: str) -> TelegramChatJetton:
-        return (
-            self.db_session.query(TelegramChatJetton)
-            .filter(
-                TelegramChatJetton.chat_id == chat_id,
-                TelegramChatJetton.address == jetton_address,
-            )
-            .one()
-        )
+    dto = CreateTelegramChatJettonRuleDTO
 
 
 class TelegramChatNFTCollectionService(TelegramChatRuleBaseService):
     model = TelegramChatNFTCollection
-    dto = TelegramChatNFTCollectionRuleDTO
-
-    def get(self, chat_id: int, collection_address: str) -> TelegramChatNFTCollection:
-        return (
-            self.db_session.query(TelegramChatNFTCollection)
-            .filter(
-                TelegramChatNFTCollection.chat_id == chat_id,
-                TelegramChatNFTCollection.address == collection_address,
-            )
-            .one()
-        )
+    dto = CreateTelegramChatNFTCollectionRuleDTO

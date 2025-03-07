@@ -2,11 +2,11 @@
 
 import {Page} from "@/components/Page";
 import {Title} from "@telegram-apps/telegram-ui";
-import NftCollectionRule from "@/components/Rule/NftCollectionRule/NftCollectionRule";
+import JettonRule from "@/components/Rule/JettonRule/JettonRule";
 
 
 
-const EditNftCollectionRulePage = ({params}: { params: { slug: string, address?: string } }) => {
+const EditJettonRulePage = ({params}: { params: { slug: string, ruleId?: number } }) => {
 
     return (
         <Page back={true}>
@@ -15,9 +15,9 @@ const EditNftCollectionRulePage = ({params}: { params: { slug: string, address?:
                     Hold to get access
                 </Title>
             </div>
-            <NftCollectionRule chatSlug={params.slug} nftCollectionAddress={params.address}/>
+            <JettonRule chatSlug={params.slug} ruleId={params.ruleId}/>
         </Page>
     )
 }
 
-export default EditNftCollectionRulePage;
+export default EditJettonRulePage;

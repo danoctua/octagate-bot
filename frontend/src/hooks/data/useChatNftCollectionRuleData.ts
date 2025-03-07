@@ -8,28 +8,30 @@ import {useState} from "react";
 import {IRule} from "@/interfaces";
 
 
-const useChatNftCollectionRuleData = ({slug, collectionAddress}: {slug: string, collectionAddress?: string}) => {
+const useChatNftCollectionRuleData = ({slug, ruleId}: {slug: string, ruleId?: number}) => {
   const [chatNftCollectionRuleData, setChatNftCollectionRuleData] = useState<IRule | null>(null);
   const [ isLoading, setIsLoading ] = useState(false);
 
   useClientOnce(() => {
-    if (!collectionAddress) return;
+    if (!ruleId) return;
     setIsLoading(true);
-    fetchNftCollectionRule(slug, collectionAddress).then(
+    fetchNftCollectionRule(slug, ruleId).then(
         (data) => { setChatNftCollectionRuleData(data) }
     ).finally(() => { setIsLoading(false) });
   });
 
-  const createChatNftCollectionRule = async (expected: number, blockchainAddress: string) => {
+  const createChatNftCollectionRule = async ({expected, address}: {expected: number, address: string}) => {
+    if (!slug || ruleId) return;
     setIsLoading(true);
-    createNftCollectionRule(slug, blockchainAddress, expected).then(
+    createNftCollectionRule(slug, address, expected).then(
         (data) => { setChatNftCollectionRuleData(data) }
     ).finally(() => { setIsLoading(false) });
   }
 
-  const updateChatNftCollectionRule = async (expected: number, blockchainAddress: string, isEnabled: boolean) => {
+  const updateChatNftCollectionRule = async ({expected, address, isEnabled}: {expected: number, address: string, isEnabled: boolean}) => {
+    if (!ruleId) return;
     setIsLoading(true);
-    updateNftCollectionRule(slug, blockchainAddress, expected, isEnabled).then(
+    updateNftCollectionRule(slug, ruleId, {address, expected, isEnabled}).then(
         (data) => { setChatNftCollectionRuleData(data) }
     ).finally(() => setIsLoading(false));
   }

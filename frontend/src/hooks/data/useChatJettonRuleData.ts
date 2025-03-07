@@ -1,43 +1,51 @@
 import {useClientOnce} from "@/hooks/useClientOnce";
-import {createJettonRule, fetchJettonRule, toggleJettonRule, updateJettonRule} from "@/services";
-import {useState} from "react";
+import {createJettonRule, fetchJettonRule, updateJettonRule} from "@/services";
+import {useCallback, useState} from "react";
 import {IRule} from "@/interfaces";
 
 
-const useChatJettonRuleData = ({slug, jettonAddress}: {slug: string, jettonAddress?: string}) => {
-  const [chatJettonRuleData, setChatJettonRuleData] = useState<IRule | null>(null);
-  const [ isLoading, setIsLoading ] = useState(false);
+const useChatJettonRuleData = ({slug, ruleId}: { slug: string, ruleId?: number }) => {
+    const [chatJettonRuleData, setChatJettonRuleData] = useState<IRule | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
-  useClientOnce(() => {
-    if (!jettonAddress) return;
-    setIsLoading(true);
-    fetchJettonRule(slug, jettonAddress).then(
-        (data) => { setChatJettonRuleData(data) }
-    ).finally(() => { setIsLoading(false) });
-  });
+    useClientOnce(() => {
+        if (!ruleId) return;
+        setIsLoading(true);
+        fetchJettonRule(slug, ruleId).then(
+            (data) => {
+                setChatJettonRuleData(data)
+            }
+        ).finally(() => {
+            setIsLoading(false)
+        });
+    });
 
-  const createChatJettonRule = async (expected: number, blockchainAddress: string) => {
-    setIsLoading(true);
-    createJettonRule(slug, blockchainAddress, expected).then(
-        (data) => { setChatJettonRuleData(data) }
-    ).finally(() => { setIsLoading(false) });
-  }
+    const createChatJettonRule = useCallback(async ({expected, address}: { expected: number, address: string }) => {
+        if (!slug || ruleId) return;
+        setIsLoading(true);
+        createJettonRule(slug, address, expected).then(
+            (data) => {
+                setChatJettonRuleData(data)
+            }
+        ).finally(() => {
+            setIsLoading(false)
+        });
+    }, [ruleId, slug])
 
-  const updateChatJettonRule = async (expected: number, blockchainAddress: string) => {
-    setIsLoading(true);
-    updateJettonRule(slug, blockchainAddress, expected).then(
-        (data) => { setChatJettonRuleData(data) }
-    ).finally(() => setIsLoading(false));
-  }
+    const updateChatJettonRule = useCallback(
+        async ({expected, address, isEnabled}: { expected: number, address: string, isEnabled: boolean }) => {
+            if (!ruleId) return;
+            setIsLoading(true);
+            updateJettonRule(slug, ruleId, {address, expected, isEnabled}).then(
+                (data) => {
+                    setChatJettonRuleData(data)
+                }
+            ).finally(() => setIsLoading(false));
+        },
+        [ruleId, slug]
+    )
 
-  const toggleChatJettonRule = async (isEnabled: boolean, blockchainAddress: string) => {
-    setIsLoading(true);
-    toggleJettonRule(slug, blockchainAddress, isEnabled).then(
-        (data) => { setChatJettonRuleData(data) }
-    ).finally(() => setIsLoading(false));
-  }
-
-  return {chatJettonRuleData, createChatJettonRule, updateChatJettonRule, toggleChatJettonRule, isLoading};
+    return {chatJettonRuleData, createChatJettonRule, updateChatJettonRule, isLoading};
 };
 
 export default useChatJettonRuleData;

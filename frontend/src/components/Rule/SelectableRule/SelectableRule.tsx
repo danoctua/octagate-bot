@@ -1,4 +1,4 @@
-import {Cell, Input, List, Section, Selectable, Switch, Text} from "@telegram-apps/telegram-ui";
+import {Cell, Input, List, Section, Selectable, Switch} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
 import {IJetton, INftCollection} from "@/interfaces";
 import React from "react";
@@ -6,7 +6,16 @@ import React from "react";
 
 const SelectableRule = (
     {
-        title, items, category, selectedOption, onSelect, expected, onExpectedChange, existing, isEnabled = true, onToggle = undefined
+        title,
+        items,
+        category,
+        selectedOption,
+        onSelect,
+        expected,
+        onExpectedChange,
+        existing,
+        isEnabled = true,
+        onToggle = undefined
     }: {
         title: string,
         items: IJetton[] | INftCollection[],
@@ -22,20 +31,6 @@ const SelectableRule = (
 ) => {
     return (
         <div style={{padding: "16px 0"}}>
-            {existing && <Section>
-                <Cell
-                    Component={"label"}
-                    after={
-                        <Switch
-                            checked={isEnabled}
-                            onChange={_ => onToggle && onToggle(!isEnabled)}
-                        />
-                    }
-                    description={"Whether the rule is active or not"}
-                >
-                    Is active
-                </Cell>
-            </Section>}
             <Input
                 header={"Required amount"}
                 type={"number"}
@@ -72,6 +67,35 @@ const SelectableRule = (
                         </Cell>
                     ))}
                 </List>
+            </Section>
+            <Section
+                header={"Access matrix"}
+            >
+                {existing &&
+                    <Cell
+                        Component={"label"}
+                        multiline
+                        after={
+                            <Switch
+                                checked={isEnabled}
+                                onChange={_ => onToggle && onToggle(!isEnabled)}
+                            />
+                        }
+                        description={"Whether the rule is active or not"}
+                    >
+                        Is active
+                    </Cell>
+                }
+                <Cell
+                    Component={"label"}
+                    after={<Switch checked/>}
+                    disabled
+                    multiline
+                    description={"Whether that rule grants write access to the chat"}
+                >
+                    Grants write access
+                </Cell>
+
             </Section>
         </div>
     )

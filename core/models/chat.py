@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, String, DateTime, func, Boolean, ForeignKey
+from sqlalchemy import BigInteger, String, DateTime, func, Boolean, ForeignKey, Integer
 from sqlalchemy.orm import mapped_column, relationship
 
 from core.db import Base
@@ -28,12 +28,14 @@ class TelegramChat(Base):
 class TelegramChatRuleBase(Base):
     __abstract__ = True
 
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
     chat_id = mapped_column(
-        ForeignKey("telegram_chat.id", ondelete="CASCADE"), primary_key=True
+        ForeignKey("telegram_chat.id", ondelete="CASCADE"), nullable=False
     )
     threshold = mapped_column(
         BigInteger, nullable=False, doc="Minimum amount of items to hold"
     )
+    grants_write_access = mapped_column(Boolean, nullable=False, default=False)
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -44,7 +46,7 @@ class TelegramChatJetton(TelegramChatRuleBase):
     __tablename__ = "telegram_chat_jetton"
 
     address = mapped_column(
-        ForeignKey("jetton.address", ondelete="CASCADE"), primary_key=True
+        ForeignKey("jetton.address", ondelete="CASCADE"), nullable=False
     )
     jetton = relationship(
         "Jetton",
@@ -60,7 +62,7 @@ class TelegramChatNFTCollection(TelegramChatRuleBase):
     __tablename__ = "telegram_chat_nft_collection"
 
     address = mapped_column(
-        ForeignKey("nft_collection.address", ondelete="CASCADE"), primary_key=True
+        ForeignKey("nft_collection.address", ondelete="CASCADE"), nullable=False
     )
 
     nft_collection = relationship(

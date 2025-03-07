@@ -15,8 +15,8 @@ from api.pos.chat import (
 )
 from core.actions.base import BaseAction
 from core.dtos.chat import (
-    TelegramChatJettonRuleDTO,
-    TelegramChatNFTCollectionRuleDTO,
+    CreateTelegramChatJettonRuleDTO,
+    CreateTelegramChatNFTCollectionRuleDTO,
     TelegramChatEligibilitySummaryDTO,
 )
 from core.dtos.user import TelegramUserDTO
@@ -196,6 +196,7 @@ class TelegramChatAction(BaseAction):
             ),
             rules=[
                 TelegramChatEligibilityRuleFDO(
+                    id=rule.id,
                     category=rule.category,
                     title=rule.title,
                     expected=rule.expected,
@@ -233,36 +234,38 @@ class TelegramChatAction(BaseAction):
                 is_member=False,
                 is_eligible=False,
             ),
-            rules=[
-                *(
-                    TelegramChatEligibilityRuleFDO.from_jetton_rule(rule)
-                    for rule in eligibility_rules.jettons
-                ),
-                *(
-                    TelegramChatEligibilityRuleFDO.from_nft_collection_rule(rule)
-                    for rule in eligibility_rules.nft_collections
-                ),
-            ],
+            rules=sorted(
+                [
+                    *(
+                        TelegramChatEligibilityRuleFDO.from_jetton_rule(rule)
+                        for rule in eligibility_rules.jettons
+                    ),
+                    *(
+                        TelegramChatEligibilityRuleFDO.from_nft_collection_rule(rule)
+                        for rule in eligibility_rules.nft_collections
+                    ),
+                ],
+                key=lambda rule: (not rule.is_enabled, rule.title),
+            ),
         )
 
 
 class TelegramChatNFTCollectionAction(BaseAction):
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: Session) -> None:
         super().__init__(db_session)
         self.telegram_chat_service = TelegramChatService(db_session)
         self.telegram_chat_nft_collection_service = TelegramChatNFTCollectionService(
             db_session
         )
 
-    def read(
-        self,
-        slug: str,
-        address_raw: str,
-    ) -> BaseTelegramChatEligibilityRuleFDO:
-        chat = self.telegram_chat_service.get_by_slug(slug)
-        rule = self.telegram_chat_nft_collection_service.get(
-            chat_id=chat.id, collection_address=address_raw
-        )
+    def read(self, rule_id: int) -> BaseTelegramChatEligibilityRuleFDO:
+        try:
+            rule = self.telegram_chat_nft_collection_service.get(rule_id)
+        except NoResultFound:
+            raise HTTPException(
+                detail={"error": {"message": "Rule not found"}},
+                status_code=404,
+            )
         return BaseTelegramChatEligibilityRuleFDO.from_nft_collection_rule(rule)
 
     def create(
@@ -271,12 +274,20 @@ class TelegramChatNFTCollectionAction(BaseAction):
         address_raw: str,
         threshold: int,
     ) -> BaseTelegramChatEligibilityRuleFDO:
-        chat = self.telegram_chat_service.get_by_slug(slug)
+        try:
+            chat = self.telegram_chat_service.get_by_slug(slug)
+        except NoResultFound:
+            logger.debug(f"Chat with slug {slug!r} not found")
+            raise HTTPException(
+                detail={"error": {"message": "Chat not found"}},
+                status_code=404,
+            )
         new_rule = self.telegram_chat_nft_collection_service.create(
-            TelegramChatNFTCollectionRuleDTO(
+            CreateTelegramChatNFTCollectionRuleDTO(
                 chat_id=chat.id,
                 address=address_raw,
                 threshold=threshold,
+                is_enabled=True,
             )
         )
         logger.info(f"Chat {chat.id!r} linked to NFT collection {address_raw!r}")
@@ -284,18 +295,23 @@ class TelegramChatNFTCollectionAction(BaseAction):
 
     def update(
         self,
-        slug: str,
-        address: str,
+        rule_id: int,
+        address_raw: str,
         expected: int,
+        is_enabled: bool,
     ) -> BaseTelegramChatEligibilityRuleFDO:
-        chat = self.telegram_chat_service.get_by_slug(slug)
-        rule = self.telegram_chat_nft_collection_service.update(
-            TelegramChatNFTCollectionRuleDTO(
-                chat_id=chat.id,
-                address=address,
+        try:
+            rule = self.telegram_chat_nft_collection_service.update(
+                rule_id=rule_id,
+                address=address_raw,
                 threshold=expected,
+                is_enabled=is_enabled,
             )
-        )
+        except NoResultFound:
+            raise HTTPException(
+                detail={"error": {"message": "Rule not found"}},
+                status_code=404,
+            )
         return BaseTelegramChatEligibilityRuleFDO.from_nft_collection_rule(rule)
 
 
@@ -304,6 +320,16 @@ class TelegramChatJettonAction(BaseAction):
         super().__init__(db_session)
         self.telegram_chat_service = TelegramChatService(db_session)
         self.telegram_chat_jetton_service = TelegramChatJettonService(db_session)
+
+    def read(self, rule_id: int) -> BaseTelegramChatEligibilityRuleFDO:
+        try:
+            rule = self.telegram_chat_jetton_service.get(rule_id)
+        except NoResultFound:
+            raise HTTPException(
+                detail={"error": {"message": "Rule not found"}},
+                status_code=404,
+            )
+        return BaseTelegramChatEligibilityRuleFDO.from_jetton_rule(rule)
 
     def create(
         self,
@@ -320,22 +346,12 @@ class TelegramChatJettonAction(BaseAction):
                 status_code=404,
             )
 
-        try:
-            self.telegram_chat_jetton_service.get(
-                chat_id=chat.id, jetton_address=address_raw
-            )
-            raise HTTPException(
-                detail={"error": {"message": "Rule already exists"}},
-                status_code=409,
-            )
-        except NoResultFound:
-            pass
-
         new_rule = self.telegram_chat_jetton_service.create(
-            TelegramChatJettonRuleDTO(
+            CreateTelegramChatJettonRuleDTO(
                 chat_id=chat.id,
                 address=address_raw,
                 threshold=threshold,
+                is_enabled=True,
             )
         )
         logger.info(f"Chat {chat.id!r} linked to jetton {address_raw!r}")
@@ -343,52 +359,16 @@ class TelegramChatJettonAction(BaseAction):
 
     def update(
         self,
-        slug: str,
+        rule_id: int,
         address_raw: str,
         expected: int | float,
-    ) -> BaseTelegramChatEligibilityRuleFDO:
-        try:
-            chat = self.telegram_chat_service.get_by_slug(slug)
-        except NoResultFound:
-            logger.debug(f"Chat with slug {slug!r} not found")
-            raise HTTPException(
-                detail={"error": {"message": "Chat not found"}},
-                status_code=404,
-            )
-        try:
-            rule = self.telegram_chat_jetton_service.update(
-                TelegramChatJettonRuleDTO(
-                    chat_id=chat.id,
-                    address=address_raw,
-                    threshold=expected,
-                )
-            )
-        except NoResultFound:
-            raise HTTPException(
-                detail={"error": {"message": "Rule not found"}},
-                status_code=404,
-            )
-        return BaseTelegramChatEligibilityRuleFDO.from_jetton_rule(rule)
-
-    def toggle(
-        self,
-        slug: str,
-        address_raw: str,
         is_enabled: bool,
     ) -> BaseTelegramChatEligibilityRuleFDO:
         try:
-            chat = self.telegram_chat_service.get_by_slug(slug)
-        except NoResultFound:
-            logger.debug(f"Chat with slug {slug!r} not found")
-            raise HTTPException(
-                detail={"error": {"message": "Chat not found"}},
-                status_code=404,
-            )
-
-        try:
-            rule = self.telegram_chat_jetton_service.toggle_rule(
-                chat_id=chat.id,
+            rule = self.telegram_chat_jetton_service.update(
+                rule_id=rule_id,
                 address=address_raw,
+                threshold=expected,
                 is_enabled=is_enabled,
             )
         except NoResultFound:
@@ -396,5 +376,4 @@ class TelegramChatJettonAction(BaseAction):
                 detail={"error": {"message": "Rule not found"}},
                 status_code=404,
             )
-
         return BaseTelegramChatEligibilityRuleFDO.from_jetton_rule(rule)

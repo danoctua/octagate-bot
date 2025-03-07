@@ -17,6 +17,7 @@ export interface IChat extends IBaseChat {
 
 
 export interface IRule {
+    id: number,
     category: string,
     title: string,
     blockchainAddress: string,

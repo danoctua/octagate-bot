@@ -1,102 +1,51 @@
 'use client';
 
-import {Cell, Placeholder, Skeleton, Switch} from "@telegram-apps/telegram-ui";
-import React, {FC, PropsWithChildren, useCallback, useEffect, useState} from "react";
-import SelectableRule from "@/components/Rule/SelectableRule/SelectableRule";
+import React, {FC, PropsWithChildren, useCallback, useState} from "react";
 import useJettonsData from "@/hooks/data/useJettonsData";
-import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
 import useChatJettonRuleData from "@/hooks/data/useChatJettonRuleData";
-import Image from "next/image";
 import {useRouter} from "next/navigation";
+import BlockchainRule from "@/components/Rule/BlockchainRule/BlockchainRule";
 
 
 const JettonRule: FC<PropsWithChildren<{
     chatSlug: string,
-    jettonAddress?: string
-}>> = ({chatSlug, jettonAddress, children}) => {
+    ruleId?: number
+}>> = ({chatSlug, ruleId, children}) => {
     const {jettons} = useJettonsData({whitelistedOnly: true})
-    const [selectedJettonAddress, setSelectedJettonAddress] = useState<string>(jettonAddress || "")
-    const [expected, setExpected] = useState(0)
     const {
         chatJettonRuleData,
         updateChatJettonRule,
         createChatJettonRule,
-        toggleChatJettonRule,
         isLoading: isChatJettonRuleLoading
     } = useChatJettonRuleData({
         slug: chatSlug,
-        jettonAddress
+        ruleId: ruleId
     })
     const [isEnabled, setIsEnabled] = useState<boolean>(false);
-    const [isFormValid, setIsFormValid] = useState<boolean>(false);
     const router = useRouter();
 
-    useEffect(() => {
-        setIsFormValid(selectedJettonAddress !== "" && expected > 0);
-    }, [selectedJettonAddress, expected]);
-
-    const onSwitchChange = useCallback(
-        async (isEnabled: boolean) => {
-            await toggleChatJettonRule(isEnabled, selectedJettonAddress)
-            setIsEnabled(isEnabled)
-        }, [selectedJettonAddress, toggleChatJettonRule]
-    )
 
     const onSaveButtonClick = useCallback(
-        async () => {
-            if (jettonAddress) {
-                await updateChatJettonRule(expected, selectedJettonAddress)
+        async (expected: number, address: string, isEnabled: boolean) => {
+            if (ruleId) {
+                await updateChatJettonRule({expected, address, isEnabled})
             } else {
-                await createChatJettonRule(expected, selectedJettonAddress)
+                await createChatJettonRule({expected, address})
             }
             // To make sure it doesn't create a bunch of history entries
             router.back()
-        }, [createChatJettonRule, expected, jettonAddress, router, selectedJettonAddress, updateChatJettonRule]
+        }, [createChatJettonRule, ruleId, router, updateChatJettonRule]
     )
 
-    useEffect(() => {
-        if (!chatJettonRuleData) return
-        setExpected(chatJettonRuleData.expected)
-        setSelectedJettonAddress(chatJettonRuleData.blockchainAddress)
-        setIsEnabled(chatJettonRuleData.isEnabled)
-    }, [chatJettonRuleData]);
-
     return (
-        <>
-            {jettons ?
-                jettons.length ?
-                    <SelectableRule
-                        title={"Jetton"}
-                        items={jettons}
-                        category={"jettons"}
-                        selectedOption={selectedJettonAddress}
-                        onSelect={setSelectedJettonAddress}
-                        expected={expected}
-                        onExpectedChange={setExpected}
-                        existing={jettonAddress !== undefined}
-                        isEnabled={isEnabled}
-                        onToggle={onSwitchChange}
-                    /> :
-                    <Placeholder
-                        description="Please, try again after some jettons will be whitelisted"
-                        header="No jettons available"
-                    >
-                        <Image
-                            alt="Lost bananas"
-                            src="/telegram.gif"
-                            width={150}
-                            height={150}
-                        />
-                    </Placeholder>
-                : <Skeleton/>
-            }
-            <FixedBottomSection
-                text={"Save"}
-                disabled={!isFormValid}
-                loading={isChatJettonRuleLoading}
-                onClick={onSaveButtonClick}
-            />
-        </>
+        <BlockchainRule
+            title={"Jettons"}
+            category={"jettons"}
+            options={jettons}
+            isLoading={isChatJettonRuleLoading}
+            onSave={onSaveButtonClick}
+            entity={chatJettonRuleData}
+        />
     )
 }
 
