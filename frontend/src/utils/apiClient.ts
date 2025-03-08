@@ -58,10 +58,9 @@ apiClient.interceptors.response.use(
 );
 
 const handleApiError = (error: AxiosError) => {
-  errorEmitter.emit("apiError", error);
   switch (error.response?.status) {
-    case 400:
-      console.error("Bad Request", error.response.data);
+    case 401:
+      console.error("Not authenticated", error.response.data);
       break;
     case 403:
       console.error("Forbidden", error.response.data);
@@ -69,10 +68,8 @@ const handleApiError = (error: AxiosError) => {
     case 404:
       console.error("Not Found", error.response.data);
       break;
-    case 500:
-      console.error("Internal Server Error", error.response.data);
-      break;
     default:
+      errorEmitter.emit("apiError", error);
       console.error("An unexpected error occurred", error.response?.data);
   }
 };

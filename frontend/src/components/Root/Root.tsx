@@ -23,9 +23,9 @@ import { errorEmitter } from '@/utils/apiClient';
 
 
 interface ErrorResponseData {
-  detail: {
-    error: {
-      message: string;
+  detail?: {
+    error?: {
+      message?: string;
     };
   };
 }
@@ -77,7 +77,7 @@ function RootInner({children}: PropsWithChildren) {
                     <Snackbar
                         before={<AlertTriangle/>}
                         duration={5000}
-                        description={(apiError.response?.data as ErrorResponseData)?.detail.error.message || 'Something went wrong'}
+                        description={(apiError.response?.data as ErrorResponseData)?.detail?.error?.message || 'Something went wrong'}
                         onClose={() => setApiError(undefined)}
                     >
                         An unexpected error occurred
