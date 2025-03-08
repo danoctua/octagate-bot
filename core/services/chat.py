@@ -224,6 +224,7 @@ class TelegramChatUserService(BaseService):
         items.extend(
             [
                 TelegramChatEligibilityItemDTO(
+                    id=rule.id,
                     category=EligibilityCheckType.JETTON,
                     expected=rule.threshold,
                     title=rule.jetton.name,
@@ -246,6 +247,7 @@ class TelegramChatUserService(BaseService):
         items.extend(
             [
                 TelegramChatEligibilityItemDTO(
+                    id=rule.id,
                     category=EligibilityCheckType.NFT_COLLECTION,
                     expected=rule.threshold,
                     title=rule.nft_collection.name,

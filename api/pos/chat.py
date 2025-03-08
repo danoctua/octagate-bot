@@ -90,6 +90,8 @@ class BaseTelegramChatRuleCPO(BaseFDO):
     def validate_address(cls, v: str) -> str:
         return userfriendly_to_raw(v)
 
+
+class TelegramChatJettonRuleCPO(BaseTelegramChatRuleCPO):
     @field_validator("expected")
     @classmethod
     def preprocess_expected(cls, v: float | int) -> float | int:
@@ -97,10 +99,6 @@ class BaseTelegramChatRuleCPO(BaseFDO):
             return v
 
         return to_nano(v)
-
-
-class TelegramChatJettonRuleCPO(BaseTelegramChatRuleCPO):
-    ...
 
 
 class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatRuleCPO):

@@ -20,6 +20,7 @@ class TelegramChatEligibilityRulesDTO:
 
 
 class TelegramChatEligibilityItemDTO(BaseModel):
+    id: int
     category: EligibilityCheckType
     title: str
     address_raw: str
