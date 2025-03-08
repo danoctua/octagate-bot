@@ -1,6 +1,9 @@
-import axios from "axios";
+import axios, {AxiosError} from "axios";
+import { EventEmitter } from "events";
 
 import { retrieveLaunchParams } from "@telegram-apps/sdk-react";
+
+export const errorEmitter = new EventEmitter();
 
 
 const apiClient = axios.create({
@@ -47,9 +50,31 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         console.error("Re-authentication failed", refreshError);
       }
+    } else {
+      handleApiError(error);
     }
     return Promise.reject(error);
   }
 );
+
+const handleApiError = (error: AxiosError) => {
+  errorEmitter.emit("apiError", error);
+  switch (error.response?.status) {
+    case 400:
+      console.error("Bad Request", error.response.data);
+      break;
+    case 403:
+      console.error("Forbidden", error.response.data);
+      break;
+    case 404:
+      console.error("Not Found", error.response.data);
+      break;
+    case 500:
+      console.error("Internal Server Error", error.response.data);
+      break;
+    default:
+      console.error("An unexpected error occurred", error.response?.data);
+  }
+};
 
 export default apiClient;
