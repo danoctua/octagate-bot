@@ -5,14 +5,10 @@ import time
 from nacl.signing import VerifyKey
 from nacl.encoding import Base64Encoder
 
-from api.pos.wallet import WalletDetailsWithProofPO
-
+from core.dtos.wallet import WalletDetailsWithProofDTO
+from core.exceptions.wallet import ProofValidationError
 
 logger = logging.getLogger(__name__)
-
-
-class ProofValidationError(Exception):
-    pass
 
 
 class TonProofService:
@@ -21,7 +17,7 @@ class TonProofService:
     valid_auth_time = 15 * 60  # 15 minutes
 
     @classmethod
-    def verify_ton_proof(cls, wallet_details: WalletDetailsWithProofPO) -> None:
+    def verify_ton_proof(cls, wallet_details: WalletDetailsWithProofDTO) -> None:
         """
         Verify the ton_proof signature.
 
@@ -97,7 +93,7 @@ if __name__ == "__main__":
     public_key_raw = "d1a4837e70230577c00fc42e88e1158c192e6f26feeaa8e01b4ed425cadab3f4"
     wallet = "0:11e309f0666214d7e189bc13a1eb73af9c95d2800de276db5d59b728c70e5d47"
     TonProofService.verify_ton_proof(
-        WalletDetailsWithProofPO(
+        WalletDetailsWithProofDTO(
             **{
                 "ton_proof": proof_data,
                 "wallet_address": wallet,

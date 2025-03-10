@@ -1,4 +1,16 @@
-from sqlalchemy import BigInteger, String, DateTime, func, Boolean, ForeignKey, Integer
+import datetime
+
+from sqlalchemy import (
+    BigInteger,
+    String,
+    DateTime,
+    func,
+    Boolean,
+    ForeignKey,
+    Integer,
+    UniqueConstraint,
+)
+from sqlalchemy.dialects.mysql import JSON
 from sqlalchemy.orm import mapped_column, relationship
 
 from core.db import Base
@@ -20,6 +32,15 @@ class TelegramChat(Base):
         doc="Invite link to the chat. If empty, the chat will not be accessible.",
     )
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    whitelist_external_sources = relationship(
+        "TelegramChatWhitelistExternalSource",
+        backref="chat",
+    )
+    whitelist_sources = relationship(
+        "TelegramChatWhitelist",
+        backref="chat",
+    )
 
     def __repr__(self):
         return f"<TelegramChat(id={self.id}, title={self.title})>"
@@ -75,15 +96,50 @@ class TelegramChatNFTCollection(TelegramChatRuleBase):
         return f"<TelegramChatNFTCollection({self.address=}, {self.chat_id=})>"
 
 
-# class TelegramChatExternalSource(Base):
-#     TODO add external source support (e.g. get list of IDs to allow to join the chat)
-#     __tablename__ = "telegram_chat_external_source"
-#
-#     chat_id = mapped_column(ForeignKey("telegram_chat.id"), primary_key=True)
-#     is_enabled = mapped_column(Boolean, nullable=False, default=True)
-#     created_at = mapped_column(
-#         DateTime(timezone=True), server_default=func.now(), nullable=False
-#     )
+class TelegramChatWhitelistBase(Base):
+    __abstract__ = True
+
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    chat_id = mapped_column(ForeignKey("telegram_chat.id"), nullable=False)
+    name = mapped_column(String(255), nullable=False)
+    description = mapped_column(String(255), nullable=True)
+    is_enabled = mapped_column(Boolean, nullable=False, default=True)
+    content = mapped_column(JSON, nullable=True)
+    created_at = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=datetime.datetime.now,
+        nullable=False,
+    )
+
+
+class TelegramChatWhitelistExternalSource(TelegramChatWhitelistBase):
+    __tablename__ = "telegram_chat_whitelist_external_source"
+
+    url = mapped_column(String(255), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "chat_id", "name", name="uix_chat_external_source_chat_name_unique"
+        ),
+    )
+
+    def __repr__(self):
+        return f"<TelegramChatWhitelistExternalSource({self.url=}, {self.chat_id=})>"
+
+
+class TelegramChatWhitelist(TelegramChatWhitelistBase):
+    __tablename__ = "telegram_chat_whitelist"
+
+    def __repr__(self):
+        return f"<TelegramChatWhitelist({self.chat_id=}, {self.name=})>"
+
+    __table_args__ = (
+        UniqueConstraint("chat_id", "name", name="uix_chat_whitelist_chat_name_unique"),
+    )
 
 
 class TelegramChatUser(Base):
@@ -98,12 +154,6 @@ class TelegramChatUser(Base):
         nullable=False,
         default=False,
         doc="Whether the user is an admin in the chat",
-    )
-    is_whale_admin = mapped_column(
-        Boolean,
-        nullable=False,
-        default=False,
-        doc="Whether the user is an admin in the chat that was promoted as a whale from the bot",
     )
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

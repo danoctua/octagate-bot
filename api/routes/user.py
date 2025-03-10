@@ -5,10 +5,13 @@ from starlette.requests import Request
 
 from api.deps import get_db_session
 from api.pos.user import UserFDO, UpdateUserWalletFDO
-from api.pos.wallet import WalletDetailsWithProofPO
+from api.pos.wallet import WalletDetailsWithProofCPO
 from core.actions.wallet import WalletAction
-from core.services.ton import ProofValidationError
-from core.services.wallet import UserWalletExistError, UserWalletConnectedError
+from core.exceptions.wallet import (
+    UserWalletExistError,
+    UserWalletConnectedError,
+    ProofValidationError,
+)
 
 user_router = APIRouter(prefix="/users")
 
@@ -23,7 +26,7 @@ async def get_user_data(
 @user_router.post("/wallet")
 async def update_wallet_address(
     request: Request,
-    wallet_details: WalletDetailsWithProofPO,
+    wallet_details: WalletDetailsWithProofCPO,
     db_session: Session = Depends(get_db_session),
 ) -> UpdateUserWalletFDO:
     wallet_action = WalletAction(db_session)

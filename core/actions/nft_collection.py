@@ -2,7 +2,7 @@ import logging
 
 from sqlalchemy.orm import Session
 
-from api.pos.ton import NftCollectionFDO
+from core.dtos.resource import NftCollectionDTO
 from core.actions.base import BaseAction
 from core.constants import NFT_LOGO_SUB_PATH, DEFAULT_NFT_LOGO_PATH
 from core.services.nft import NftCollectionService
@@ -17,20 +17,20 @@ class NftCollectionAction(BaseAction):
         super().__init__(db_session)
         self.nft_collection_service = NftCollectionService(db_session)
 
-    def get_all(self, whitelisted_only: bool) -> list[NftCollectionFDO]:
+    def get_all(self, whitelisted_only: bool) -> list[NftCollectionDTO]:
         nft_collections = self.nft_collection_service.get_all(
             whitelisted_only=whitelisted_only
         )
         return [
-            NftCollectionFDO.from_orm(nft_collection)
+            NftCollectionDTO.from_orm(nft_collection)
             for nft_collection in nft_collections
         ]
 
-    def get(self, address_raw: str) -> NftCollectionFDO:
+    def get(self, address_raw: str) -> NftCollectionDTO:
         nft_collection = self.nft_collection_service.get(address_raw)
-        return NftCollectionFDO.from_orm(nft_collection)
+        return NftCollectionDTO.from_orm(nft_collection)
 
-    async def create(self, address_raw: str) -> NftCollectionFDO:
+    async def create(self, address_raw: str) -> NftCollectionDTO:
         blockchain_service = TonApiService()
         nft_collection_data = await blockchain_service.get_nft_collection_info(
             address_raw
@@ -47,10 +47,10 @@ class NftCollectionAction(BaseAction):
         nft_collection = self.nft_collection_service.create_or_update(
             nft_collection_data, logo_path=logo_path
         )
-        return NftCollectionFDO.from_orm(nft_collection)
+        return NftCollectionDTO.from_orm(nft_collection)
 
-    async def update(self, address_raw: str, is_enabled: bool) -> NftCollectionFDO:
+    async def update(self, address_raw: str, is_enabled: bool) -> NftCollectionDTO:
         nft_collection = self.nft_collection_service.update_status(
             address_raw, is_enabled
         )
-        return NftCollectionFDO.from_orm(nft_collection)
+        return NftCollectionDTO.from_orm(nft_collection)

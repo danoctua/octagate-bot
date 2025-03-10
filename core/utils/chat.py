@@ -1,13 +1,21 @@
+import logging
+
 from telegram import ChatMemberUpdated, ChatMember
+
+logger = logging.getLogger(__name__)
 
 
 def extract_member_status_change(
-    chat_member_update: ChatMemberUpdated,
+    chat_member_update: ChatMemberUpdated | None,
 ) -> tuple[bool, bool] | None:
     """Takes a ChatMemberUpdated instance and extracts whether the 'old_chat_member' was a member
     of the chat and whether the 'new_chat_member' is a member of the chat. Returns None, if
     the status didn't change.
     """
+    if not chat_member_update:
+        logger.warning(f"ChatMemberUpdated instance is {chat_member_update!r}.")
+        return None
+
     status_change = chat_member_update.difference().get("status")
     old_is_member, new_is_member = chat_member_update.difference().get(
         "is_member", (None, None)

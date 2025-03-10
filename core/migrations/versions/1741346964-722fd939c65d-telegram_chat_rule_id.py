@@ -116,9 +116,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Drop the primary key for telegram_chat_jetton
-    op.execute(
-        "ALTER TABLE telegram_chat_jetton MODIFY COLUMN id INT NOT NULL PRIMARY KEY"
-    )
+    op.execute("ALTER TABLE telegram_chat_jetton MODIFY COLUMN id INT NOT NULL")
     op.drop_constraint(
         "telegram_chat_jetton_pkey", "telegram_chat_jetton", type_="primary"
     )
@@ -155,9 +153,7 @@ def downgrade() -> None:
     )
 
     # Drop the primary key for telegram_chat_nft_collection
-    op.execute(
-        "ALTER TABLE telegram_chat_nft_collection MODIFY COLUMN id INT NOT NULL PRIMARY KEY"
-    )
+    op.execute("ALTER TABLE telegram_chat_nft_collection MODIFY COLUMN id INT NOT NULL")
     op.drop_constraint(
         "telegram_chat_nft_collection_pkey",
         "telegram_chat_nft_collection",

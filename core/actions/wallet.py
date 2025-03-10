@@ -3,7 +3,7 @@ import logging
 from celery.result import AsyncResult
 from sqlalchemy.orm import Session
 
-from api.pos.wallet import WalletDetailsWithProofPO
+from core.dtos.wallet import WalletDetailsWithProofDTO
 from core.actions.base import BaseAction
 from core.constants import (
     DEFAULT_WALLET_TRACK_EXPIRATION,
@@ -14,9 +14,8 @@ from core.services.superredis import RedisService
 from core.services.ton import TonProofService
 from core.services.wallet import (
     WalletService,
-    UserWalletExistError,
-    UserWalletConnectedError,
 )
+from core.exceptions.wallet import UserWalletExistError, UserWalletConnectedError
 from wallet_indexer.celery_app import app
 
 logger = logging.getLogger(__name__)
@@ -30,7 +29,7 @@ class WalletAction(BaseAction):
     async def connect_wallet(
         self,
         user_id: int,
-        wallet_details: WalletDetailsWithProofPO,
+        wallet_details: WalletDetailsWithProofDTO,
     ) -> str:
         TonProofService.verify_ton_proof(wallet_details=wallet_details)
         try:

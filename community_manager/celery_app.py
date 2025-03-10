@@ -1,7 +1,7 @@
-from celery import Celery, signals
+from celery import Celery
+from celery.schedules import crontab
 
 from community_manager.settings import community_manager_settings
-from core.constants import CELERY_SYSTEM_QUEUE_NAME
 
 
 def create_app() -> Celery:
@@ -12,15 +12,19 @@ def create_app() -> Celery:
             "result_backend": community_manager_settings.broker_url,
             "include": ["community_manager.tasks"],
             "worker_concurrency": community_manager_settings.worker_concurrency,
+            "beat_schedule": {
+                "check-chat-members": {
+                    "task": "check-chat-members",
+                    "schedule": crontab(minute="*/1"),  # Every minute
+                },
+                "refresh-chat-external-sources": {
+                    "task": "refresh-chat-external-sources",
+                    "schedule": crontab(minute="*/3"),  # Every 3 minutes
+                },
+            },
         }
     )
     return _app
-
-
-@signals.worker_ready.connect
-def at_start(sender, **kwargs):
-    if community_manager_settings.enable_manager:
-        sender.app.send_task("check-chat-members", queue=CELERY_SYSTEM_QUEUE_NAME)
 
 
 app = create_app()

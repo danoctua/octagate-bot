@@ -4,20 +4,13 @@ from collections.abc import Generator
 from pytonapi.schema.jettons import JettonBalance, JettonsBalances
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
+from core.exceptions.wallet import UserWalletExistError, UserWalletConnectedError
 from core.models.blockchain import Jetton
 from core.models.wallet import UserWallet, JettonWallet
 from core.services.base import BaseService
 
 
 logger = logging.getLogger(__name__)
-
-
-class UserWalletExistError(Exception):
-    pass
-
-
-class UserWalletConnectedError(Exception):
-    pass
 
 
 class WalletService(BaseService):

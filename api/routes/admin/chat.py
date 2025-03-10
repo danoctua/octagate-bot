@@ -5,21 +5,23 @@ from sqlalchemy.orm import Session
 
 from api.deps import get_db_session
 from api.pos.chat import (
-    BaseTelegramChatEligibilityRuleFDO,
     TelegramChatJettonRuleCPO,
     AddChatCPO,
+    TelegramChatNFTCollectionRuleCPO,
+    BaseTelegramChatEligibilityRuleFDO,
     BaseTelegramChatFDO,
     TelegramChatWithRulesFDO,
-    TelegramChatNFTCollectionRuleCPO,
 )
-from core.actions.chat import (
-    TelegramChatAction,
-    TelegramChatAlreadyExists,
+from core.exceptions.chat import (
     TelegramChatNotSufficientPrivileges,
+    TelegramChatAlreadyExists,
     TelegramChatNotExists,
-    TelegramChatJettonAction,
-    TelegramChatNFTCollectionAction,
 )
+from core.actions.chat.rule.blockchain import (
+    TelegramChatNFTCollectionAction,
+    TelegramChatJettonAction,
+)
+from core.actions.chat import TelegramChatAction
 from core.services.chat import TelegramChatService
 
 admin_chat_router = APIRouter(prefix="/chats")
@@ -43,7 +45,8 @@ async def get_chat(
 ) -> TelegramChatWithRulesFDO:
     telegram_chat_action = TelegramChatAction(db_session)
     try:
-        return await telegram_chat_action.get_with_eligibility_rules(slug=slug)
+        result = await telegram_chat_action.get_with_eligibility_rules(slug=slug)
+        return TelegramChatWithRulesFDO.from_dto(result)
     except TelegramChatNotExists:
         raise HTTPException(
             detail={"error": {"message": "Chat not found"}},
@@ -58,7 +61,8 @@ async def create_chat(
 ) -> BaseTelegramChatFDO:
     telegram_chat_action = TelegramChatAction(db_session)
     try:
-        return await telegram_chat_action.create(chat_identifier=chat.chat_identifier)
+        result = await telegram_chat_action.create(chat_identifier=chat.chat_identifier)
+        return BaseTelegramChatFDO.model_validate(result.model_dump())
     except TelegramChatAlreadyExists:
         raise HTTPException(
             detail={"error": {"message": "Chat already exists"}},
@@ -87,7 +91,9 @@ async def get_chat_jetton_rule(
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatEligibilityRuleFDO:
     telegram_chat_jetton_action = TelegramChatJettonAction(db_session)
-    return telegram_chat_jetton_action.read(rule_id=rule_id)
+    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+        telegram_chat_jetton_action.read(rule_id=rule_id).model_dump()
+    )
 
 
 @admin_chat_router.post("/{slug}/rules/jettons")
@@ -97,10 +103,12 @@ async def add_chat_jetton_rule(
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatEligibilityRuleFDO:
     action = TelegramChatJettonAction(db_session)
-    return action.create(
-        slug=slug,
-        address_raw=rule.address,
-        threshold=rule.expected,
+    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+        action.create(
+            slug=slug,
+            address_raw=rule.address,
+            threshold=rule.expected,
+        ).model_dump()
     )
 
 
@@ -112,11 +120,13 @@ async def update_chat_jetton_rule(
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatEligibilityRuleFDO:
     action = TelegramChatJettonAction(db_session)
-    return action.update(
-        rule_id=rule_id,
-        address_raw=rule.address,
-        expected=rule.expected,
-        is_enabled=rule.is_enabled,
+    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+        action.update(
+            rule_id=rule_id,
+            address_raw=rule.address,
+            expected=rule.expected,
+            is_enabled=rule.is_enabled,
+        ).model_dump()
     )
 
 
@@ -127,7 +137,9 @@ async def get_chat_nft_collection_rule(
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatEligibilityRuleFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return action.read(rule_id=rule_id)
+    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+        action.read(rule_id=rule_id)
+    )
 
 
 @admin_chat_router.post("/{slug}/rules/nft-collections")
@@ -137,10 +149,12 @@ async def add_chat_nft_collection_rule(
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatEligibilityRuleFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return action.create(
-        slug=slug,
-        address_raw=rule.address,
-        threshold=rule.expected,
+    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+        action.create(
+            slug=slug,
+            address_raw=rule.address,
+            threshold=rule.expected,
+        ).model_dump()
     )
 
 
@@ -152,9 +166,11 @@ async def update_chat_nft_collection_rule(
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatEligibilityRuleFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return action.update(
-        rule_id=rule_id,
-        address_raw=rule.address,
-        expected=rule.expected,
-        is_enabled=rule.is_enabled,
+    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+        action.update(
+            rule_id=rule_id,
+            address_raw=rule.address,
+            expected=rule.expected,
+            is_enabled=rule.is_enabled,
+        ).model_dump()
     )

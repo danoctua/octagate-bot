@@ -6,7 +6,8 @@ from telegram.ext import ContextTypes
 
 from core.actions.authorization import AuthorizationAction
 from core.dtos.user import TelegramUserDTO
-from core.services.chat import TelegramChatUserService, TelegramChatService
+from core.services.chat import TelegramChatService
+from core.services.chat.user import TelegramChatUserService
 from core.services.db import DBService
 from core.services.user import UserService
 from core.utils.chat import extract_member_status_change
@@ -63,7 +64,6 @@ async def chat_join_request_callback(
             chat_id=update.effective_chat.id,
             user_id=user.id,
             is_admin=False,
-            is_whale_admin=False,
         )
 
 

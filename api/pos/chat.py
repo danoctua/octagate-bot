@@ -1,26 +1,24 @@
 import re
-from typing import Annotated, Any, Self
+from typing import Annotated, Self
 
 from pydantic import (
     BaseModel,
-    computed_field,
     ConfigDict,
     AfterValidator,
-    field_serializer,
     field_validator,
+    field_serializer,
 )
 from pydantic.alias_generators import to_camel
-from pytonapi.utils import to_amount, to_nano, raw_to_userfriendly, userfriendly_to_raw
+from pytonapi.utils import to_nano, userfriendly_to_raw, to_amount
 
 from api.pos.base import BaseFDO
-from core.dtos.chat import EligibilityCheckType
-from core.models.chat import TelegramChatJetton, TelegramChatNFTCollection
-from core.utils.number import human_friendly_number
-
-
-PROMOTE_NFT_COLLECTION_TEMPLATE = "https://getgems.io/collection/{collection_address}"
-PROMOTE_JETTON_TEMPLATE = (
-    "https://app.ston.fi/swap?chartVisible=false&ft=TON&tt={jetton_master_address}"
+from core.dtos.chat import (
+    BaseTelegramChatEligibilityRuleDTO,
+    EligibilityCheckType,
+    BaseTelegramChatDTO,
+    TelegramChatDTO,
+    TelegramChatWithRulesDTO,
+    TelegramChatEligibilityRuleDTO,
 )
 
 CHAT_INPUT_REGEX = re.compile(
@@ -28,36 +26,16 @@ CHAT_INPUT_REGEX = re.compile(
 )
 
 
-class BaseTelegramChatFDO(BaseFDO):
-    id: int
-    username: str | None
-    title: str
-    description: str | None
-    slug: str
-    is_forum: bool
-    logo_path: str | None
-
-    @classmethod
-    def from_orm(cls, obj: Any) -> Self:
-        return cls(
-            id=obj.id,
-            username=obj.username,
-            title=obj.title,
-            description=obj.description,
-            slug=obj.slug,
-            is_forum=obj.is_forum,
-            logo_path=obj.logo_path,
-        )
+class BaseTelegramChatFDO(BaseFDO, BaseTelegramChatDTO):
+    ...
 
 
 class TelegramChatCPO(BaseModel):
     full: bool = False
 
 
-class TelegramChatFDO(BaseTelegramChatFDO):
-    join_url: str | None = None
-    is_member: bool = False
-    is_eligible: bool = False
+class TelegramChatFDO(BaseFDO, TelegramChatDTO):
+    ...
 
 
 def validate_chat_identifier(v: str) -> str | int:
@@ -105,15 +83,7 @@ class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatRuleCPO):
     ...
 
 
-class BaseTelegramChatEligibilityRuleFDO(BaseFDO):
-    id: int
-    category: EligibilityCheckType
-    title: str
-    expected: int
-    photo_url: str | None
-    blockchain_address: str | None
-    is_enabled: bool
-
+class BaseTelegramChatEligibilityRuleFDO(BaseFDO, BaseTelegramChatEligibilityRuleDTO):
     @field_serializer("expected", return_type=float | int)
     def preprocess_expected(self, v: int) -> float | int:
         if not v or self.category != EligibilityCheckType.JETTON:
@@ -121,54 +91,21 @@ class BaseTelegramChatEligibilityRuleFDO(BaseFDO):
 
         return to_amount(v)
 
-    @computed_field
-    def promote_url(self) -> str | None:
-        if self.category == EligibilityCheckType.JETTON:
-            return PROMOTE_JETTON_TEMPLATE.format(
-                jetton_master_address=self.blockchain_address
-            )
-        elif self.category == EligibilityCheckType.NFT_COLLECTION:
-            return PROMOTE_NFT_COLLECTION_TEMPLATE.format(
-                collection_address=self.blockchain_address
-            )
-        return None
+
+class TelegramChatWithRulesFDO(BaseFDO):
+    chat: BaseTelegramChatFDO
+    rules: list[BaseTelegramChatEligibilityRuleFDO]
 
     @classmethod
-    def from_jetton_rule(cls, jetton_rule: TelegramChatJetton):
+    def from_dto(cls, dto: TelegramChatWithRulesDTO) -> Self:
         return cls(
-            id=jetton_rule.id,
-            category=EligibilityCheckType.JETTON,
-            title=jetton_rule.jetton.name,
-            expected=jetton_rule.threshold,
-            photo_url=jetton_rule.jetton.logo_path,
-            blockchain_address=raw_to_userfriendly(jetton_rule.jetton.address),
-            is_enabled=jetton_rule.is_enabled,
-        )
-
-    @classmethod
-    def from_nft_collection_rule(cls, nft_collection_rule: TelegramChatNFTCollection):
-        return cls(
-            id=nft_collection_rule.id,
-            category=EligibilityCheckType.NFT_COLLECTION,
-            title=nft_collection_rule.nft_collection.name,
-            expected=nft_collection_rule.threshold,
-            photo_url=nft_collection_rule.nft_collection.logo_path,
-            blockchain_address=raw_to_userfriendly(
-                nft_collection_rule.nft_collection.address
-            ),
-            is_enabled=nft_collection_rule.is_enabled,
+            chat=BaseTelegramChatFDO.model_validate(dto.chat.model_dump()),
+            rules=[
+                BaseTelegramChatEligibilityRuleFDO.model_validate(rule.model_dump())
+                for rule in dto.rules
+            ],
         )
 
 
-class TelegramChatEligibilityRuleFDO(BaseTelegramChatEligibilityRuleFDO):
-    actual: float | None = None
-    is_eligible: bool = False
-
-    @property
-    def expected_human_friendly(self) -> str:
-        return human_friendly_number(self.expected)
-
-
-class TelegramChatWithRulesFDO(BaseModel):
-    chat: TelegramChatFDO
-    rules: list[TelegramChatEligibilityRuleFDO]
+class TelegramChatEligibilityRuleFDO(BaseFDO, TelegramChatEligibilityRuleDTO):
+    ...

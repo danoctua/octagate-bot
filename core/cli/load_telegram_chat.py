@@ -3,7 +3,8 @@ import asyncio
 import click
 
 from core.dtos.user import TelegramUserDTO
-from core.services.chat import TelegramChatService, TelegramChatUserService
+from core.services.chat import TelegramChatService
+from core.services.chat.user import TelegramChatUserService
 from core.services.db import DBService
 from core.services.supertelethon import TelethonService
 from core.services.user import UserService
@@ -60,7 +61,6 @@ async def load_telegram_chat(chat_id: int) -> None:
                 chat_id=chat_id,
                 user_id=user.id,
                 is_admin=hasattr(participant_user.participant, "admin_rights"),
-                is_whale_admin=False,
             )
     click.echo("Chat loaded successfully.")
 

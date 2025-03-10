@@ -1,8 +1,6 @@
 from api.pos.base import BaseFDO
-from api.pos.ton import TonProofPO
+from core.dtos.wallet import WalletDetailsWithProofDTO
 
 
-class WalletDetailsWithProofPO(BaseFDO):
-    ton_proof: TonProofPO
-    wallet_address: str
-    public_key: str
+class WalletDetailsWithProofCPO(BaseFDO, WalletDetailsWithProofDTO):
+    ...

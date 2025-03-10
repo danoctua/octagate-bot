@@ -8,14 +8,13 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from telegram.helpers import escape_markdown
 
+from core.actions.authorization import AuthorizationAction
 from core.dtos.chat import TelegramChatEligibilitySummaryDTO
 from core.dtos.user import TelegramUserDTO
 from core.models.user import User
-from core.services.chat import TelegramChatUserService
+from core.services.chat.user import TelegramChatUserService
 from core.services.db import DBService
-from core.services.nft import NftItemService
 from core.services.user import UserService
-from core.services.wallet import JettonWalletService
 from bot_ui.settings import bot_ui_settings
 
 MAIN_BUTTON_REPLY_MARKUP = InlineKeyboardMarkup.from_button(
@@ -33,21 +32,12 @@ async def connected_wallet_response(
     context: ContextTypes.DEFAULT_TYPE,
     edit_mode: bool = False,
 ) -> None:
+    action = AuthorizationAction(db_session)
+    eligibility_summary = action.is_user_eligible_chat_member(
+        chat_id=bot_ui_settings.target_common_chat_id,
+        user_id=user.id,
+    )
     telegram_chat_user_service = TelegramChatUserService(db_session)
-    eligibility_rules = telegram_chat_user_service.get_eligibility_rules(
-        chat_id=bot_ui_settings.target_common_chat_id
-    )
-    nft_item_service = NftItemService(db_session)
-    user_nft_items = nft_item_service.get_all(owner_address=user.wallet.address)
-    jetton_wallet_service = JettonWalletService(db_session)
-    user_jettons = jetton_wallet_service.get_all(owner_address=user.wallet.address)
-
-    eligibility_summary = telegram_chat_user_service.is_user_eligible_chat_member(
-        eligibility_rules=eligibility_rules,
-        user_jettons=user_jettons,
-        user_nft_items=user_nft_items,
-        chat_member=None,
-    )
     is_chat_member = telegram_chat_user_service.is_chat_member(
         chat_id=bot_ui_settings.target_common_chat_id,
         user_id=user.id,

@@ -3,7 +3,7 @@ import logging
 from pytonapi.schema.jettons import JettonInfo
 from sqlalchemy.orm import Session
 
-from api.pos.ton import JettonFDO
+from core.dtos.resource import JettonDTO
 from core.actions.base import BaseAction
 from core.constants import JETTON_LOGO_SUB_PATH, DEFAULT_JETTON_LOGO_PATH
 from core.services.jetton import JettonService
@@ -21,7 +21,7 @@ class JettonAction(BaseAction):
         super().__init__(db_session)
         self.jetton_service = JettonService(db_session)
 
-    async def create(self, address_raw: str) -> JettonFDO:
+    async def create(self, address_raw: str) -> JettonDTO:
         blockchain_service = TonApiService()
         jetton_info: JettonInfo = await blockchain_service.get_jetton_info(address_raw)
 
@@ -47,9 +47,9 @@ class JettonAction(BaseAction):
             fetch_wallet_details.apply_async(args=(wallet,))
         logger.info("%d tasks queued", len(all_wallets))
 
-        return JettonFDO.from_orm(jetton)
+        return JettonDTO.from_orm(jetton)
 
-    async def update(self, address_raw: str, is_enabled: bool) -> JettonFDO:
+    async def update(self, address_raw: str, is_enabled: bool) -> JettonDTO:
         jetton = self.jetton_service.update_status(address_raw, is_enabled)
         logger.info("Jetton %s updated", jetton.name)
-        return JettonFDO.from_orm(jetton)
+        return JettonDTO.from_orm(jetton)

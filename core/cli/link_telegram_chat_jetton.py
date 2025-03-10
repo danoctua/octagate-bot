@@ -3,7 +3,7 @@ import logging
 
 import click
 
-from core.actions.chat import TelegramChatJettonAction
+from core.actions.chat.rule.blockchain import TelegramChatJettonAction
 from core.services.chat import TelegramChatService
 from core.services.db import DBService
 

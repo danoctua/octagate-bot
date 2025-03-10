@@ -1,20 +1,22 @@
 import asyncio
-import logging
+
+from celery.utils.log import get_task_logger
 
 from community_manager.celery_app import app
 from community_manager.settings import community_manager_settings
 from core.actions.authorization import AuthorizationAction
+from core.actions.chat.rule.whitelist import TelegramChatWhitelistExternalSourceAction
 from core.constants import (
     CELERY_SYSTEM_QUEUE_NAME,
     UPDATED_WALLETS_SET_NAME,
     DISCONNECTED_WALLETS_SET_NAME,
 )
-from core.services.chat import TelegramChatUserService
+from core.services.chat.user import TelegramChatUserService
 from core.services.db import DBService
 from core.services.superredis import RedisService
 from core.services.wallet import WalletService
 
-logger = logging.getLogger(__name__)
+logger = get_task_logger(__name__)
 
 
 async def sanity_chat_checks(
@@ -50,7 +52,7 @@ async def sanity_chat_checks(
 )
 def check_chat_members() -> None:
     if not community_manager_settings.enable_manager:
-        logger.info("Community manager is disabled.")
+        logger.warning("Community manager is disabled.")
         return
 
     redis_service = RedisService()
@@ -91,9 +93,18 @@ def check_chat_members() -> None:
     else:
         logger.info("No users to validate. Skipping")
 
-    if community_manager_settings.enable_manager:
-        app.send_task(
-            name="check-chat-members",
-            queue=CELERY_SYSTEM_QUEUE_NAME,
-            countdown=60,
-        )
+
+@app.task(
+    name="refresh-chat-external-sources",
+    queue=CELERY_SYSTEM_QUEUE_NAME,
+    rate_limit="1/m",
+)
+def refresh_chat_external_sources() -> None:
+    if not community_manager_settings.enable_manager:
+        logger.warning("Community manager is disabled.")
+        return
+
+    with DBService().db_session() as db_session:
+        action = TelegramChatWhitelistExternalSourceAction(db_session)
+        action.refresh_enabled()
+        logger.info("Chat external sources refreshed.")

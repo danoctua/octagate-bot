@@ -4,10 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from api.deps import validate_access_token, get_db_session
-from api.pos.chat import (
-    TelegramChatWithRulesFDO,
-)
-from core.actions.chat import TelegramChatAction, TelegramChatNotExists
+from api.pos.chat import TelegramChatWithRulesFDO
+from core.exceptions.chat import TelegramChatNotExists
+from core.actions.chat import TelegramChatAction
 from core.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -23,10 +22,11 @@ async def get_chat(
 ) -> TelegramChatWithRulesFDO:
     telegram_chat_action = TelegramChatAction(db_session)
     try:
-        return await telegram_chat_action.get_with_eligibility_summary(
+        result = await telegram_chat_action.get_with_eligibility_summary(
             slug=slug,
             user=user,
         )
+        return TelegramChatWithRulesFDO.from_dto(result)
     except TelegramChatNotExists:
         raise HTTPException(
             detail={"error": {"message": "Chat not found"}},
