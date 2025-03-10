@@ -98,10 +98,12 @@ export function Root(props: PropsWithChildren) {
         <ErrorBoundary fallback={ErrorPage}>
             {
                 pathname === '/' ?
-                <TonConnectUIProvider manifestUrl="https://gate.essentis.xyz/tonconnect-manifest.json">
+                    // Include the TonConnectUIProvider component to enable the TonConnect UI,
+                    //  but only for the root page which is the gateway page
+                    <TonConnectUIProvider manifestUrl="https://gate.essentis.xyz/tonconnect-manifest.json">
+                        <RootInner {...props}/>
+                    </TonConnectUIProvider> :
                     <RootInner {...props}/>
-                </TonConnectUIProvider>:
-                <RootInner {...props}/>
             }
         </ErrorBoundary>
     ) : <div className="root__loading">Loading...</div>;

@@ -111,7 +111,12 @@ class TelegramChatWithRulesFDO(BaseFDO):
 
 
 class TelegramChatEligibilityRuleFDO(BaseFDO, TelegramChatEligibilityRuleDTO):
-    ...
+    @field_serializer("expected", return_type=float | int)
+    def preprocess_expected(self, v: int) -> float | int:
+        if not v or self.category != EligibilityCheckType.JETTON:
+            return v
+
+        return to_amount(v)
 
 
 class TelegramChatWithEligibilityRulesFDO(BaseFDO):
