@@ -71,10 +71,14 @@ class AuthorizationAction(BaseAction):
         )
         eligibility_rules = self.get_eligibility_rules(chat_id=chat_id)
         nft_item_service = NftItemService(self.db_session)
-        user_nft_items = nft_item_service.get_all(owner_address=user.wallet.address)
-        user_jettons = self.jetton_wallet_service.get_all(
-            owner_address=user.wallet.address
-        )
+        if user.wallet:
+            user_nft_items = nft_item_service.get_all(owner_address=user.wallet.address)
+            user_jettons = self.jetton_wallet_service.get_all(
+                owner_address=user.wallet.address
+            )
+        else:
+            user_nft_items = []
+            user_jettons = []
 
         eligibility_summary = self.check_chat_member_eligibility(
             eligibility_rules=eligibility_rules,
@@ -245,9 +249,7 @@ class AuthorizationAction(BaseAction):
                     category=EligibilityCheckType.EXTERNAL_SOURCE,
                     expected=1,
                     title=external_source.name,
-                    current=cls.is_user_in_external_source_whitelist(
-                        user=user, external_source=external_source
-                    ),
+                    current=cls.is_whitelisted(user=user, rule=external_source),
                     is_enabled=external_source.is_enabled,
                 )
                 for external_source in eligibility_rules.whitelist_external_sources
@@ -260,9 +262,7 @@ class AuthorizationAction(BaseAction):
                     category=EligibilityCheckType.WHITELIST,
                     expected=1,
                     title=whitelist_group.name,
-                    current=cls.is_user_in_whitelist_group(
-                        user=user, whitelist_group=whitelist_group
-                    ),
+                    current=cls.is_whitelisted(user=user, rule=whitelist_group),
                     is_enabled=whitelist_group.is_enabled,
                 )
                 for whitelist_group in eligibility_rules.whitelist_sources
@@ -273,28 +273,16 @@ class AuthorizationAction(BaseAction):
         )
 
     @staticmethod
-    def is_user_in_external_source_whitelist(
-        user: User, external_source: TelegramChatWhitelistExternalSource
+    def is_whitelisted(
+        user: User, rule: TelegramChatWhitelist | TelegramChatWhitelistExternalSource
     ) -> bool:
         """
-        Check if user is in the whitelist of the external source
+        Check if user is in whitelist by the rule
         :param user: User to check
-        :param external_source: External source to check
-        :return: True if user is in the whitelist
+        :param rule: Whitelist rule to check
+        :return: True if user is whitelisted
         """
-        return user.telegram_id in external_source.content["users"]
-
-    @staticmethod
-    def is_user_in_whitelist_group(
-        user: User, whitelist_group: TelegramChatWhitelist
-    ) -> bool:
-        """
-        Check if user is in the whitelist group
-        :param user: User to check
-        :param whitelist_group: Whitelist group to check
-        :return: True if user is in the whitelist group
-        """
-        return user.telegram_id in {user.telegram_id for user in whitelist_group.users}
+        return user.telegram_id in rule.content
 
     async def kick_ineligible_chat_members(
         self,

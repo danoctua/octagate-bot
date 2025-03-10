@@ -11,7 +11,11 @@ from api.pos.chat import (
     BaseTelegramChatEligibilityRuleFDO,
     BaseTelegramChatFDO,
     TelegramChatWithRulesFDO,
+    CreateTelegramChatWhitelistCPO,
+    TelegramChatWhitelistFDO,
+    UpdateTelegramChatWhitelistCPO,
 )
+from core.actions.chat.rule.whitelist import TelegramChatWhitelistAction
 from core.exceptions.chat import (
     TelegramChatNotSufficientPrivileges,
     TelegramChatAlreadyExists,
@@ -174,3 +178,48 @@ async def update_chat_nft_collection_rule(
             is_enabled=rule.is_enabled,
         ).model_dump()
     )
+
+
+@admin_chat_router.post("/{slug}/rules/whitelist")
+async def add_chat_whitelist(
+    slug: str,
+    rule: CreateTelegramChatWhitelistCPO,
+    db_session: Session = Depends(get_db_session),
+) -> TelegramChatWhitelistFDO:
+    action = TelegramChatWhitelistAction(db_session)
+    new_rule = action.create(
+        slug=slug,
+        name=rule.name,
+        description=rule.description,
+    )
+    result = await action.set_content(new_rule.id, rule.users)
+    return TelegramChatWhitelistFDO.model_validate(result.model_dump())
+
+
+@admin_chat_router.put("/{slug}/rules/whitelist/{rule_id}")
+async def update_chat_whitelist(
+    slug: str,
+    rule_id: int,
+    rule: UpdateTelegramChatWhitelistCPO,
+    db_session: Session = Depends(get_db_session),
+) -> TelegramChatWhitelistFDO:
+    action = TelegramChatWhitelistAction(db_session)
+    action.update(
+        rule_id=rule_id,
+        name=rule.name,
+        description=rule.description,
+        is_enabled=rule.is_enabled,
+    )
+    result = await action.set_content(rule_id, rule.users)
+    return TelegramChatWhitelistFDO.model_validate(result.model_dump())
+
+
+@admin_chat_router.get("/{slug}/rules/whitelist/{rule_id}")
+async def get_chat_whitelist(
+    slug: str,
+    rule_id: int,
+    db_session: Session = Depends(get_db_session),
+) -> TelegramChatWhitelistFDO:
+    action = TelegramChatWhitelistAction(db_session)
+    result = action.get(rule_id=rule_id)
+    return TelegramChatWhitelistFDO.model_validate(result.model_dump())

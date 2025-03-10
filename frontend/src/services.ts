@@ -1,5 +1,5 @@
 import apiClient from "@/utils/apiClient";
-import {IBaseChat, IChatConfiguration, IJetton, INftCollection, IRule, IUser} from "@/interfaces";
+import {IBaseChat, IChatConfiguration, IJetton, INftCollection, IRule, IUser, IWhitelistRule} from "@/interfaces";
 
 
 export const fetchTaskStatus = async (asyncTaskId: string) => {
@@ -97,4 +97,16 @@ export const createNftCollectionRule = async (slug: string, address: string, exp
 
 export const updateNftCollectionRule = async (slug: string, ruleId: number, {address, expected, isEnabled}: {address: string, expected: number, isEnabled: boolean}): Promise<IRule> => {
     return await apiClient.put(`/admin/chats/${slug}/rules/nft-collections/${ruleId}`, {address, expected, isEnabled}).then(response => response.data);
+}
+
+export const fetchWhitelistRule = async (slug: string, ruleId: number): Promise<IWhitelistRule> => {
+    return await apiClient.get(`/admin/chats/${slug}/rules/whitelist/${ruleId}`).then(response => response.data);
+}
+
+export const createWhitelistRule = async (slug: string, name: string, description: string | undefined | null, users: number[]): Promise<IWhitelistRule> => {
+    return await apiClient.post(`/admin/chats/${slug}/rules/whitelist`, {name, description, users}).then(response => response.data);
+}
+
+export const updateWhitelistRule = async (slug: string, ruleId: number, {name, description, users, isEnabled}: {name: string, description: string | undefined | null, users: number[], isEnabled: boolean}): Promise<IWhitelistRule> => {
+    return await apiClient.put(`/admin/chats/${slug}/rules/whitelist/${ruleId}`, {name, description, users, isEnabled}).then(response => response.data);
 }

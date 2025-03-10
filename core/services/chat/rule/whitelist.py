@@ -3,7 +3,6 @@ from typing import TypeVar, Generic
 
 from sqlalchemy import desc
 
-from core.dtos.chat import TelegramChatWhitelistDTO
 from core.models.chat import TelegramChatWhitelistExternalSource, TelegramChatWhitelist
 from core.services.base import BaseService
 
@@ -22,10 +21,8 @@ class BaseTelegramChatExternalSourceService(
 ):
     model: TelegramChatWhitelistBaseT
 
-    def get(self, source_id: int) -> TelegramChatWhitelistBaseT:
-        return (
-            self.db_session.query(self.model).filter(self.model.id == source_id).one()
-        )
+    def get(self, rule_id: int) -> TelegramChatWhitelistBaseT:
+        return self.db_session.query(self.model).filter(self.model.id == rule_id).one()
 
     def get_all(
         self, chat_id: int | None = None, enabled_only: bool = True
@@ -40,19 +37,19 @@ class BaseTelegramChatExternalSourceService(
         ).all()
 
     def set_content(
-        self, source_id: int, content: TelegramChatWhitelistDTO
+        self, rule_id: int, content: list[int]
     ) -> TelegramChatWhitelistBaseT:
-        source = self.get(source_id)
-        source.content = content.model_dump()
+        source = self.get(rule_id)
+        source.content = content
         self.db_session.commit()
         return source
 
-    def delete(self, source_id: int) -> None:
-        self.db_session.query(self.model).filter(self.model.id == source_id).delete(
+    def delete(self, rule_id: int) -> None:
+        self.db_session.query(self.model).filter(self.model.id == rule_id).delete(
             synchronize_session="fetch"
         )
         self.db_session.commit()
-        logger.debug(f"Telegram Chat External Source {source_id!r} deleted.")
+        logger.debug(f"Telegram Chat External Source {rule_id!r} deleted.")
 
 
 class TelegramChatExternalSourceService(
@@ -74,12 +71,12 @@ class TelegramChatExternalSourceService(
 
     def update(
         self,
-        source_id: int,
+        rule_id: int,
         description: str,
         external_source_url: str,
         is_enabled: bool,
     ) -> TelegramChatWhitelistExternalSource:
-        source = self.get(source_id)
+        source = self.get(rule_id)
         source.url = external_source_url
         source.description = description
         source.is_enabled = is_enabled
@@ -105,9 +102,9 @@ class TelegramChatWhitelistService(
         return new_source
 
     def update(
-        self, source_id: int, name: str, description: str | None, is_enabled: bool
+        self, rule_id: int, name: str, description: str | None, is_enabled: bool
     ) -> TelegramChatWhitelist:
-        source = self.get(source_id)
+        source = self.get(rule_id)
         source.name = name
         source.description = description
         source.is_enabled = is_enabled

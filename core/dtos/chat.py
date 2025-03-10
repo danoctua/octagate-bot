@@ -58,6 +58,7 @@ class TelegramChatEligibilityItemDTO(BaseModel):
 
     @property
     def current_human_friendly(self) -> str:
+        # TODO deprecate
         return human_friendly_number(self.current)
 
     @property
@@ -100,21 +101,17 @@ class CreateTelegramChatNFTCollectionRuleDTO(BaseModel):
     is_enabled: bool
 
 
-class TelegramChatWhitelistDTO(BaseModel):
-    users: list[int]
-
-
 class TelegramChatWhitelistDifferenceDTO(BaseModel):
-    previous: TelegramChatWhitelistDTO
-    current: TelegramChatWhitelistDTO
+    previous: list[int]
+    current: list[int]
 
     @cached_property
     def removed(self) -> list[int]:
-        return list(set(self.previous.users) - set(self.current.users))
+        return list(set(self.previous) - set(self.current))
 
     @cached_property
     def added(self) -> list[int]:
-        return list(set(self.current.users) - set(self.previous.users))
+        return list(set(self.current) - set(self.previous))
 
 
 class BaseTelegramChatEligibilityRuleDTO(BaseModel):
@@ -191,14 +188,38 @@ class BaseTelegramChatEligibilityRuleDTO(BaseModel):
         )
 
 
-class TelegramChatExternalSourceDTO(BaseModel):
+class TelegramChatWhitelistCPO(BaseModel):
+    users: list[int]
+
+
+class BaseTelegramChatWhitelistDTO(BaseModel):
     id: int
     chat_id: int
-    url: str
+    name: str
     description: str | None
     created_at: datetime.datetime
     updated_at: datetime.datetime
     is_enabled: bool
+    users: list[int] | None = None
+
+
+class TelegramChatWhitelistDTO(BaseTelegramChatWhitelistDTO):
+    @classmethod
+    def from_orm(cls, obj: TelegramChatWhitelist) -> Self:
+        return cls(
+            id=obj.id,
+            chat_id=obj.chat_id,
+            name=obj.name,
+            description=obj.description,
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+            is_enabled=obj.is_enabled,
+            users=obj.content,
+        )
+
+
+class TelegramChatWhitelistExternalSourceDTO(BaseTelegramChatWhitelistDTO):
+    url: str
 
     @classmethod
     def from_orm(cls, obj: TelegramChatWhitelistExternalSource) -> Self:
@@ -206,10 +227,12 @@ class TelegramChatExternalSourceDTO(BaseModel):
             id=obj.id,
             chat_id=obj.chat_id,
             url=obj.url,
+            name=obj.name,
             description=obj.description,
             created_at=obj.created_at,
             updated_at=obj.updated_at,
             is_enabled=obj.is_enabled,
+            users=obj.content,
         )
 
 

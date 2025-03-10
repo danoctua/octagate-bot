@@ -51,7 +51,6 @@ const ResourcePage: FC<PropsWithChildren<{
             if (inputAddress) return
 
             const newAddress = e.target.value
-            console.log(newAddress)
             setAddress(newAddress)
             if (addressRegex.test(newAddress)) {
                 setIsFormValid(true)

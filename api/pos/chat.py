@@ -7,6 +7,7 @@ from pydantic import (
     AfterValidator,
     field_validator,
     field_serializer,
+    Field,
 )
 from pydantic.alias_generators import to_camel
 from pytonapi.utils import to_nano, userfriendly_to_raw, to_amount
@@ -19,6 +20,8 @@ from core.dtos.chat import (
     TelegramChatDTO,
     TelegramChatWithRulesDTO,
     TelegramChatEligibilityRuleDTO,
+    TelegramChatWhitelistDTO,
+    TelegramChatWhitelistExternalSourceDTO,
 )
 
 CHAT_INPUT_REGEX = re.compile(
@@ -108,4 +111,44 @@ class TelegramChatWithRulesFDO(BaseFDO):
 
 
 class TelegramChatEligibilityRuleFDO(BaseFDO, TelegramChatEligibilityRuleDTO):
+    ...
+
+
+class TelegramChatWithEligibilityRulesFDO(BaseFDO):
+    """
+    Chat with eligibility rules. Returns not only chat and rules data,
+    but whether user is eligible for chat
+    """
+
+    chat: TelegramChatFDO
+    rules: list[TelegramChatEligibilityRuleFDO]
+
+    @classmethod
+    def from_dto(cls, dto: TelegramChatWithRulesDTO) -> Self:
+        return cls(
+            chat=TelegramChatFDO.model_validate(dto.chat.model_dump()),
+            rules=[
+                TelegramChatEligibilityRuleFDO.model_validate(rule.model_dump())
+                for rule in dto.rules
+            ],
+        )
+
+
+class CreateTelegramChatWhitelistCPO(BaseFDO):
+    name: Annotated[str, Field(min_length=1, max_length=255)]
+    description: Annotated[str | None, Field(min_length=0, max_length=255)] = None
+    users: list[int]
+
+
+class UpdateTelegramChatWhitelistCPO(CreateTelegramChatWhitelistCPO):
+    is_enabled: bool
+
+
+class TelegramChatWhitelistFDO(BaseFDO, TelegramChatWhitelistDTO):
+    ...
+
+
+class TelegramChatWhitelistExternalSourceFDO(
+    BaseFDO, TelegramChatWhitelistExternalSourceDTO
+):
     ...

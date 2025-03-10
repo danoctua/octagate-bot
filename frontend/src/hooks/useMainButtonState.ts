@@ -43,6 +43,12 @@ const useMainButtonState = (
                 disabled: true,
                 mode: "filled"
             }
+        } else if (chat && chat.joinUrl) {
+            return {
+                ...baseAttributes,
+                text: "Join",
+                onClick: () => chat.joinUrl && openTelegramLink(chat.joinUrl),
+            }
         } else if (chat && !user.walletAddress) {
             return {
                 ...baseAttributes,
@@ -64,12 +70,6 @@ const useMainButtonState = (
                     setTimeLeft(10);
                     fetchChatData().then();
                 }
-            }
-        } else if (chat && chat.joinUrl) {
-            return {
-                ...baseAttributes,
-                text: "Join",
-                onClick: () => chat.joinUrl && openTelegramLink(chat.joinUrl),
             }
         } else if (chat && chat.isEligible && !chat.joinUrl) {
             return {

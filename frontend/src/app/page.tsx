@@ -11,6 +11,7 @@ import {
 
 import {Page} from '@/components/Page';
 
+import {TonConnectUIProvider} from '@tonconnect/ui-react';
 import useAuthAndFetchUser from "@/hooks/useAuthAndFetchUser";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {mainButton, secondaryButton, useLaunchParams} from '@telegram-apps/sdk-react';
@@ -169,25 +170,27 @@ export default function Home() {
     ];
 
     return (
-        <Page back={false}>
-            <ChatHeader chat={chat.chat}/>
-            <div>
-                <List>
-                    <Section>
-                        {blockchainRules}
-                    </Section>
-                </List>
-            </div>
-            {mainButtonState &&
-                <FixedBottomSection {...mainButtonState}>
-                    {parsedWalletAddress &&
-                        <ConnectedWalletCell
-                            walletAddress={parsedWalletAddress}
-                            disconnectWallet={disconnectWalletAndRefresh}
-                        />
-                    }
-                </FixedBottomSection>
-            }
-        </Page>
+        <TonConnectUIProvider manifestUrl="https://gate.essentis.xyz/tonconnect-manifest.json">
+            <Page back={false}>
+                <ChatHeader chat={chat.chat}/>
+                <div>
+                    <List>
+                        <Section>
+                            {blockchainRules}
+                        </Section>
+                    </List>
+                </div>
+                {mainButtonState &&
+                    <FixedBottomSection {...mainButtonState}>
+                        {parsedWalletAddress &&
+                            <ConnectedWalletCell
+                                walletAddress={parsedWalletAddress}
+                                disconnectWallet={disconnectWalletAndRefresh}
+                            />
+                        }
+                    </FixedBottomSection>
+                }
+            </Page>
+        </TonConnectUIProvider>
     );
 }

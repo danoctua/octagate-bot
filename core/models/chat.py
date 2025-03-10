@@ -104,7 +104,11 @@ class TelegramChatWhitelistBase(Base):
     name = mapped_column(String(255), nullable=False)
     description = mapped_column(String(255), nullable=True)
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
-    content = mapped_column(JSON, nullable=True)
+    content = mapped_column(
+        JSON,
+        nullable=True,
+        doc="List of Telegram IDs as integers that are allowed to access the chat, e.g. `[123455, 122234, 123456]`",
+    )
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

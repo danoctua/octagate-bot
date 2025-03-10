@@ -17,7 +17,9 @@ import useAdminChatData from "@/hooks/data/useAdminChatData";
 
 const RULE_CATEGORY_MAPPING: { [key: string]: string } = {
     jetton: "jetton",
-    nft_collection: "nft-collection"
+    nft_collection: "nft-collection",
+    whitelist: "whitelist",
+    external_source: "external-api"
 }
 
 

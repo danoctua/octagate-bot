@@ -31,12 +31,6 @@ const SelectableRule = (
 ) => {
     return (
         <div style={{padding: "16px 0"}}>
-            <Input
-                header={"Required amount"}
-                type={"number"}
-                value={expected}
-                onChange={(event) => onExpectedChange(parseInt(event.target.value))}
-            />
             <Section
                 style={{padding: "16px 0"}}
                 header={title}
@@ -68,6 +62,12 @@ const SelectableRule = (
                     ))}
                 </List>
             </Section>
+            <Input
+                header={"Required amount"}
+                type={"number"}
+                value={expected}
+                onChange={(event) => onExpectedChange(parseInt(event.target.value))}
+            />
             <Section
                 header={"Access matrix"}
             >

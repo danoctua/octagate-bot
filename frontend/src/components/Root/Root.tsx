@@ -6,7 +6,6 @@ import {
     useLaunchParams,
     useSignal,
 } from '@telegram-apps/sdk-react';
-import {TonConnectUIProvider} from '@tonconnect/ui-react';
 import {AppRoot, Snackbar} from '@telegram-apps/telegram-ui';
 
 import {ErrorBoundary} from '@/components/ErrorBoundary';
@@ -66,25 +65,23 @@ function RootInner({children}: PropsWithChildren) {
     }, []);
 
     return (
-        <TonConnectUIProvider manifestUrl="https://gate.essentis.xyz/tonconnect-manifest.json">
-            <AppRoot
-                appearance={isDark ? 'dark' : 'light'}
-                platform={['macos', 'ios'].includes(lp.platform) ? 'ios' : 'base'}
-            >
-                {children}
-                {
-                    apiError &&
-                    <Snackbar
-                        before={<AlertTriangle/>}
-                        duration={5000}
-                        description={(apiError.response?.data as ErrorResponseData)?.detail?.error?.message || 'Something went wrong'}
-                        onClose={() => setApiError(undefined)}
-                    >
-                        An unexpected error occurred
-                    </Snackbar>
-                }
-            </AppRoot>
-        </TonConnectUIProvider>
+        <AppRoot
+            appearance={isDark ? 'dark' : 'light'}
+            platform={['macos', 'ios'].includes(lp.platform) ? 'ios' : 'base'}
+        >
+            {children}
+            {
+                apiError &&
+                <Snackbar
+                    before={<AlertTriangle/>}
+                    duration={5000}
+                    description={(apiError.response?.data as ErrorResponseData)?.detail?.error?.message || 'Something went wrong'}
+                    onClose={() => setApiError(undefined)}
+                >
+                    An unexpected error occurred
+                </Snackbar>
+            }
+        </AppRoot>
     );
 }
 

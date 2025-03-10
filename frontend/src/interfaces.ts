@@ -27,6 +27,17 @@ export interface IRule {
     isEnabled: boolean,
 }
 
+export interface IWhitelistRule {
+    id: number,
+    chatId: number,
+    name: string,
+    description: string | null,
+    users: number[],
+    isEnabled: boolean,
+    createdAt: string,
+    updatedAt: string,
+}
+
 
 export interface IRuleEligibility extends IRule {
     actual?: number,
