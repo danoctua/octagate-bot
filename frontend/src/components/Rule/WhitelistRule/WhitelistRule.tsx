@@ -52,7 +52,11 @@ const WhitelistRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: number }
     };
 
     const handleSubmit = useCallback(async () => {
-        const userIds = fields.map(field => parseInt(field.value))
+        const userIds = fields.map(
+            field => parseInt(field.value)
+        ).filter(
+            id => !isNaN(id) && id !== null
+        )
         if (!ruleId) {
             await createRule(name, description, userIds).then(
                 (rule) => router.push(`/admin/chat/${chatSlug}/rule/whitelist/${rule.id}`)
