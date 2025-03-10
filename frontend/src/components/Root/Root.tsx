@@ -18,15 +18,17 @@ import './styles.css';
 import {useTelegramMock} from "@/hooks/useTelegramMock";
 import {AlertTriangle} from "lucide-react";
 import {AxiosError} from "axios";
-import { errorEmitter } from '@/utils/apiClient';
+import {errorEmitter} from '@/utils/apiClient';
+import {TonConnectUIProvider} from "@tonconnect/ui-react";
+import {usePathname} from "next/navigation";
 
 
 interface ErrorResponseData {
-  detail?: {
-    error?: {
-      message?: string;
+    detail?: {
+        error?: {
+            message?: string;
+        };
     };
-  };
 }
 
 
@@ -90,10 +92,17 @@ export function Root(props: PropsWithChildren) {
     // the Server Side Rendering. That's why we are showing loader on the server
     // side.
     const didMount = useDidMount();
+    const pathname = usePathname();
 
     return didMount ? (
         <ErrorBoundary fallback={ErrorPage}>
-            <RootInner {...props}/>
+            {
+                pathname === '/' ?
+                <TonConnectUIProvider manifestUrl="https://gate.essentis.xyz/tonconnect-manifest.json">
+                    <RootInner {...props}/>
+                </TonConnectUIProvider>:
+                <RootInner {...props}/>
+            }
         </ErrorBoundary>
     ) : <div className="root__loading">Loading...</div>;
 }

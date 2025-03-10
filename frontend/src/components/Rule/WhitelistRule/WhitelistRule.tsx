@@ -58,14 +58,11 @@ const WhitelistRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: number }
             id => !isNaN(id) && id !== null
         )
         if (!ruleId) {
-            await createRule(name, description, userIds).then(
-                (rule) => router.push(`/admin/chat/${chatSlug}/rule/whitelist/${rule.id}`)
-            )
+            await createRule(name, description, userIds)
         } else {
-            await updateRule(name, description, isEnabled, userIds).then(
-                _ => router.push(`/admin/chat/${chatSlug}`)
-            )
+            await updateRule(name, description, isEnabled, userIds)
         }
+        router.push(`/admin/chat/${chatSlug}`)
     }, [chatSlug, createRule, description, fields, isEnabled, name, router, ruleId, updateRule])
 
     useEffect(
