@@ -1,17 +1,17 @@
 'use client';
 
 import {Page} from '@/components/Page';
-import {Skeleton, Input, Section, Button, ButtonCell} from "@telegram-apps/telegram-ui";
+import {Skeleton, Input, Section, ButtonCell, InlineButtons} from "@telegram-apps/telegram-ui";
 
 import ChatHeader from "@/components/ChatHeader/ChatHeader";
 import {useClientOnce} from "@/hooks/useClientOnce";
 import {notFound, useRouter} from "next/navigation";
 import {useEffect, useMemo, useState} from 'react';
 import DisplayRuleItem from "@/components/Rule/DisplayRuleItem/DisplayRuleItem";
-import {CirclePlus, Share} from "lucide-react";
+import {CirclePlus, MessageCircle, Share} from "lucide-react";
 import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
 import {generateBotJoinLink} from "@/utils/bot";
-import {shareURL, init} from "@telegram-apps/sdk-react";
+import {shareURL, init, openTelegramLink} from "@telegram-apps/sdk-react";
 import useAdminChatData from "@/hooks/data/useAdminChatData";
 
 
@@ -19,7 +19,7 @@ const RULE_CATEGORY_MAPPING: { [key: string]: string } = {
     jetton: "jetton",
     nft_collection: "nft-collection",
     whitelist: "whitelist",
-    external_source: "external-api"
+    external_source: "whitelist-external"
 }
 
 
@@ -75,27 +75,43 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
             <ChatHeader chat={chat?.chat} isChatDataLoading={isChatDataLoading}/>
             <div style={{padding: "16px 8px"}}>
                 <Skeleton visible={isChatDataLoading}>
-                    <Button
-                        before={<Share/>}
-                        mode={"bezeled"}
-                        stretched
-                        onClick={() => {
-                            // Without an explicit call to init, the SDK will not be able to share the URL
-                            init();
-                            if (shareURL.isAvailable()) {
-                                shareURL(generateBotJoinLink(chat?.chat.slug || ""), `Join ${chat?.chat.title}`);
-                            }
-                        }}
-                    >
-                        Share join link
-                    </Button>
+                    <InlineButtons>
+                        <InlineButtons.Item
+                            text={"Share join link"}
+                            mode={"bezeled"}
+                            onClick={() => {
+                                // Without an explicit call to init, the SDK will not be able to share the URL
+                                init();
+                                if (shareURL.isAvailable()) {
+                                    shareURL(generateBotJoinLink(chat?.chat.slug || ""), `Join ${chat?.chat.title}`);
+                                }
+                            }}
+                        >
+                            <Share/>
+                        </InlineButtons.Item>
+                        <InlineButtons.Item
+                            text={"Open chat"}
+                            mode={"bezeled"}
+                            onClick={() => {
+                                chat?.chat.joinUrl && openTelegramLink(chat?.chat.joinUrl)
+                            }}
+                        >
+                            <MessageCircle/>
+                        </InlineButtons.Item>
+                    </InlineButtons>
                 </Skeleton>
             </div>
 
             <Skeleton visible={isChatDataLoading}>
-                <Input placeholder={"Short description"} value={description}
-                       onChange={(event) => setDescription(event.target.value)}/>
-                <Section header={"To join"}>
+                <Input
+                    placeholder={"Short description"}
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                />
+                <Section
+                    header={"To join"}
+                    footer={"Any of the rules above must be met to join the chat."}
+                >
                     {chatJoinRules}
                 </Section>
             </Skeleton>

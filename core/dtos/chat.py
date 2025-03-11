@@ -102,15 +102,19 @@ class CreateTelegramChatNFTCollectionRuleDTO(BaseModel):
 
 
 class TelegramChatWhitelistDifferenceDTO(BaseModel):
-    previous: list[int]
+    previous: list[int] | None
     current: list[int]
 
     @cached_property
     def removed(self) -> list[int]:
+        if not self.previous:
+            return []
         return list(set(self.previous) - set(self.current))
 
     @cached_property
     def added(self) -> list[int]:
+        if not self.previous:
+            return self.current
         return list(set(self.current) - set(self.previous))
 
 
@@ -168,7 +172,7 @@ class BaseTelegramChatEligibilityRuleDTO(BaseModel):
         return cls(
             id=external_rule.id,
             category=EligibilityCheckType.EXTERNAL_SOURCE,
-            title=external_rule.url,
+            title=external_rule.name,
             expected=1,
             photo_url=None,
             blockchain_address=None,

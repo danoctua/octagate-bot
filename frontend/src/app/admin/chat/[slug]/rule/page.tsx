@@ -6,6 +6,7 @@ import {useMemo, useState} from "react";
 import JettonRule from "@/components/Rule/JettonRule/JettonRule";
 import NftCollectionRule from "@/components/Rule/NftCollectionRule/NftCollectionRule";
 import WhitelistRule from "@/components/Rule/WhitelistRule/WhitelistRule";
+import WhitelistExternalRule from "@/components/Rule/WhitelistExternalRule/WhitelistExternalRule";
 
 
 const TABS = [
@@ -28,6 +29,8 @@ const NewRulePage = ({params}: { params: { slug: string } }) => {
                     return <NftCollectionRule chatSlug={params.slug}/>;
                 case "whitelist":
                     return <WhitelistRule chatSlug={params.slug}/>
+                case "externalApi":
+                    return <WhitelistExternalRule chatSlug={params.slug}/>
                 default:
                     return null;
             }

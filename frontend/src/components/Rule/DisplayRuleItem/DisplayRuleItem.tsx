@@ -1,6 +1,6 @@
 import {IRuleEligibility} from "@/interfaces";
 import {Cell, Text} from "@telegram-apps/telegram-ui";
-import {Check, ChevronRight, EyeOff} from "lucide-react";
+import {Check, Coins, ExternalLink, Images, ListCheck} from "lucide-react";
 import React from "react";
 
 
@@ -22,15 +22,30 @@ const DisplayRuleItem = (
     let before = null;
     let after;
 
+    const defaultBeforeAfterStyle = { color: "var(--tg-theme-subtitle-text-color)" }
+
     if (readOnly) {
         after = (
             rule.isEligible ?
-                <Check style={{color: "var(--tg-theme-accent-text-color)"}}/> :
-                <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>Not yet</Text>
+                <Check style={defaultBeforeAfterStyle}/> :
+                <Text style={defaultBeforeAfterStyle}>Not yet</Text>
         )
     } else {
-        before = null
-        after = rule.isEnabled ? null : <EyeOff color={"var(--tg-theme-hint-color)"}/>
+        switch (rule.category) {
+            case "jetton":
+                before = <Coins style={defaultBeforeAfterStyle}/>
+                break;
+            case "nft_collection":
+                before = <Images style={defaultBeforeAfterStyle}/>
+                break;
+            case "whitelist":
+                before = <ListCheck style={defaultBeforeAfterStyle}/>
+                break;
+            case "external_source":
+                before = <ExternalLink style={defaultBeforeAfterStyle}/>
+                break
+        }
+        after = null
     }
 
     return (
@@ -42,6 +57,7 @@ const DisplayRuleItem = (
             before={before}
             after={after}
             onClick={onClick}
+            style={rule.isEnabled ? undefined: {...defaultBeforeAfterStyle, textDecoration: "line-through"}}
         >
             {title}
         </Cell>

@@ -11,8 +11,8 @@ from core.exceptions.chat import TelegramChatInvalidExternalSourceError
 logger = logging.getLogger(__name__)
 
 timeout = httpx.Timeout(REQUEST_TIMEOUT, read=READ_TIMEOUT, connect=CONNECT_TIMEOUT)
-sync_client = httpx.Client(timeout=timeout)
-async_client = httpx.AsyncClient(timeout=timeout)
+sync_client = httpx.Client(timeout=timeout, follow_redirects=True)
+async_client = httpx.AsyncClient(timeout=timeout, follow_redirects=True)
 
 
 async def fetch_whitelist_members(url: str) -> TelegramChatWhitelistCPO:

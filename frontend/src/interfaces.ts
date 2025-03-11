@@ -38,6 +38,10 @@ export interface IWhitelistRule {
     updatedAt: string,
 }
 
+export interface IExternalWhitelistRule extends IWhitelistRule {
+    url: string,
+}
+
 
 export interface IRuleEligibility extends IRule {
     actual?: number,

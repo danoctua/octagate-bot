@@ -89,11 +89,13 @@ const WhitelistRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: number }
                 <Input
                     header={"Name"}
                     value={name}
+                    placeholder={"Diamond hands only"}
                     onChange={e => setName(e.target.value)}
                 />
                 <Input
                     header={"Description"}
                     value={description}
+                    placeholder={"Only users with diamond hands are allowed."}
                     onChange={e => setDescription(e.target.value)}
                 />
                 {ruleId && (

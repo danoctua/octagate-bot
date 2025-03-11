@@ -1,5 +1,14 @@
 import apiClient from "@/utils/apiClient";
-import {IBaseChat, IChatConfiguration, IJetton, INftCollection, IRule, IUser, IWhitelistRule} from "@/interfaces";
+import {
+    IBaseChat,
+    IChatConfiguration,
+    IExternalWhitelistRule,
+    IJetton,
+    INftCollection,
+    IRule,
+    IUser,
+    IWhitelistRule
+} from "@/interfaces";
 
 
 export const fetchTaskStatus = async (asyncTaskId: string) => {
@@ -109,4 +118,16 @@ export const createWhitelistRule = async (slug: string, name: string, descriptio
 
 export const updateWhitelistRule = async (slug: string, ruleId: number, {name, description, users, isEnabled}: {name: string, description: string | undefined | null, users: number[], isEnabled: boolean}): Promise<IWhitelistRule> => {
     return await apiClient.put(`/admin/chats/${slug}/rules/whitelist/${ruleId}`, {name, description, users, isEnabled}).then(response => response.data);
+}
+
+export const fetchExternalWhitelistRule = async (slug: string, ruleId: number): Promise<IExternalWhitelistRule> => {
+    return await apiClient.get(`/admin/chats/${slug}/rules/whitelist-external/${ruleId}`).then(response => response.data);
+}
+
+export const createExternalWhitelistRule = async (slug: string, name: string, description: string | undefined | null, url: string): Promise<IExternalWhitelistRule> => {
+    return await apiClient.post(`/admin/chats/${slug}/rules/whitelist-external`, {name, description, url}).then(response => response.data);
+}
+
+export const updateExternalWhitelistRule = async (slug: string, ruleId: number, {name, description, isEnabled, url}: {name: string, description: string | undefined | null, isEnabled: boolean, url: string}): Promise<IExternalWhitelistRule> => {
+    return await apiClient.put(`/admin/chats/${slug}/rules/whitelist-external/${ruleId}`, {name, description, isEnabled, url}).then(response => response.data);
 }

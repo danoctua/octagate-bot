@@ -222,6 +222,6 @@ class TelegramChatAction(BaseAction):
                         for rule in eligibility_rules.whitelist_external_sources
                     ),
                 ],
-                key=lambda rule: (not rule.is_enabled, rule.title),
+                key=lambda rule: (not rule.is_enabled, rule.category.value, rule.title),
             ),
         )

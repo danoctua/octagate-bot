@@ -14,8 +14,14 @@ from api.pos.chat import (
     CreateTelegramChatWhitelistCPO,
     TelegramChatWhitelistFDO,
     UpdateTelegramChatWhitelistCPO,
+    TelegramChatWhitelistExternalSourceFDO,
+    CreateTelegramChatWhitelistExternalSourceCPO,
+    UpdateTelegramChatWhitelistExternalSourceCPO,
 )
-from core.actions.chat.rule.whitelist import TelegramChatWhitelistAction
+from core.actions.chat.rule.whitelist import (
+    TelegramChatWhitelistAction,
+    TelegramChatWhitelistExternalSourceAction,
+)
 from core.exceptions.chat import (
     TelegramChatNotSufficientPrivileges,
     TelegramChatAlreadyExists,
@@ -223,3 +229,64 @@ async def get_chat_whitelist(
     action = TelegramChatWhitelistAction(db_session)
     result = action.get(rule_id=rule_id)
     return TelegramChatWhitelistFDO.model_validate(result.model_dump())
+
+
+@admin_chat_router.post("/{slug}/rules/whitelist-external")
+async def add_chat_whitelist_external(
+    slug: str,
+    rule: CreateTelegramChatWhitelistExternalSourceCPO,
+    db_session: Session = Depends(get_db_session),
+) -> TelegramChatWhitelistExternalSourceFDO:
+    action = TelegramChatWhitelistExternalSourceAction(db_session)
+    try:
+        new_rule = await action.create(
+            slug=slug,
+            name=rule.name,
+            description=rule.description,
+            external_source_url=str(rule.url),
+        )
+    except Exception as e:
+        logger.error("Failed to create whitelist external source", exc_info=e)
+        raise HTTPException(
+            detail={"error": {"message": "Failed to create whitelist external source"}},
+            status_code=400,
+        )
+    return TelegramChatWhitelistExternalSourceFDO.model_validate(new_rule.model_dump())
+
+
+@admin_chat_router.get("/{slug}/rules/whitelist-external/{rule_id}")
+async def get_chat_whitelist_external(
+    slug: str,
+    rule_id: int,
+    db_session: Session = Depends(get_db_session),
+) -> TelegramChatWhitelistExternalSourceFDO:
+    action = TelegramChatWhitelistExternalSourceAction(db_session)
+    result = action.get(rule_id=rule_id)
+    return TelegramChatWhitelistExternalSourceFDO.model_validate(result.model_dump())
+
+
+@admin_chat_router.put("/{slug}/rules/whitelist-external/{rule_id}")
+async def update_chat_whitelist_external(
+    slug: str,
+    rule_id: int,
+    rule: UpdateTelegramChatWhitelistExternalSourceCPO,
+    db_session: Session = Depends(get_db_session),
+) -> TelegramChatWhitelistExternalSourceFDO:
+    action = TelegramChatWhitelistExternalSourceAction(db_session)
+    try:
+        await action.update(
+            rule_id=rule_id,
+            name=rule.name,
+            description=rule.description,
+            external_source_url=str(rule.url),
+            is_enabled=rule.is_enabled,
+        )
+    except Exception as e:
+        logger.error("Failed to update whitelist external source", exc_info=e)
+        raise HTTPException(
+            detail={"error": {"message": "Failed to update whitelist external source"}},
+            status_code=400,
+        )
+
+    result = action.get(rule_id=rule_id)
+    return TelegramChatWhitelistExternalSourceFDO.model_validate(result.model_dump())

@@ -6,7 +6,7 @@ from api.routes.admin.chat import admin_chat_router
 from api.routes.admin.resource import admin_resource_router
 from api.routes.auth import auth_router
 from api.routes.chat import chat_router
-from api.routes.system import system_router
+from api.routes.system import system_router, system_non_authenticated_router
 from api.routes.user import user_router
 
 
@@ -21,6 +21,7 @@ def include_authenticated_routes(_app: FastAPI) -> None:
 def include_non_authenticated_routes(_app: FastAPI) -> None:
     non_authenticated_router = APIRouter()
     non_authenticated_router.include_router(auth_router)
+    non_authenticated_router.include_router(system_non_authenticated_router)
     _app.include_router(non_authenticated_router)
 
 

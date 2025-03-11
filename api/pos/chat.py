@@ -8,6 +8,7 @@ from pydantic import (
     field_validator,
     field_serializer,
     Field,
+    AnyHttpUrl,
 )
 from pydantic.alias_generators import to_camel
 from pytonapi.utils import to_nano, userfriendly_to_raw, to_amount
@@ -96,13 +97,13 @@ class BaseTelegramChatEligibilityRuleFDO(BaseFDO, BaseTelegramChatEligibilityRul
 
 
 class TelegramChatWithRulesFDO(BaseFDO):
-    chat: BaseTelegramChatFDO
+    chat: TelegramChatFDO
     rules: list[BaseTelegramChatEligibilityRuleFDO]
 
     @classmethod
     def from_dto(cls, dto: TelegramChatWithRulesDTO) -> Self:
         return cls(
-            chat=BaseTelegramChatFDO.model_validate(dto.chat.model_dump()),
+            chat=TelegramChatFDO.model_validate(dto.chat.model_dump()),
             rules=[
                 BaseTelegramChatEligibilityRuleFDO.model_validate(rule.model_dump())
                 for rule in dto.rules
@@ -139,13 +140,26 @@ class TelegramChatWithEligibilityRulesFDO(BaseFDO):
         )
 
 
-class CreateTelegramChatWhitelistCPO(BaseFDO):
+class CreateTelegramChatWhitelistBaseCPO(BaseFDO):
     name: Annotated[str, Field(min_length=1, max_length=255)]
     description: Annotated[str | None, Field(min_length=0, max_length=255)] = None
+
+
+class CreateTelegramChatWhitelistCPO(CreateTelegramChatWhitelistBaseCPO):
     users: list[int]
 
 
+class CreateTelegramChatWhitelistExternalSourceCPO(CreateTelegramChatWhitelistBaseCPO):
+    url: AnyHttpUrl
+
+
 class UpdateTelegramChatWhitelistCPO(CreateTelegramChatWhitelistCPO):
+    is_enabled: bool
+
+
+class UpdateTelegramChatWhitelistExternalSourceCPO(
+    CreateTelegramChatWhitelistExternalSourceCPO
+):
     is_enabled: bool
 
 
