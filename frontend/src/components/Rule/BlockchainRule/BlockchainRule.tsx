@@ -6,12 +6,12 @@ import SelectableRule from "@/components/Rule/SelectableRule/SelectableRule";
 import {Placeholder, Skeleton} from "@telegram-apps/telegram-ui";
 import Image from "next/image";
 import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
-import {IJetton, INftCollection, IRule} from "@/interfaces";
+import {IJettonWithTitle, INftCollectionWithTitle, IRule} from "@/interfaces";
 
 const BlockchainRule: FC<PropsWithChildren<{
     title: string,
     category: "nfts" | "jettons",
-    options: IJetton[] | INftCollection[] | undefined,
+    options: IJettonWithTitle[] | INftCollectionWithTitle[] | undefined,
     isLoading: boolean,
     entity?: IRule | null,
     onSave: (expected: number, address: string, isEnabled: boolean) => void
@@ -57,19 +57,19 @@ const BlockchainRule: FC<PropsWithChildren<{
                             existing={!!entity}
                             isEnabled={isEnabled}
                             onToggle={() => setIsEnabled(!isEnabled)}
-                        />:
+                        /> :
                         <Placeholder
-                        description={`Please, try again after some ${title}s will be whitelisted`}
-                        header={`No ${title}s available`}
-                    >
-                        <Image
-                            alt="Lost bananas"
-                            src="/telegram.gif"
-                            width={150}
-                            height={150}
-                        />
-                    </Placeholder>
-                : <Skeleton/>
+                            description={`Please, try again after some ${title}s will be whitelisted`}
+                            header={`No ${title}s available`}
+                        >
+                            <Image
+                                alt="Lost bananas"
+                                src="/telegram.gif"
+                                width={150}
+                                height={150}
+                            />
+                        </Placeholder>
+                    : <Skeleton/>
             }
             <FixedBottomSection
                 text={"Save"}
