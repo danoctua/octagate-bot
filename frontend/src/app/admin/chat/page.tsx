@@ -33,7 +33,6 @@ const ChatsPage = () => {
                                 }
                                 onClick={() => router.push(`/admin/chat/${chat.slug}`)}
                                 subtitle={chat.description}
-                                after={<ChevronRight/>}
                                 key={chat.id}
                             >
                                 {chat.title}

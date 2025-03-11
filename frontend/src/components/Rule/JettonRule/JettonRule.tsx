@@ -39,9 +39,9 @@ const JettonRule: FC<PropsWithChildren<{
 
     return (
         <BlockchainRule
-            title={"Jettons"}
+            title={"Token"}
             category={"jettons"}
-            options={jettons}
+            options={jettons?.map(jetton => ({...jetton, title: jetton.symbol, subtitle: jetton.name}))}
             isLoading={isChatJettonRuleLoading}
             onSave={onSaveButtonClick}
             entity={chatJettonRuleData}

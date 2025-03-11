@@ -69,10 +69,20 @@ export interface IJetton {
     isEnabled: boolean,
 }
 
+export interface IJettonWithTitle extends IJetton {
+    title: string,
+    subtitle?: string
+}
+
 export interface INftCollection {
     address: string,
     name: string,
     description?: string,
     logoPath?: string,
     isEnabled: boolean,
+}
+
+export interface INftCollectionWithTitle extends INftCollection {
+    title: string,
+    subtitle?: string
 }

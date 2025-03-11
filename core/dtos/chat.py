@@ -140,7 +140,7 @@ class BaseTelegramChatEligibilityRuleDTO(BaseModel):
         return cls(
             id=jetton_rule.id,
             category=EligibilityCheckType.JETTON,
-            title=jetton_rule.jetton.name,
+            title=jetton_rule.jetton.symbol,
             expected=jetton_rule.threshold,
             photo_url=jetton_rule.jetton.logo_path,
             blockchain_address=raw_to_userfriendly(jetton_rule.jetton.address),

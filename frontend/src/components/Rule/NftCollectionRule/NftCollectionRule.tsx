@@ -42,7 +42,7 @@ const NftCollectionRule: FC<PropsWithChildren<{
         <BlockchainRule
             title={"NFT Collection"}
             category={"nfts"}
-            options={nftCollections}
+            options={nftCollections?.map(nftCollection => ({...nftCollection, title: nftCollection.name, subtitle: nftCollection.description}))}
             isLoading={isLoading}
             onSave={onSaveButtonClick}
             entity={chatNftCollectionRuleData}

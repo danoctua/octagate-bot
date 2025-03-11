@@ -31,12 +31,11 @@ const JettonsPage = () => {
                                         rounded
                                     />
                                 }
-                                subtitle={jetton.description}
-                                after={<ChevronRight/>}
+                                subtitle={jetton.name}
                                 onClick={() => router.push(`/admin/jetton/${jetton.address}`)}
                                 key={jetton.address}
                             >
-                                {jetton.name}
+                                {jetton.symbol}
                             </Cell>
                         )) || []
                     ),

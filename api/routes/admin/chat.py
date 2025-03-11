@@ -142,7 +142,7 @@ async def get_chat_nft_collection_rule(
 ) -> BaseTelegramChatEligibilityRuleFDO:
     action = TelegramChatNFTCollectionAction(db_session)
     return BaseTelegramChatEligibilityRuleFDO.model_validate(
-        action.read(rule_id=rule_id)
+        action.read(rule_id=rule_id).model_dump()
     )
 
 
