@@ -1,7 +1,6 @@
 'use client';
 
 import {Page} from "@/components/layout/Page";
-import {Title} from "@telegram-apps/telegram-ui";
 import NftCollectionRule from "@/components/layout/Rule/NftCollectionRule/NftCollectionRule";
 
 

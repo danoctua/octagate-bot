@@ -1,7 +1,6 @@
 'use client';
 
 import {Page} from "@/components/layout/Page";
-import {Title} from "@telegram-apps/telegram-ui";
 import JettonRule from "@/components/layout/Rule/JettonRule/JettonRule";
 
 

@@ -4,7 +4,7 @@ import useJettonsData from "@/hooks/data/useJettonsData";
 import {useMemo} from "react";
 import {ButtonCell, Cell, List, Section, Skeleton} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
-import {ChevronRight, CirclePlus} from "lucide-react";
+import {CirclePlus} from "lucide-react";
 import {useRouter} from "next/navigation";
 import {Page} from "@/components/layout/Page";
 import Image from "next/image";

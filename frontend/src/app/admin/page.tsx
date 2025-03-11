@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Header from '@/components/ui/Header/Header';
 import {Page} from '@/components/layout/Page';
 import {Cell, List, Section} from "@telegram-apps/telegram-ui";
-import {ChevronRight, Coins, Images, MessageCircleMore, UserCog} from "lucide-react";
+import {Coins, Images, MessageCircleMore, UserCog} from "lucide-react";
 import {useRouter} from "next/navigation";
 
 
