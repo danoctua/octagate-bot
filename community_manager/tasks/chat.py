@@ -106,5 +106,6 @@ def refresh_chat_external_sources() -> None:
 
     with DBService().db_session() as db_session:
         action = TelegramChatWhitelistExternalSourceAction(db_session)
-        action.refresh_enabled()
+        # Celery tasks are not async, so we need to run the async function in a blocking way
+        asyncio.run(action.refresh_enabled())
         logger.info("Chat external sources refreshed.")

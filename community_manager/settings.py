@@ -8,5 +8,7 @@ class CommunityManagerSettings(CoreSettings):
     enable_manager: bool
     items_per_task: int = 100
 
+    beat_schedule_filename: str = "/tmp/celerybeat-schedule"
+
 
 community_manager_settings = CommunityManagerSettings()

@@ -202,7 +202,7 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
                 <Skeleton visible={isLoading}>
                     <Section
                         header={"Whitelist Telegram IDs"}
-                        footer={"List of valid non-negative Telegram IDs related to users to be whitelisted."}
+                        footer={`Last updated: ${rule?.updatedAt && new Date(rule?.updatedAt).toLocaleString()}`}
                     >
                         {renderUsers}
                     </Section>

@@ -81,17 +81,21 @@ class TelegramChatWhitelistExternalSourceAction(BaseAction):
             description=description,
             is_enabled=is_enabled,
         )
-        try:
-            await self._refresh_external_source(
-                source=external_source, raise_for_error=True
-            )
-        except Exception as e:
-            logger.warning(
-                "Rolling back transaction as an error occurred while validating the source"
-            )
-            self.db_session.rollback()
-            raise e
-        # No need for a manual commit, as it's already done in the service during set_content
+        if is_enabled:
+            # No need for a manual commit, as it's already done in the service during set_content
+            try:
+                await self._refresh_external_source(
+                    source=external_source, raise_for_error=True
+                )
+            except Exception as e:
+                logger.warning(
+                    "Rolling back transaction as an error occurred while validating the source"
+                )
+                self.db_session.rollback()
+                raise e
+        else:
+            self.db_session.commit()
+
         return TelegramChatWhitelistExternalSourceDTO.from_orm(external_source)
 
     def _set_content(

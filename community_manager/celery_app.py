@@ -22,6 +22,7 @@ def create_app() -> Celery:
                     "schedule": crontab(minute="*/3"),  # Every 3 minutes
                 },
             },
+            "beat_schedule_filename": community_manager_settings.beat_schedule_filename,
         }
     )
     return _app

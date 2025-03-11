@@ -112,6 +112,26 @@ services:
       - ./community_manager:/app/community_manager
       - ./core:/app/core
 
+  community-manager-scheduler:
+    <<: *x-python-service
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+      target: community-manager
+    env_file:
+      - ./community_manager/config/.env
+      - ./core/config/.env
+    command: [
+      "celery",
+      "-A",
+      "community_manager.celery_app:app",
+      "beat",
+      "--loglevel=info"
+    ]
+    volumes:
+      - ./community_manager:/app/community_manager
+      - ./core:/app/core
+
   api:
     <<: *x-python-service
     build:
