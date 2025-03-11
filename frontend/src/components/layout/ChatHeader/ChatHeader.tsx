@@ -16,13 +16,15 @@ const ChatHeader: FC<PropsWithChildren<{
     return (
         <Header>
             <Skeleton visible={isChatDataLoading}>
-                <ImageWithFallback
-                    src={`/dynamic/chats/${chat?.logoPath}`}
-                    fallbackSrc={"/welcome.gif"}
-                    rounded
-                    width={96}
-                    height={96}
-                />
+                {chat &&
+                    <ImageWithFallback
+                        src={`/dynamic/chats/${chat?.logoPath}`}
+                        fallbackSrc={"/welcome.gif"}
+                        rounded
+                        width={96}
+                        height={96}
+                    />
+                }
             </Skeleton>
             <div style={{display: "flex", flexDirection: "column", gap: 8}}>
                 <Skeleton visible={isChatDataLoading}>

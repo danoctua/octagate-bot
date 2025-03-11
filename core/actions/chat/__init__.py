@@ -118,6 +118,28 @@ class TelegramChatAction(BaseAction):
             logo_path=telegram_chat.logo_path,
         )
 
+    async def update(self, slug: str, description: str | None) -> BaseTelegramChatDTO:
+        try:
+            chat = self.telegram_chat_service.get_by_slug(slug)
+        except NoResultFound:
+            logger.error(f"Chat with slug {slug!r} not found")
+            raise TelegramChatNotExists(f"Chat with slug {slug!r} not found")
+
+        self.telegram_chat_service.update_description(
+            chat=chat,
+            description=description,
+        )
+
+        return BaseTelegramChatDTO(
+            id=chat.id,
+            username=chat.username,
+            title=chat.title,
+            description=chat.description,
+            slug=chat.slug,
+            is_forum=chat.is_forum,
+            logo_path=chat.logo_path,
+        )
+
     async def get_with_eligibility_summary(
         self, slug: str, user: User
     ) -> TelegramChatWithRulesDTO:

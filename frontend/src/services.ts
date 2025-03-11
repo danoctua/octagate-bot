@@ -1,6 +1,6 @@
 import apiClient from "@/utils/apiClient";
 import {
-    IBaseChat,
+    IBaseChat, IChat,
     IChatConfiguration,
     IExternalWhitelistRule,
     IJetton,
@@ -40,8 +40,12 @@ export const fetchChats = async (): Promise<IBaseChat[]> => {
     return await apiClient.get("/admin/chats").then(response => response.data);
 }
 
-export const createChat = async (chat: {chatIdentifier: string}): Promise<IBaseChat> => {
+export const createChat = async (chat: {chatIdentifier: string}): Promise<IChat> => {
     return await apiClient.post("/admin/chats", chat).then(response => response.data);
+}
+
+export const updateChat = async (slug: string, description: string): Promise<IChat> => {
+    return await apiClient.put(`/admin/chats/${slug}`, {description}).then(response => response.data);
 }
 
 export const fetchAllJettons = async (): Promise<IJetton[]> => {

@@ -17,6 +17,7 @@ from api.pos.chat import (
     TelegramChatWhitelistExternalSourceFDO,
     CreateTelegramChatWhitelistExternalSourceCPO,
     UpdateTelegramChatWhitelistExternalSourceCPO,
+    EditChatCPO,
 )
 from core.actions.chat.rule.whitelist import (
     TelegramChatWhitelistAction,
@@ -91,6 +92,25 @@ async def create_chat(
         raise HTTPException(
             detail={"error": {"message": f"Chat '{chat.chat_identifier}' not found"}},
             status_code=400,
+        )
+
+
+@admin_chat_router.put("/{slug}")
+async def update_chat(
+    slug: str,
+    chat: EditChatCPO,
+    db_session: Session = Depends(get_db_session),
+) -> BaseTelegramChatFDO:
+    telegram_chat_action = TelegramChatAction(db_session)
+    try:
+        result = await telegram_chat_action.update(
+            slug=slug, description=chat.description
+        )
+        return BaseTelegramChatFDO.model_validate(result.model_dump())
+    except TelegramChatNotExists:
+        raise HTTPException(
+            detail={"error": {"message": "Chat not found"}},
+            status_code=404,
         )
 
 

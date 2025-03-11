@@ -3,14 +3,12 @@ from typing import Annotated, Self
 
 from pydantic import (
     BaseModel,
-    ConfigDict,
     AfterValidator,
     field_validator,
     field_serializer,
     Field,
     AnyHttpUrl,
 )
-from pydantic.alias_generators import to_camel
 from pytonapi.utils import to_nano, userfriendly_to_raw, to_amount
 
 from api.pos.base import BaseFDO
@@ -53,13 +51,12 @@ def validate_chat_identifier(v: str) -> str | int:
     return int(match.group("chat_id"))
 
 
-class AddChatCPO(BaseModel):
+class AddChatCPO(BaseFDO):
     chat_identifier: Annotated[str | int, AfterValidator(validate_chat_identifier)]
 
-    model_config = ConfigDict(
-        alias_generator=to_camel,
-        populate_by_name=False,
-    )
+
+class EditChatCPO(BaseFDO):
+    description: str | None
 
 
 class BaseTelegramChatRuleCPO(BaseFDO):

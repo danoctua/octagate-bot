@@ -1,12 +1,12 @@
 'use client';
 
 import {Page} from '@/components/layout/Page';
-import {Skeleton, Input, Section, ButtonCell, InlineButtons} from "@telegram-apps/telegram-ui";
+import {Skeleton, Input, Section, ButtonCell, Button} from "@telegram-apps/telegram-ui";
 
 import ChatHeader from "@/components/layout/ChatHeader/ChatHeader";
 import {useClientOnce} from "@/hooks/useClientOnce";
 import {notFound, useRouter} from "next/navigation";
-import {useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import DisplayRuleItem from "@/components/layout/Rule/DisplayRuleItem/DisplayRuleItem";
 import {CirclePlus, MessageCircle, Share} from "lucide-react";
 import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
@@ -25,7 +25,7 @@ const RULE_CATEGORY_MAPPING: { [key: string]: string } = {
 
 const ChatPage = ({params}: { params: { slug: string } }) => {
 
-    const {chat, isChatDataLoading, fetchChatData} = useAdminChatData(params.slug);
+    const {chat, isChatDataLoading, fetchChatData, updateChatData} = useAdminChatData(params.slug);
     const [description, setDescription] = useState<string>("");
     const router = useRouter();
 
@@ -37,10 +37,17 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
     })
 
     useEffect(() => {
-        if (chat && chat.chat.description && !description) {
-            setDescription(chat.chat.description);
+        if (chat) {
+            setDescription(chat.chat.description || "");
         }
-    }, [chat, description])
+    }, [chat])
+
+    const onSave = useCallback(
+        async () => {
+            await updateChatData(description);
+            router.push("/admin/chat");
+        }, [description, router, updateChatData]
+    )
 
     if (!params.slug) {
         notFound();
@@ -73,12 +80,12 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
     return (
         <Page back={true}>
             <ChatHeader chat={chat?.chat} isChatDataLoading={isChatDataLoading}/>
-            <div style={{padding: "16px 8px"}}>
+            <div style={{padding: "16px 22px"}}>
                 <Skeleton visible={isChatDataLoading}>
-                    <InlineButtons>
-                        <InlineButtons.Item
-                            text={"Share join link"}
-                            mode={"bezeled"}
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                        <Button
+                            stretched
+                            before={<Share/>}
                             onClick={() => {
                                 // Without an explicit call to init, the SDK will not be able to share the URL
                                 init();
@@ -87,18 +94,18 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                                 }
                             }}
                         >
-                            <Share/>
-                        </InlineButtons.Item>
-                        <InlineButtons.Item
-                            text={"Open chat"}
-                            mode={"bezeled"}
+                            Share join link
+                        </Button>
+                        <Button
+                            stretched
+                            before={<MessageCircle/>}
                             onClick={() => {
                                 chat?.chat.joinUrl && openTelegramLink(chat?.chat.joinUrl)
                             }}
                         >
-                            <MessageCircle/>
-                        </InlineButtons.Item>
-                    </InlineButtons>
+                            Open chat
+                        </Button>
+                    </div>
                 </Skeleton>
             </div>
 
@@ -116,8 +123,7 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                 </Section>
             </Skeleton>
 
-            <FixedBottomSection text={"Save"} onClick={() => {
-            }}/>
+            <FixedBottomSection text={"Save"} onClick={onSave}/>
         </Page>
     )
 }

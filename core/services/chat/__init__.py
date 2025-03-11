@@ -40,6 +40,12 @@ class TelegramChatService(BaseService):
         logger.debug(f"Telegram Chat {chat.title!r} updated.")
         return chat
 
+    def update_description(self, chat: TelegramChat, description: str) -> TelegramChat:
+        chat.description = description
+        self.db_session.commit()
+        logger.debug(f"Telegram Chat {chat.title!r} description updated.")
+        return chat
+
     def create_or_update(
         self, chat_id: int, entity: Channel, logo_path: str
     ) -> TelegramChat:

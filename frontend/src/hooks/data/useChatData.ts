@@ -20,7 +20,7 @@ const useChatData = (slug: string | undefined) => {
         });
     }, [slug])
 
-    return { chat, setChat, fetchChatData: refreshChatData, isChatDataLoading, setIsChatDataLoading };
+    return { chat, fetchChatData: refreshChatData, isChatDataLoading, setIsChatDataLoading };
 }
 
 export default useChatData;
