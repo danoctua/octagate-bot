@@ -1,5 +1,5 @@
 import {ButtonCell, Cell, Input, List, Section, Selectable, Switch} from "@telegram-apps/telegram-ui";
-import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
+import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
 import {IJetton, IJettonWithTitle, INftCollection, INftCollectionWithTitle} from "@/interfaces";
 import React, {useMemo, useState} from "react";
 import {ChevronDown, ChevronUp} from "lucide-react";

@@ -27,8 +27,9 @@ const useChatJettonRuleData = ({slug, ruleId}: { slug: string, ruleId?: number }
             (data) => {
                 setChatJettonRuleData(data)
             }
-        ).finally(() => {
+        ).catch((e) => {
             setIsLoading(false)
+            throw e;
         });
     }, [ruleId, slug])
 
@@ -40,7 +41,10 @@ const useChatJettonRuleData = ({slug, ruleId}: { slug: string, ruleId?: number }
                 (data) => {
                     setChatJettonRuleData(data)
                 }
-            ).finally(() => setIsLoading(false));
+            ).catch((e) => {
+                setIsLoading(false)
+                throw e;
+            });
         },
         [ruleId, slug]
     )

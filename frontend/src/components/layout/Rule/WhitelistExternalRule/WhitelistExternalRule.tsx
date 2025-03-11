@@ -1,11 +1,12 @@
 'use client';
 
 import React, {useState, useEffect, useCallback, ChangeEvent, useMemo} from "react";
-import {ButtonCell, Cell, Input, List, Section, Skeleton, Switch} from "@telegram-apps/telegram-ui";
+import {Badge, ButtonCell, Cell, Input, List, Placeholder, Section, Skeleton, Switch} from "@telegram-apps/telegram-ui";
 import {useRouter} from "next/navigation";
 import useChatExternalWhitelistRuleData from "@/hooks/data/useChatExternalWhitelistRuleData";
-import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
+import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {ChevronDown, ChevronUp} from "lucide-react";
+import Image from "next/image";
 
 
 const DEFAULT_DISPLAY_ITEMS = 5;
@@ -105,8 +106,8 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
         } else {
             await updateRule(name, description, isEnabled, url)
         }
-        router.push(`/admin/chat/${chatSlug}`)
-    }, [chatSlug, createRule, description, isEnabled, name, router, ruleId, updateRule, url])
+        router.back()
+    }, [createRule, description, isEnabled, name, router, ruleId, updateRule, url])
 
     useEffect(() => {
         if (Object.values(errors).every(error => !error) && name && url) {
@@ -129,6 +130,21 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
     }, [rule, showAll])
 
     const renderUsers = useMemo(() => {
+        if (!rule?.users || rule.users.length === 0) {
+            return (
+                <Placeholder
+                    description={`Seems like no one is being whitelisted with that source. Try later`}
+                    header={`No users whitelisted`}
+                >
+                    <Image
+                        alt="Lost bananas"
+                        src="/telegram.gif"
+                        width={150}
+                        height={150}
+                    />
+                </Placeholder>
+            )
+        }
         let items = displayUsers.map((user, index) => (
             <Cell key={index} multiline>
                 {user}
@@ -144,7 +160,7 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
             </ButtonCell>
         )
         return <List>{items}</List>;
-    }, [displayUsers, showAll])
+    }, [displayUsers, rule, showAll])
 
     const renderErrors = useMemo(() => {
         return (
@@ -165,9 +181,14 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
     return (
         <>
             <Skeleton visible={isLoading}>
-                <Section footer={
-                    !isFormValid && renderErrors
-                }>
+                <Section
+                    header={
+                        <Section.Header large>Configure external API</Section.Header>
+                    }
+                    footer={
+                        !isFormValid && renderErrors
+                    }
+                >
                     {
                         Object.entries(fields).map(([name, field], index) => (
                             <Input
@@ -201,7 +222,12 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
             {ruleId &&
                 <Skeleton visible={isLoading}>
                     <Section
-                        header={"Whitelist Telegram IDs"}
+                        header={
+                            <Section.Header>
+                                Telegram IDs
+                                {rule?.users && <Badge type={"number"}>{rule.users.length}</Badge>}
+                            </Section.Header>
+                        }
                         footer={`Last updated: ${rule?.updatedAt && new Date(rule?.updatedAt).toLocaleString()}`}
                     >
                         {renderUsers}

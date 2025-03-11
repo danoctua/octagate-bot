@@ -5,7 +5,7 @@ import React, {FC, PropsWithChildren, useCallback} from "react";
 import useNftCollectionsData from "@/hooks/data/useNftCollectionsData";
 import {useRouter} from "next/navigation";
 import useChatNftCollectionRuleData from "@/hooks/data/useChatNftCollectionRuleData";
-import BlockchainRule from "@/components/Rule/BlockchainRule/BlockchainRule";
+import BlockchainRule from "@/components/layout/Rule/BlockchainRule/BlockchainRule";
 
 const NftCollectionRule: FC<PropsWithChildren<{
     chatSlug: string,
@@ -32,10 +32,9 @@ const NftCollectionRule: FC<PropsWithChildren<{
             } else {
                 await createChatNftCollectionRule({expected, address})
             }
-            // To make sure it doesn't create a bunch of history entries
-            router.back()
+            router.push(`/admin/chat/${chatSlug}`)
         },
-        [createChatNftCollectionRule, ruleId, router, updateChatNftCollectionRule]
+        [ruleId, router, chatSlug, updateChatNftCollectionRule, createChatNftCollectionRule]
     )
 
     return (

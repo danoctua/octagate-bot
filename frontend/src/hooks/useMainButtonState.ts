@@ -1,4 +1,4 @@
-import {ButtonStateProps} from "@/components/FixedBottomSection/FixedBottomSection";
+import {ButtonStateProps} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {useEffect, useMemo, useState} from "react";
 import {openTelegramLink} from "@telegram-apps/sdk-react";
 import {IChat, IChatConfiguration, IUser} from "@/interfaces";

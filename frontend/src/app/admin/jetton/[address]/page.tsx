@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import JettonPage from "@/components/Resource/JettonPage/JettonPage";
+import JettonPage from "@/components/layout/Resource/JettonPage/JettonPage";
 
 
 const EditJettonPage = ({params}: {params: {address: string}}) => {

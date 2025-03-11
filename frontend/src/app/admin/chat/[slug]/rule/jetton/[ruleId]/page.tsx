@@ -1,8 +1,8 @@
 'use client';
 
-import {Page} from "@/components/Page";
+import {Page} from "@/components/layout/Page";
 import {Title} from "@telegram-apps/telegram-ui";
-import JettonRule from "@/components/Rule/JettonRule/JettonRule";
+import JettonRule from "@/components/layout/Rule/JettonRule/JettonRule";
 
 
 
@@ -10,11 +10,6 @@ const EditJettonRulePage = ({params}: { params: { slug: string, ruleId?: number 
 
     return (
         <Page back={true}>
-            <div style={{padding: "44px 32px"}}>
-                <Title level={"1"} plain style={{textAlign: "center"}}>
-                    Hold to get access
-                </Title>
-            </div>
             <JettonRule chatSlug={params.slug} ruleId={params.ruleId}/>
         </Page>
     )

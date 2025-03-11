@@ -3,12 +3,12 @@
 import useChatsData from "@/hooks/data/useChatsData";
 import {useMemo} from "react";
 import {ButtonCell, Cell, List, Section, Skeleton} from "@telegram-apps/telegram-ui";
-import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
+import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
 import {ChevronRight, CirclePlus} from "lucide-react";
 import {useRouter} from "next/navigation";
-import Header from "@/components/Header/Header";
+import Header from "@/components/ui/Header/Header";
 import Image from "next/image";
-import {Page} from "@/components/Page";
+import {Page} from "@/components/layout/Page";
 
 
 const ChatsPage = () => {

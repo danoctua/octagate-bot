@@ -1,7 +1,7 @@
 import React, { PropsWithChildren, FC, useRef, useEffect, forwardRef, ChangeEvent } from 'react';
 import {List, ButtonCell, Input} from '@telegram-apps/telegram-ui';
 import { CirclePlus, X } from "lucide-react";
-import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
+import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
 
 
 /**

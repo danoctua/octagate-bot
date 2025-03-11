@@ -1,15 +1,15 @@
 'use client';
 
-import {Page} from '@/components/Page';
+import {Page} from '@/components/layout/Page';
 import {Skeleton, Input, Section, ButtonCell, InlineButtons} from "@telegram-apps/telegram-ui";
 
-import ChatHeader from "@/components/ChatHeader/ChatHeader";
+import ChatHeader from "@/components/layout/ChatHeader/ChatHeader";
 import {useClientOnce} from "@/hooks/useClientOnce";
 import {notFound, useRouter} from "next/navigation";
 import {useEffect, useMemo, useState} from 'react';
-import DisplayRuleItem from "@/components/Rule/DisplayRuleItem/DisplayRuleItem";
+import DisplayRuleItem from "@/components/layout/Rule/DisplayRuleItem/DisplayRuleItem";
 import {CirclePlus, MessageCircle, Share} from "lucide-react";
-import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
+import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {generateBotJoinLink} from "@/utils/bot";
 import {shareURL, init, openTelegramLink} from "@telegram-apps/sdk-react";
 import useAdminChatData from "@/hooks/data/useAdminChatData";

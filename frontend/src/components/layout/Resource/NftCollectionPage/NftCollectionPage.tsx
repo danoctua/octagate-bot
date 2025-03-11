@@ -4,7 +4,7 @@ import React, {FC, PropsWithChildren, useCallback} from "react";
 
 import {useRouter} from "next/navigation";
 import useNftCollectionData from "@/hooks/data/useNftCollectionData";
-import ResourcePage from "@/components/Resource/ResourcePage";
+import ResourcePage from "@/components/layout/Resource/ResourcePage";
 
 
 const NftCollectionPage: FC<PropsWithChildren<{ address?: string }>> = ({address, children}) => {

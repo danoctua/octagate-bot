@@ -1,14 +1,12 @@
 'use client';
 
 import React, {ChangeEvent, FC, PropsWithChildren, useCallback, useEffect, useMemo, useState} from "react";
-import {Page} from "@/components/Page";
-import Header from "@/components/Header/Header";
+import {Page} from "@/components/layout/Page";
+import Header from "@/components/ui/Header/Header";
 import {Cell, Info, Input, Section, Skeleton, Subheadline, Switch, Title} from "@telegram-apps/telegram-ui";
-import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
-import useJettonData from "@/hooks/data/useJettonData";
-import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
-import {useRouter} from "next/navigation";
-import {Link} from "@/components/Link/Link";
+import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
+import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
+import {Link} from "@/components/functional/Link/Link";
 import {ExternalLink} from "lucide-react";
 import {IJetton, INftCollection} from "@/interfaces";
 
@@ -121,7 +119,7 @@ const ResourcePage: FC<PropsWithChildren<{
                     </div>
                 </Header>
             )
-        }, [inputAddress, isLoading, resource, resourceStaticPath, resourceType]
+        }, [isLoading, resource, resourceStaticPath, resourceType]
     )
 
     const renderForm = useMemo(

@@ -3,7 +3,7 @@
 import React, {FC, PropsWithChildren, useCallback} from "react";
 import useJettonData from "@/hooks/data/useJettonData";
 import {useRouter} from "next/navigation";
-import ResourcePage from "@/components/Resource/ResourcePage";
+import ResourcePage from "@/components/layout/Resource/ResourcePage";
 
 
 const JettonPage: FC<PropsWithChildren<{ address?: string }>> = ({address, children}) => {

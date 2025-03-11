@@ -1,12 +1,12 @@
 'use client';
 
-import {Page} from "@/components/Page";
+import {Page} from "@/components/layout/Page";
 import {Select, Title} from "@telegram-apps/telegram-ui";
 import {useMemo, useState} from "react";
-import JettonRule from "@/components/Rule/JettonRule/JettonRule";
-import NftCollectionRule from "@/components/Rule/NftCollectionRule/NftCollectionRule";
-import WhitelistRule from "@/components/Rule/WhitelistRule/WhitelistRule";
-import WhitelistExternalRule from "@/components/Rule/WhitelistExternalRule/WhitelistExternalRule";
+import JettonRule from "@/components/layout/Rule/JettonRule/JettonRule";
+import NftCollectionRule from "@/components/layout/Rule/NftCollectionRule/NftCollectionRule";
+import WhitelistRule from "@/components/layout/Rule/WhitelistRule/WhitelistRule";
+import WhitelistExternalRule from "@/components/layout/Rule/WhitelistExternalRule/WhitelistExternalRule";
 
 
 const TABS = [

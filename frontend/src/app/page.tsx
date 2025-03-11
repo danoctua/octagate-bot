@@ -9,7 +9,7 @@ import {
     Text,
 } from '@telegram-apps/telegram-ui';
 
-import {Page} from '@/components/Page';
+import {Page} from '@/components/layout/Page';
 
 import useAuthAndFetchUser from "@/hooks/useAuthAndFetchUser";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
@@ -20,12 +20,12 @@ import {Address} from "@ton/core";
 import useChatData from '@/hooks/data/useChatData';
 import Image from "next/image";
 import {disconnectUserWallet, fetchTaskStatus, updateUserWallet} from "@/services";
-import ConnectedWalletCell from "@/components/ConnectedWalletCell/ConnectedWalletCell";
-import ChatHeader from "@/components/ChatHeader/ChatHeader";
-import FixedBottomSection, {ButtonStateProps} from "@/components/FixedBottomSection/FixedBottomSection";
+import ConnectedWalletCell from "@/components/layout/ConnectedWalletCell/ConnectedWalletCell";
+import ChatHeader from "@/components/layout/ChatHeader/ChatHeader";
+import FixedBottomSection, {ButtonStateProps} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import useMainButtonState from "@/hooks/useMainButtonState";
 import {useClientOnce} from "@/hooks/useClientOnce";
-import DisplayRuleItem from "@/components/Rule/DisplayRuleItem/DisplayRuleItem";
+import DisplayRuleItem from "@/components/layout/Rule/DisplayRuleItem/DisplayRuleItem";
 
 export default function Home() {
     const {user, setUser, isUserDataLoading, setIsUserDataLoading} = useAuthAndFetchUser();

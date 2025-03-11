@@ -1,9 +1,9 @@
-import {Avatar, AvatarStack, Info, Skeleton, Text, Title} from "@telegram-apps/telegram-ui";
+import {Info, Skeleton, Title} from "@telegram-apps/telegram-ui";
 import React, {FC, PropsWithChildren} from "react";
 import {IChat} from "@/interfaces";
 
-import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
-import Header from "@/components/Header/Header";
+import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
+import Header from "@/components/ui/Header/Header";
 
 
 const ChatHeader: FC<PropsWithChildren<{

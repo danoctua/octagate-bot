@@ -1,10 +1,10 @@
 'use client';
 
-import React, {FC, PropsWithChildren, useCallback, useState} from "react";
+import React, {FC, PropsWithChildren, useCallback} from "react";
 import useJettonsData from "@/hooks/data/useJettonsData";
 import useChatJettonRuleData from "@/hooks/data/useChatJettonRuleData";
 import {useRouter} from "next/navigation";
-import BlockchainRule from "@/components/Rule/BlockchainRule/BlockchainRule";
+import BlockchainRule from "@/components/layout/Rule/BlockchainRule/BlockchainRule";
 
 
 const JettonRule: FC<PropsWithChildren<{
@@ -21,7 +21,6 @@ const JettonRule: FC<PropsWithChildren<{
         slug: chatSlug,
         ruleId: ruleId
     })
-    const [isEnabled, setIsEnabled] = useState<boolean>(false);
     const router = useRouter();
 
 
@@ -33,8 +32,8 @@ const JettonRule: FC<PropsWithChildren<{
                 await createChatJettonRule({expected, address})
             }
             // To make sure it doesn't create a bunch of history entries
-            router.back()
-        }, [createChatJettonRule, ruleId, router, updateChatJettonRule]
+            router.push(`/admin/chat/${chatSlug}`)
+        }, [ruleId, router, chatSlug, updateChatJettonRule, createChatJettonRule]
     )
 
     return (

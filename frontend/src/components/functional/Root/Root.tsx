@@ -8,8 +8,8 @@ import {
 } from '@telegram-apps/sdk-react';
 import {AppRoot, Snackbar} from '@telegram-apps/telegram-ui';
 
-import {ErrorBoundary} from '@/components/ErrorBoundary';
-import {ErrorPage} from '@/components/ErrorPage';
+import {ErrorBoundary} from '@/components/layout/ErrorBoundary';
+import {ErrorPage} from '@/components/layout/ErrorPage';
 import {useDidMount} from '@/hooks/useDidMount';
 import {useClientOnce} from '@/hooks/useClientOnce';
 import {init} from '@/core/init';

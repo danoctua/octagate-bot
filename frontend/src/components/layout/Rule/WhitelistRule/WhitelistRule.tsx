@@ -1,7 +1,7 @@
 'use client';
 
 import React, {useState, ChangeEvent, useEffect, useCallback} from "react";
-import DynamicForm from "@/components/DynamicForm/DynamicForm";
+import DynamicForm from "@/components/ui/DynamicForm/DynamicForm";
 import {Cell, Input, Section, Switch} from "@telegram-apps/telegram-ui";
 import useChatWhitelistRuleData from "@/hooks/data/useChatWhitelistRuleData";
 import {useRouter} from "next/navigation";
@@ -85,7 +85,13 @@ const WhitelistRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: number }
 
     return (
         <>
-            <Section>
+            <Section
+                header={
+                    <Section.Header large>
+                        Whitelist users
+                    </Section.Header>
+                }
+            >
                 <Input
                     header={"Name"}
                     value={name}
@@ -116,7 +122,7 @@ const WhitelistRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: number }
                 }
             </Section>
             <Section
-                header={"Whitelist Telegram IDs"}
+                header={"Telegram IDs"}
                 footer={"List of valid non-negative Telegram IDs related to users to be whitelisted."}
             >
                 <DynamicForm

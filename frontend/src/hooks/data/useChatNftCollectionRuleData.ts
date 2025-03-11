@@ -25,7 +25,7 @@ const useChatNftCollectionRuleData = ({slug, ruleId}: {slug: string, ruleId?: nu
     setIsLoading(true);
     createNftCollectionRule(slug, address, expected).then(
         (data) => { setChatNftCollectionRuleData(data) }
-    ).finally(() => { setIsLoading(false) });
+    ).catch((e) => { setIsLoading(false); throw e;});
   }
 
   const updateChatNftCollectionRule = async ({expected, address, isEnabled}: {expected: number, address: string, isEnabled: boolean}) => {
@@ -33,7 +33,7 @@ const useChatNftCollectionRuleData = ({slug, ruleId}: {slug: string, ruleId?: nu
     setIsLoading(true);
     updateNftCollectionRule(slug, ruleId, {address, expected, isEnabled}).then(
         (data) => { setChatNftCollectionRuleData(data) }
-    ).finally(() => setIsLoading(false));
+    ).catch((e) => { setIsLoading(false); throw e;});
   }
 
   return {chatNftCollectionRuleData, createChatNftCollectionRule, updateChatNftCollectionRule, isLoading};

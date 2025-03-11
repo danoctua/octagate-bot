@@ -4,10 +4,10 @@ import useNftCollectionsData from "@/hooks/data/useNftCollectionsData";
 import {useRouter} from "next/navigation";
 import {useMemo} from "react";
 import {ButtonCell, Cell, List, Section, Skeleton} from "@telegram-apps/telegram-ui";
-import ImageWithFallback from "@/components/ImageWithFallback/ImageWithFallback";
+import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
 import {ChevronRight, CirclePlus} from "lucide-react";
-import {Page} from "@/components/Page";
-import Header from "@/components/Header/Header";
+import {Page} from "@/components/layout/Page";
+import Header from "@/components/ui/Header/Header";
 import Image from "next/image";
 
 const NftCollectionsPage = () => {

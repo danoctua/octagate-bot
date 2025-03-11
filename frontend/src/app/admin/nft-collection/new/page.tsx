@@ -1,4 +1,4 @@
-import NftCollectionPage from "@/components/Resource/NftCollectionPage/NftCollectionPage";
+import NftCollectionPage from "@/components/layout/Resource/NftCollectionPage/NftCollectionPage";
 
 const CreateNftCollectionPage = () => {
     return (

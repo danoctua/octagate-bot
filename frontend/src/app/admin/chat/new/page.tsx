@@ -2,9 +2,9 @@
 
 import {useCallback, useState} from "react";
 
-import {Page} from '@/components/Page';
+import {Page} from '@/components/layout/Page';
 import {Input, Section} from "@telegram-apps/telegram-ui";
-import FixedBottomSection from "@/components/FixedBottomSection/FixedBottomSection";
+import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {createChat} from "@/services";
 import {useRouter} from "next/navigation";
 
