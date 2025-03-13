@@ -16,7 +16,7 @@ from core.services.wallet import (
     WalletService,
 )
 from core.exceptions.wallet import UserWalletExistError, UserWalletConnectedError
-from wallet_indexer.celery_app import app
+from indexer.celery_app import app
 
 logger = logging.getLogger(__name__)
 

@@ -5,11 +5,11 @@ import {
   updateNftCollectionRule
 } from "@/services";
 import {useState} from "react";
-import {IRule} from "@/interfaces";
+import {INftCollectionRule, INftMetadata} from "@/interfaces";
 
 
 const useChatNftCollectionRuleData = ({slug, ruleId}: {slug: string, ruleId?: number}) => {
-  const [chatNftCollectionRuleData, setChatNftCollectionRuleData] = useState<IRule | null>(null);
+  const [chatNftCollectionRuleData, setChatNftCollectionRuleData] = useState<INftCollectionRule | null>(null);
   const [ isLoading, setIsLoading ] = useState(false);
 
   useClientOnce(() => {
@@ -20,18 +20,22 @@ const useChatNftCollectionRuleData = ({slug, ruleId}: {slug: string, ruleId?: nu
     ).finally(() => { setIsLoading(false) });
   });
 
-  const createChatNftCollectionRule = async ({expected, address}: {expected: number, address: string}) => {
+  const createChatNftCollectionRule = async (
+      {expected, address, requiredAttributes}: {expected: number, address: string, requiredAttributes: INftMetadata[]}
+  ) => {
     if (!slug || ruleId) return;
     setIsLoading(true);
-    createNftCollectionRule(slug, address, expected).then(
+    createNftCollectionRule(slug, address, expected, requiredAttributes).then(
         (data) => { setChatNftCollectionRuleData(data) }
     ).catch((e) => { setIsLoading(false); throw e;});
   }
 
-  const updateChatNftCollectionRule = async ({expected, address, isEnabled}: {expected: number, address: string, isEnabled: boolean}) => {
+  const updateChatNftCollectionRule = async (
+      {expected, address, isEnabled, requiredAttributes}: {expected: number, address: string, isEnabled: boolean, requiredAttributes: INftMetadata[]}
+  ) => {
     if (!ruleId) return;
     setIsLoading(true);
-    updateNftCollectionRule(slug, ruleId, {address, expected, isEnabled}).then(
+    updateNftCollectionRule(slug, ruleId, {address, expected, isEnabled, requiredAttributes}).then(
         (data) => { setChatNftCollectionRuleData(data) }
     ).catch((e) => { setIsLoading(false); throw e;});
   }

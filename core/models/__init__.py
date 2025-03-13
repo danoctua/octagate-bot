@@ -6,6 +6,8 @@ from core.models.chat import (  # noqa
     TelegramChatJetton,
     TelegramChatNFTCollection,
     TelegramChatUser,
+    TelegramChatWhitelist,
+    TelegramChatWhitelistExternalSource,
 )
 from core.models.user import User  # noqa
 from core.models.wallet import UserWallet, JettonWallet  # noqa

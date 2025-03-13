@@ -8,16 +8,17 @@ from api.pos.chat import (
     TelegramChatJettonRuleCPO,
     AddChatCPO,
     TelegramChatNFTCollectionRuleCPO,
-    BaseTelegramChatEligibilityRuleFDO,
+    BaseRuleEligibilityFDO,
     BaseTelegramChatFDO,
     TelegramChatWithRulesFDO,
-    CreateTelegramChatWhitelistCPO,
-    TelegramChatWhitelistFDO,
-    UpdateTelegramChatWhitelistCPO,
-    TelegramChatWhitelistExternalSourceFDO,
-    CreateTelegramChatWhitelistExternalSourceCPO,
-    UpdateTelegramChatWhitelistExternalSourceCPO,
+    CreateWhitelistRuleCPO,
+    WhitelistRuleFDO,
+    UpdateWhitelistRuleCPO,
+    WhitelistRuleExternalFDO,
+    CreateWhitelistRuleExternalCPO,
+    UpdateWhitelistRuleExternalCPO,
     EditChatCPO,
+    NFTRuleEligibilityFDO,
 )
 from core.actions.chat.rule.whitelist import (
     TelegramChatWhitelistAction,
@@ -119,9 +120,9 @@ async def get_chat_jetton_rule(
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
-) -> BaseTelegramChatEligibilityRuleFDO:
+) -> BaseRuleEligibilityFDO:
     telegram_chat_jetton_action = TelegramChatJettonAction(db_session)
-    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+    return BaseRuleEligibilityFDO.model_validate(
         telegram_chat_jetton_action.read(rule_id=rule_id).model_dump()
     )
 
@@ -131,9 +132,9 @@ async def add_chat_jetton_rule(
     slug: str,
     rule: TelegramChatJettonRuleCPO,
     db_session: Session = Depends(get_db_session),
-) -> BaseTelegramChatEligibilityRuleFDO:
+) -> BaseRuleEligibilityFDO:
     action = TelegramChatJettonAction(db_session)
-    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+    return BaseRuleEligibilityFDO.model_validate(
         action.create(
             slug=slug,
             address_raw=rule.address,
@@ -148,9 +149,9 @@ async def update_chat_jetton_rule(
     rule_id: int,
     rule: TelegramChatJettonRuleCPO,
     db_session: Session = Depends(get_db_session),
-) -> BaseTelegramChatEligibilityRuleFDO:
+) -> BaseRuleEligibilityFDO:
     action = TelegramChatJettonAction(db_session)
-    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+    return BaseRuleEligibilityFDO.model_validate(
         action.update(
             rule_id=rule_id,
             address_raw=rule.address,
@@ -165,9 +166,9 @@ async def get_chat_nft_collection_rule(
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
-) -> BaseTelegramChatEligibilityRuleFDO:
+) -> NFTRuleEligibilityFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+    return NFTRuleEligibilityFDO.model_validate(
         action.read(rule_id=rule_id).model_dump()
     )
 
@@ -177,13 +178,14 @@ async def add_chat_nft_collection_rule(
     slug: str,
     rule: TelegramChatNFTCollectionRuleCPO,
     db_session: Session = Depends(get_db_session),
-) -> BaseTelegramChatEligibilityRuleFDO:
+) -> NFTRuleEligibilityFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+    return NFTRuleEligibilityFDO.model_validate(
         action.create(
             slug=slug,
             address_raw=rule.address,
             threshold=rule.expected,
+            required_attributes=rule.required_attributes,
         ).model_dump()
     )
 
@@ -194,14 +196,15 @@ async def update_chat_nft_collection_rule(
     rule_id: int,
     rule: TelegramChatNFTCollectionRuleCPO,
     db_session: Session = Depends(get_db_session),
-) -> BaseTelegramChatEligibilityRuleFDO:
+) -> NFTRuleEligibilityFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return BaseTelegramChatEligibilityRuleFDO.model_validate(
+    return NFTRuleEligibilityFDO.model_validate(
         action.update(
             rule_id=rule_id,
             address_raw=rule.address,
             expected=rule.expected,
             is_enabled=rule.is_enabled,
+            required_attributes=rule.required_attributes,
         ).model_dump()
     )
 
@@ -209,9 +212,9 @@ async def update_chat_nft_collection_rule(
 @admin_chat_router.post("/{slug}/rules/whitelist")
 async def add_chat_whitelist(
     slug: str,
-    rule: CreateTelegramChatWhitelistCPO,
+    rule: CreateWhitelistRuleCPO,
     db_session: Session = Depends(get_db_session),
-) -> TelegramChatWhitelistFDO:
+) -> WhitelistRuleFDO:
     action = TelegramChatWhitelistAction(db_session)
     new_rule = action.create(
         slug=slug,
@@ -219,16 +222,16 @@ async def add_chat_whitelist(
         description=rule.description,
     )
     result = await action.set_content(new_rule.id, rule.users)
-    return TelegramChatWhitelistFDO.model_validate(result.model_dump())
+    return WhitelistRuleFDO.model_validate(result.model_dump())
 
 
 @admin_chat_router.put("/{slug}/rules/whitelist/{rule_id}")
 async def update_chat_whitelist(
     slug: str,
     rule_id: int,
-    rule: UpdateTelegramChatWhitelistCPO,
+    rule: UpdateWhitelistRuleCPO,
     db_session: Session = Depends(get_db_session),
-) -> TelegramChatWhitelistFDO:
+) -> WhitelistRuleFDO:
     action = TelegramChatWhitelistAction(db_session)
     action.update(
         rule_id=rule_id,
@@ -237,7 +240,7 @@ async def update_chat_whitelist(
         is_enabled=rule.is_enabled,
     )
     result = await action.set_content(rule_id, rule.users)
-    return TelegramChatWhitelistFDO.model_validate(result.model_dump())
+    return WhitelistRuleFDO.model_validate(result.model_dump())
 
 
 @admin_chat_router.get("/{slug}/rules/whitelist/{rule_id}")
@@ -245,18 +248,18 @@ async def get_chat_whitelist(
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
-) -> TelegramChatWhitelistFDO:
+) -> WhitelistRuleFDO:
     action = TelegramChatWhitelistAction(db_session)
     result = action.get(rule_id=rule_id)
-    return TelegramChatWhitelistFDO.model_validate(result.model_dump())
+    return WhitelistRuleFDO.model_validate(result.model_dump())
 
 
 @admin_chat_router.post("/{slug}/rules/whitelist-external")
 async def add_chat_whitelist_external(
     slug: str,
-    rule: CreateTelegramChatWhitelistExternalSourceCPO,
+    rule: CreateWhitelistRuleExternalCPO,
     db_session: Session = Depends(get_db_session),
-) -> TelegramChatWhitelistExternalSourceFDO:
+) -> WhitelistRuleExternalFDO:
     action = TelegramChatWhitelistExternalSourceAction(db_session)
     try:
         new_rule = await action.create(
@@ -271,7 +274,7 @@ async def add_chat_whitelist_external(
             detail={"error": {"message": "Failed to create whitelist external source"}},
             status_code=400,
         )
-    return TelegramChatWhitelistExternalSourceFDO.model_validate(new_rule.model_dump())
+    return WhitelistRuleExternalFDO.model_validate(new_rule.model_dump())
 
 
 @admin_chat_router.get("/{slug}/rules/whitelist-external/{rule_id}")
@@ -279,19 +282,19 @@ async def get_chat_whitelist_external(
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
-) -> TelegramChatWhitelistExternalSourceFDO:
+) -> WhitelistRuleExternalFDO:
     action = TelegramChatWhitelistExternalSourceAction(db_session)
     result = action.get(rule_id=rule_id)
-    return TelegramChatWhitelistExternalSourceFDO.model_validate(result.model_dump())
+    return WhitelistRuleExternalFDO.model_validate(result.model_dump())
 
 
 @admin_chat_router.put("/{slug}/rules/whitelist-external/{rule_id}")
 async def update_chat_whitelist_external(
     slug: str,
     rule_id: int,
-    rule: UpdateTelegramChatWhitelistExternalSourceCPO,
+    rule: UpdateWhitelistRuleExternalCPO,
     db_session: Session = Depends(get_db_session),
-) -> TelegramChatWhitelistExternalSourceFDO:
+) -> WhitelistRuleExternalFDO:
     action = TelegramChatWhitelistExternalSourceAction(db_session)
     try:
         await action.update(
@@ -309,4 +312,4 @@ async def update_chat_whitelist_external(
         )
 
     result = action.get(rule_id=rule_id)
-    return TelegramChatWhitelistExternalSourceFDO.model_validate(result.model_dump())
+    return WhitelistRuleExternalFDO.model_validate(result.model_dump())

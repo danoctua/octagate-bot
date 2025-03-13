@@ -4,11 +4,11 @@ from collections import defaultdict
 from sqlalchemy.orm import Session
 
 from core.actions.base import BaseAction
-from core.dtos.chat import (
-    TelegramChatEligibilitySummaryDTO,
-    TelegramChatEligibilityRulesDTO,
-    TelegramChatEligibilityItemDTO,
+from core.dtos.chat.rules import (
     EligibilityCheckType,
+    TelegramChatEligibilityRulesDTO,
+    RuleEligibilityItemDTO,
+    RuleEligibilitySummaryDTO,
 )
 from core.models.user import User
 from core.models.wallet import JettonWallet
@@ -58,7 +58,7 @@ class AuthorizationAction(BaseAction):
 
     def is_user_eligible_chat_member(
         self, user_id: int, chat_id: int
-    ) -> TelegramChatEligibilitySummaryDTO:
+    ) -> RuleEligibilitySummaryDTO:
         """
         Check if user is eligible to be a chat member
         :param user_id:
@@ -181,7 +181,7 @@ class AuthorizationAction(BaseAction):
         user_jettons: list[JettonWallet],
         user_nft_items: list[NftItem],
         chat_member: TelegramChatUser | None = None,
-    ) -> TelegramChatEligibilitySummaryDTO:
+    ) -> RuleEligibilitySummaryDTO:
         """
         The rule is to have all required jetton balance OR all NFT items from the required collections
 
@@ -200,7 +200,7 @@ class AuthorizationAction(BaseAction):
         # Check if the user has all required jetton balances
         items.extend(
             [
-                TelegramChatEligibilityItemDTO(
+                RuleEligibilityItemDTO(
                     id=jetton.id,
                     category=EligibilityCheckType.JETTON,
                     expected=jetton.threshold,
@@ -223,7 +223,7 @@ class AuthorizationAction(BaseAction):
         # Check if the user has all required NFT items
         items.extend(
             [
-                TelegramChatEligibilityItemDTO(
+                RuleEligibilityItemDTO(
                     id=nft_collection.id,
                     category=EligibilityCheckType.NFT_COLLECTION,
                     expected=nft_collection.threshold,
@@ -244,7 +244,7 @@ class AuthorizationAction(BaseAction):
         )
         items.extend(
             [
-                TelegramChatEligibilityItemDTO(
+                RuleEligibilityItemDTO(
                     id=external_source.id,
                     category=EligibilityCheckType.EXTERNAL_SOURCE,
                     expected=1,
@@ -257,7 +257,7 @@ class AuthorizationAction(BaseAction):
         )
         items.extend(
             [
-                TelegramChatEligibilityItemDTO(
+                RuleEligibilityItemDTO(
                     id=whitelist_group.id,
                     category=EligibilityCheckType.WHITELIST,
                     expected=1,
@@ -268,7 +268,7 @@ class AuthorizationAction(BaseAction):
                 for whitelist_group in eligibility_rules.whitelist_sources
             ]
         )
-        return TelegramChatEligibilitySummaryDTO(
+        return RuleEligibilitySummaryDTO(
             items=items, is_admin=bool(chat_member and chat_member.is_admin)
         )
 

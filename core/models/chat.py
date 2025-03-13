@@ -85,6 +85,11 @@ class TelegramChatNFTCollection(TelegramChatRuleBase):
     address = mapped_column(
         ForeignKey("nft_collection.address", ondelete="CASCADE"), nullable=False
     )
+    required_attributes = mapped_column(
+        JSON,
+        nullable=True,
+        doc="List of required attributes to hold, e.g. `[{'rarity': 'legendary'}, {'type': 'weapon'}]`",
+    )
 
     nft_collection = relationship(
         "NFTCollection",

@@ -1,6 +1,6 @@
 'use client';
 
-import React, {FC, PropsWithChildren, useCallback} from "react";
+import React, {FC, PropsWithChildren, useCallback, useState} from "react";
 import useJettonsData from "@/hooks/data/useJettonsData";
 import useChatJettonRuleData from "@/hooks/data/useChatJettonRuleData";
 import {useRouter} from "next/navigation";
@@ -22,6 +22,7 @@ const JettonRule: FC<PropsWithChildren<{
         ruleId: ruleId
     })
     const router = useRouter();
+    const [ selectedAddress, setSelectedAddress ] = useState<string>("")
 
 
     const onSaveButtonClick = useCallback(
@@ -44,6 +45,8 @@ const JettonRule: FC<PropsWithChildren<{
             isLoading={isChatJettonRuleLoading}
             onSave={onSaveButtonClick}
             entity={chatJettonRuleData}
+            selectedAddress={selectedAddress}
+            setSelectedAddress={setSelectedAddress}
         />
     )
 }

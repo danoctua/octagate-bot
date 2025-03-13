@@ -183,6 +183,8 @@ class TonApiService:
                 # When partial - break after first batch
                 break
 
+            batch_idx += 1
+
         return NftCollectionMetadataDTO.from_items_metadata(
             items_metadata=items_metadata
         )

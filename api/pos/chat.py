@@ -13,15 +13,18 @@ from pytonapi.utils import to_nano, userfriendly_to_raw, to_amount
 
 from api.pos.base import BaseFDO
 from core.dtos.chat import (
-    BaseTelegramChatEligibilityRuleDTO,
-    EligibilityCheckType,
     BaseTelegramChatDTO,
     TelegramChatDTO,
-    TelegramChatWithRulesDTO,
-    TelegramChatEligibilityRuleDTO,
-    TelegramChatWhitelistDTO,
-    TelegramChatWhitelistExternalSourceDTO,
 )
+from core.dtos.chat.rules import (
+    EligibilityCheckType,
+    BaseRuleEligibilityDTO,
+    RuleEligibilityDTO,
+    TelegramChatWithRulesDTO,
+)
+from core.dtos.chat.rules.whitelist import WhitelistRuleDTO, WhitelistRuleExternalDTO
+from core.dtos.chat.rules.nft import NftRuleEligibilityDTO
+from core.dtos.resource import NftItemAttributeDTO
 
 CHAT_INPUT_REGEX = re.compile(
     r"^(?P<chat_id>-?\d+(\.\d+)?)|^(https:\/\/t\.me\/(?P<username>[a-zA-Z0-9_]{4,32}))$"
@@ -80,11 +83,26 @@ class TelegramChatJettonRuleCPO(BaseTelegramChatRuleCPO):
         return to_nano(v)
 
 
-class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatRuleCPO):
+class NftItemAttributeFDO(BaseFDO, NftItemAttributeDTO):
     ...
 
 
-class BaseTelegramChatEligibilityRuleFDO(BaseFDO, BaseTelegramChatEligibilityRuleDTO):
+class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatRuleCPO):
+    required_attributes: list[NftItemAttributeFDO] | None = None
+
+
+class BaseRuleEligibilityFDO(BaseFDO, BaseRuleEligibilityDTO):
+    @field_serializer("expected", return_type=float | int)
+    def preprocess_expected(self, v: int) -> float | int:
+        if not v or self.category != EligibilityCheckType.JETTON:
+            return v
+
+        return to_amount(v)
+
+
+class NFTRuleEligibilityFDO(BaseFDO, NftRuleEligibilityDTO):
+    required_attributes: list[NftItemAttributeFDO] | None
+
     @field_serializer("expected", return_type=float | int)
     def preprocess_expected(self, v: int) -> float | int:
         if not v or self.category != EligibilityCheckType.JETTON:
@@ -95,20 +113,25 @@ class BaseTelegramChatEligibilityRuleFDO(BaseFDO, BaseTelegramChatEligibilityRul
 
 class TelegramChatWithRulesFDO(BaseFDO):
     chat: TelegramChatFDO
-    rules: list[BaseTelegramChatEligibilityRuleFDO]
+    rules: list[BaseRuleEligibilityFDO | NFTRuleEligibilityFDO]
 
     @classmethod
     def from_dto(cls, dto: TelegramChatWithRulesDTO) -> Self:
+        mapping = {
+            EligibilityCheckType.NFT_COLLECTION: NFTRuleEligibilityFDO,
+        }
         return cls(
             chat=TelegramChatFDO.model_validate(dto.chat.model_dump()),
             rules=[
-                BaseTelegramChatEligibilityRuleFDO.model_validate(rule.model_dump())
+                mapping.get(rule.category, BaseRuleEligibilityFDO).model_validate(
+                    rule.model_dump()
+                )
                 for rule in dto.rules
             ],
         )
 
 
-class TelegramChatEligibilityRuleFDO(BaseFDO, TelegramChatEligibilityRuleDTO):
+class RuleEligibilityFDO(BaseFDO, RuleEligibilityDTO):
     @field_serializer("expected", return_type=float | int)
     def preprocess_expected(self, v: int) -> float | int:
         if not v or self.category != EligibilityCheckType.JETTON:
@@ -124,47 +147,43 @@ class TelegramChatWithEligibilityRulesFDO(BaseFDO):
     """
 
     chat: TelegramChatFDO
-    rules: list[TelegramChatEligibilityRuleFDO]
+    rules: list[RuleEligibilityFDO]
 
     @classmethod
     def from_dto(cls, dto: TelegramChatWithRulesDTO) -> Self:
         return cls(
             chat=TelegramChatFDO.model_validate(dto.chat.model_dump()),
             rules=[
-                TelegramChatEligibilityRuleFDO.model_validate(rule.model_dump())
+                RuleEligibilityFDO.model_validate(rule.model_dump())
                 for rule in dto.rules
             ],
         )
 
 
-class CreateTelegramChatWhitelistBaseCPO(BaseFDO):
+class CreateWhitelistRuleBaseCPO(BaseFDO):
     name: Annotated[str, Field(min_length=1, max_length=255)]
     description: Annotated[str | None, Field(min_length=0, max_length=255)] = None
 
 
-class CreateTelegramChatWhitelistCPO(CreateTelegramChatWhitelistBaseCPO):
+class CreateWhitelistRuleCPO(CreateWhitelistRuleBaseCPO):
     users: list[int]
 
 
-class CreateTelegramChatWhitelistExternalSourceCPO(CreateTelegramChatWhitelistBaseCPO):
+class CreateWhitelistRuleExternalCPO(CreateWhitelistRuleBaseCPO):
     url: AnyHttpUrl
 
 
-class UpdateTelegramChatWhitelistCPO(CreateTelegramChatWhitelistCPO):
+class UpdateWhitelistRuleCPO(CreateWhitelistRuleCPO):
     is_enabled: bool
 
 
-class UpdateTelegramChatWhitelistExternalSourceCPO(
-    CreateTelegramChatWhitelistExternalSourceCPO
-):
+class UpdateWhitelistRuleExternalCPO(CreateWhitelistRuleExternalCPO):
     is_enabled: bool
 
 
-class TelegramChatWhitelistFDO(BaseFDO, TelegramChatWhitelistDTO):
+class WhitelistRuleFDO(BaseFDO, WhitelistRuleDTO):
     ...
 
 
-class TelegramChatWhitelistExternalSourceFDO(
-    BaseFDO, TelegramChatWhitelistExternalSourceDTO
-):
+class WhitelistRuleExternalFDO(BaseFDO, WhitelistRuleExternalDTO):
     ...

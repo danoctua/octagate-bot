@@ -1,11 +1,12 @@
 import {useState} from "react";
-import {INftCollection} from "@/interfaces";
+import {INftCollection, IStatusResponse} from "@/interfaces";
 import {useClientOnce} from "@/hooks/useClientOnce";
-import {createNftCollection, fetchNftCollection, updateNftCollection} from "@/services";
+import {createNftCollection, fetchNftCollection, refreshNftCollectionMetadata, updateNftCollection} from "@/services";
 
 const useNftCollectionData = (address?: string) => {
     const [nftCollection, setNftCollection] = useState<INftCollection | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(false);
+    const [isMetadataLoading, setIsMetadataLoading] = useState(false);
 
     useClientOnce(() => {
         if (!address) return;
@@ -36,7 +37,14 @@ const useNftCollectionData = (address?: string) => {
         ).finally(() => setIsLoading(false));
     }
 
-    return { nftCollection, isLoading, addNftCollection, toggleNftCollection };
+    const refreshMetadata = async (address: string): Promise<IStatusResponse> => {
+        setIsMetadataLoading(true);
+        return await refreshNftCollectionMetadata(address).then(
+            data => data
+        ).finally(() => setIsMetadataLoading(false));
+    }
+
+    return { nftCollection, isLoading, addNftCollection, toggleNftCollection, refreshMetadata, isMetadataLoading };
 }
 
 export default useNftCollectionData;

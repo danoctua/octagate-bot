@@ -10,3 +10,4 @@ alembic==1.14.1
 pydantic-settings==2.7.1
 pytonapi==0.4.3
 python-slugify==8.0.4
+gql[httpx]==3.6.0b4

@@ -3,7 +3,7 @@ import random
 from fastapi import APIRouter, HTTPException
 
 from api.pos.common import StatusFDO
-from core.dtos.chat import TelegramChatWhitelistCPO
+from core.dtos.chat.rules.whitelist import WhitelistRuleCPO
 from core.utils.task import wait_for_task
 
 system_router = APIRouter(prefix="/system")
@@ -25,7 +25,7 @@ async def get_task_status_status(
 
 
 @system_non_authenticated_router.get("/test-get-random-users-list")
-async def get_random_users_list() -> TelegramChatWhitelistCPO:
-    return TelegramChatWhitelistCPO(
+async def get_random_users_list() -> WhitelistRuleCPO:
+    return WhitelistRuleCPO(
         users=[random.randint(1234567, 23456789) for _ in range(10)]
     )

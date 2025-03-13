@@ -1,7 +1,7 @@
 'use client';
 
 
-import React, {FC, PropsWithChildren, useCallback, useEffect, useState} from "react";
+import React, {FC, PropsWithChildren, ReactNode, useCallback, useEffect, useState} from "react";
 import SelectableRule from "@/components/layout/Rule/SelectableRule/SelectableRule";
 import {Placeholder, Section, Skeleton} from "@telegram-apps/telegram-ui";
 import Image from "next/image";
@@ -12,11 +12,26 @@ const BlockchainRule: FC<PropsWithChildren<{
     title: string,
     category: "nfts" | "jettons",
     options: IJettonWithTitle[] | INftCollectionWithTitle[] | undefined,
+    selectedAddress: string,
+    setSelectedAddress: (address: string) => void,
     isLoading: boolean,
     entity?: IRule | null,
     onSave: (expected: number, address: string, isEnabled: boolean) => void
-}>> = ({title, category, options, entity, isLoading, onSave, children}) => {
-    const [selectedAddress, setSelectedAddress] = useState<string>(entity?.blockchainAddress || "")
+    children?: ReactNode
+    isChildValid?: boolean,
+}>> = (
+    {
+        title,
+        category,
+        options,
+        selectedAddress,
+        setSelectedAddress,
+        entity,
+        isLoading,
+        onSave,
+        children,
+        isChildValid = true
+    }) => {
     const [expected, setExpected] = useState(0)
 
     const [isEnabled, setIsEnabled] = useState<boolean>(false);
@@ -28,7 +43,7 @@ const BlockchainRule: FC<PropsWithChildren<{
         setExpected(entity.expected)
         setIsEnabled(entity.isEnabled)
         setIsFormValid(true)
-    }, [entity])
+    }, [entity, setSelectedAddress])
 
     useEffect(() => {
         setIsFormValid(selectedAddress !== "" && expected > 0);
@@ -79,9 +94,10 @@ const BlockchainRule: FC<PropsWithChildren<{
                         : <Skeleton/>
                 }
             </Section>
+            {children}
             <FixedBottomSection
                 text={"Save"}
-                disabled={!isFormValid}
+                disabled={!isFormValid || !isChildValid}
                 loading={isLoading}
                 onClick={onSaveButtonClick}
             />

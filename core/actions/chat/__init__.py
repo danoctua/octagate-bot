@@ -8,11 +8,15 @@ from telethon.utils import get_peer_id
 from core.dtos.chat import (
     BaseTelegramChatDTO,
     TelegramChatDTO,
+)
+from core.dtos.chat.rules import (
+    RuleEligibilityDTO,
     TelegramChatWithRulesDTO,
-    TelegramChatEligibilityRuleDTO,
+    TelegramChatWithEligibilitySummaryDTO,
 )
 from core.actions.authorization import AuthorizationAction
 from core.actions.base import BaseAction
+from core.dtos.chat.rules.nft import NftRuleEligibilityDTO
 from core.exceptions.chat import (
     TelegramChatNotSufficientPrivileges,
     TelegramChatAlreadyExists,
@@ -142,7 +146,7 @@ class TelegramChatAction(BaseAction):
 
     async def get_with_eligibility_summary(
         self, slug: str, user: User
-    ) -> TelegramChatWithRulesDTO:
+    ) -> TelegramChatWithEligibilitySummaryDTO:
         """
         This is non-administrative method to get chat with rules
         :param slug:
@@ -165,7 +169,7 @@ class TelegramChatAction(BaseAction):
         )
         is_eligible = bool(eligibility_summary)
 
-        return TelegramChatWithRulesDTO(
+        return TelegramChatWithEligibilitySummaryDTO(
             chat=TelegramChatDTO(
                 id=chat.id,
                 username=chat.username,
@@ -179,7 +183,7 @@ class TelegramChatAction(BaseAction):
                 is_eligible=is_eligible,
             ),
             rules=[
-                TelegramChatEligibilityRuleDTO(
+                RuleEligibilityDTO(
                     id=rule.id,
                     category=rule.category,
                     title=rule.title,
@@ -226,21 +230,19 @@ class TelegramChatAction(BaseAction):
             rules=sorted(
                 [
                     *(
-                        TelegramChatEligibilityRuleDTO.from_jetton_rule(rule)
+                        RuleEligibilityDTO.from_jetton_rule(rule)
                         for rule in eligibility_rules.jettons
                     ),
                     *(
-                        TelegramChatEligibilityRuleDTO.from_nft_collection_rule(rule)
+                        NftRuleEligibilityDTO.from_nft_collection_rule(rule)
                         for rule in eligibility_rules.nft_collections
                     ),
                     *(
-                        TelegramChatEligibilityRuleDTO.from_whitelist_rule(rule)
+                        RuleEligibilityDTO.from_whitelist_rule(rule)
                         for rule in eligibility_rules.whitelist_sources
                     ),
                     *(
-                        TelegramChatEligibilityRuleDTO.from_whitelist_external_rule(
-                            rule
-                        )
+                        RuleEligibilityDTO.from_whitelist_external_rule(rule)
                         for rule in eligibility_rules.whitelist_external_sources
                     ),
                 ],

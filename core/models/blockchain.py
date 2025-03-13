@@ -1,5 +1,5 @@
 from sqlalchemy import String, Boolean, DateTime, func, BigInteger, ForeignKey
-from sqlalchemy.dialects.mysql import TEXT
+from sqlalchemy.dialects.mysql import TEXT, JSON
 from sqlalchemy.orm import mapped_column, relationship
 
 from core.db import Base
@@ -35,6 +35,11 @@ class NFTCollection(Base):
     description = mapped_column(TEXT, nullable=True)
     logo_path = mapped_column(String(290), nullable=False)
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
+    blockchain_metadata = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Metadata of the collection, such as attributes, traits, etc.",
+    )
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     telegram_chat_nft_collections = relationship(
@@ -57,6 +62,11 @@ class NftItem(Base):
     collection_address = mapped_column(
         ForeignKey("nft_collection.address", ondelete="CASCADE"),
         nullable=False,
+    )
+    blockchain_metadata = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Metadata of the NFT, such as attributes, traits, etc.",
     )
     created_at = mapped_column(
         DateTime(timezone=True),

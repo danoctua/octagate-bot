@@ -2,6 +2,7 @@ from typing import Any, Set
 
 import redis
 
+from core.constants import ASYNC_TASK_REDIS_PREFIX
 from core.settings import core_settings
 
 
@@ -65,6 +66,19 @@ class RedisService:
 
     def delete(self, key: str) -> str:
         return self.client.delete(key)
+
+    def set_task_status(
+        self, task_id: str, status: str, ex=core_settings.redis_task_status_expiration
+    ) -> None:
+        self.set(f"{ASYNC_TASK_REDIS_PREFIX}:{task_id}", status, ex=ex)
+
+    def check_task_status(self, task_id: str) -> str:
+        return self.get(f"{ASYNC_TASK_REDIS_PREFIX}:{task_id}")
+
+    def pop_task_status(self, task_id: str) -> str:
+        status = self.check_task_status(task_id)
+        self.delete(f"{ASYNC_TASK_REDIS_PREFIX}:{task_id}")
+        return status
 
     def get_stream_items(self) -> dict[str, Any]:
         """

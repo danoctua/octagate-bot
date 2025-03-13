@@ -6,10 +6,10 @@ from sqlalchemy.orm import Session
 
 from core.actions.authorization import AuthorizationAction
 from core.actions.base import BaseAction
-from core.dtos.chat import (
-    TelegramChatWhitelistDifferenceDTO,
-    TelegramChatWhitelistExternalSourceDTO,
-    TelegramChatWhitelistDTO,
+from core.dtos.chat.rules.whitelist import (
+    WhitelistRuleItemsDifferenceDTO,
+    WhitelistRuleDTO,
+    WhitelistRuleExternalDTO,
 )
 from core.models.chat import TelegramChatWhitelistExternalSource
 from core.services.chat import TelegramChatService
@@ -36,13 +36,13 @@ class TelegramChatWhitelistExternalSourceAction(BaseAction):
             db_session
         )
 
-    def get(self, rule_id: int) -> TelegramChatWhitelistExternalSourceDTO:
+    def get(self, rule_id: int) -> WhitelistRuleExternalDTO:
         external_source = self.telegram_chat_external_source_service.get(rule_id)
-        return TelegramChatWhitelistExternalSourceDTO.from_orm(external_source)
+        return WhitelistRuleExternalDTO.from_orm(external_source)
 
     async def create(
         self, slug: str, external_source_url: str, name: str, description: str | None
-    ) -> TelegramChatWhitelistExternalSourceDTO:
+    ) -> WhitelistRuleExternalDTO:
         try:
             chat = self.telegram_chat_service.get_by_slug(slug)
         except NoResultFound:
@@ -64,7 +64,7 @@ class TelegramChatWhitelistExternalSourceAction(BaseAction):
             self.db_session.rollback()
             raise e
         # No need for a manual commit, as it's already done in the service during set_content
-        return TelegramChatWhitelistExternalSourceDTO.from_orm(external_source)
+        return WhitelistRuleExternalDTO.from_orm(external_source)
 
     async def update(
         self,
@@ -73,7 +73,7 @@ class TelegramChatWhitelistExternalSourceAction(BaseAction):
         name: str,
         description: str | None,
         is_enabled: bool,
-    ) -> TelegramChatWhitelistExternalSourceDTO:
+    ) -> WhitelistRuleExternalDTO:
         external_source = self.telegram_chat_external_source_service.update(
             rule_id=rule_id,
             external_source_url=external_source_url,
@@ -96,15 +96,15 @@ class TelegramChatWhitelistExternalSourceAction(BaseAction):
         else:
             self.db_session.commit()
 
-        return TelegramChatWhitelistExternalSourceDTO.from_orm(external_source)
+        return WhitelistRuleExternalDTO.from_orm(external_source)
 
     def _set_content(
         self, rule: TelegramChatWhitelistExternalSource, content: list[int]
-    ) -> TelegramChatWhitelistExternalSourceDTO:
+    ) -> WhitelistRuleExternalDTO:
         external_source = self.telegram_chat_external_source_service.set_content(
             rule=rule, content=content
         )
-        return TelegramChatWhitelistExternalSourceDTO.from_orm(external_source)
+        return WhitelistRuleExternalDTO.from_orm(external_source)
 
     async def _refresh_external_source(
         self,
@@ -129,7 +129,7 @@ class TelegramChatWhitelistExternalSourceAction(BaseAction):
                 raise
             return
 
-        difference = TelegramChatWhitelistDifferenceDTO(
+        difference = WhitelistRuleItemsDifferenceDTO(
             previous=source.content,
             current=result.users,
         )
@@ -162,13 +162,13 @@ class TelegramChatWhitelistAction(BaseAction):
         self.telegram_chat_user_service = TelegramChatUserService(db_session)
         self.telegram_chat_whitelist_service = TelegramChatWhitelistService(db_session)
 
-    def get(self, rule_id: int) -> TelegramChatWhitelistDTO:
+    def get(self, rule_id: int) -> WhitelistRuleDTO:
         whitelist = self.telegram_chat_whitelist_service.get(rule_id)
-        return TelegramChatWhitelistDTO.from_orm(whitelist)
+        return WhitelistRuleDTO.from_orm(whitelist)
 
     def create(
         self, slug: str, name: str, description: str | None = None
-    ) -> TelegramChatWhitelistDTO:
+    ) -> WhitelistRuleDTO:
         try:
             chat = self.telegram_chat_service.get_by_slug(slug)
         except NoResultFound:
@@ -178,27 +178,25 @@ class TelegramChatWhitelistAction(BaseAction):
             name=name,
             description=description,
         )
-        return TelegramChatWhitelistDTO.from_orm(whitelist)
+        return WhitelistRuleDTO.from_orm(whitelist)
 
     def update(
         self, rule_id: int, name: str, description: str | None, is_enabled: bool
-    ) -> TelegramChatWhitelistDTO:
+    ) -> WhitelistRuleDTO:
         whitelist = self.telegram_chat_whitelist_service.update(
             rule_id=rule_id,
             name=name,
             description=description,
             is_enabled=is_enabled,
         )
-        return TelegramChatWhitelistDTO.from_orm(whitelist)
+        return WhitelistRuleDTO.from_orm(whitelist)
 
-    async def set_content(
-        self, rule_id: int, content: list[int]
-    ) -> TelegramChatWhitelistDTO:
+    async def set_content(self, rule_id: int, content: list[int]) -> WhitelistRuleDTO:
         rule = self.telegram_chat_whitelist_service.get(rule_id)
         whitelist = self.telegram_chat_whitelist_service.set_content(
             rule=rule, content=content
         )
-        difference = TelegramChatWhitelistDifferenceDTO(
+        difference = WhitelistRuleItemsDifferenceDTO(
             previous=rule.content,
             current=content,
         )
@@ -213,7 +211,7 @@ class TelegramChatWhitelistAction(BaseAction):
             )
 
         logger.info(f"Whitelist {rule_id!r} updated successfully")
-        return TelegramChatWhitelistDTO.from_orm(whitelist)
+        return WhitelistRuleDTO.from_orm(whitelist)
 
     def delete(self, rule_id: int) -> None:
         self.telegram_chat_whitelist_service.delete(rule_id=rule_id)

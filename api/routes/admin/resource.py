@@ -18,6 +18,7 @@ from api.pos.blockchain import (
     JettonFDO,
     NftCollectionFDO,
 )
+from api.pos.common import StatusFDO
 from core.actions.jetton import JettonAction
 from core.actions.nft_collection import NftCollectionAction
 from core.services.jetton import JettonService
@@ -136,3 +137,17 @@ async def update_nft_collection(
         address_raw=address_raw, is_enabled=nft_collection_data.is_enabled
     )
     return NftCollectionFDO.model_validate(result.model_dump())
+
+
+@admin_resource_router.post("/nft-collections/{nft_collection_address}/metadata")
+async def refresh_nft_collection_metadata(
+    nft_collection_address: str,
+    db_session: Session = Depends(get_db_session),
+) -> StatusFDO:
+    nft_collection_action = NftCollectionAction(db_session)
+    address_raw = userfriendly_to_raw(nft_collection_address)
+    await nft_collection_action.refresh_metadata(address_raw)
+    return StatusFDO(
+        status="success",
+        message="Metadata refresh initiated. It could take some time",
+    )

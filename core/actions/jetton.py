@@ -9,8 +9,8 @@ from core.constants import JETTON_LOGO_SUB_PATH, DEFAULT_JETTON_LOGO_PATH
 from core.services.jetton import JettonService
 from core.services.wallet import WalletService
 from core.utils.file import download_media
-from wallet_indexer.indexers.tonapi import TonApiService
-from wallet_indexer.tasks.wallet import fetch_wallet_details
+from indexer.indexers.tonapi import TonApiService
+from indexer.tasks.wallet import fetch_wallet_details
 
 
 logger = logging.getLogger(__name__)

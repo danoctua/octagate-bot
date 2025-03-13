@@ -1,3 +1,8 @@
+export interface IStatusResponse {
+    status: string,
+    message: string,
+}
+
 export interface IBaseChat {
     id: number,
     username: string,
@@ -38,6 +43,22 @@ export interface IWhitelistRule {
     updatedAt: string,
 }
 
+
+export interface INftMetadata {
+    traitType: string,
+    value: string,
+}
+
+export interface INftMetadataInput extends INftMetadata {
+    currentValue: string,
+    error: string | null,
+}
+
+
+export interface INftCollectionRule extends IRule {
+    requiredAttributes: INftMetadata[],
+}
+
 export interface IExternalWhitelistRule extends IWhitelistRule {
     url: string,
 }
@@ -47,6 +68,7 @@ export interface IRuleEligibility extends IRule {
     actual?: number,
     isEligible: boolean,
 }
+
 
 export interface IChatConfiguration {
     chat: IChat,
@@ -71,6 +93,7 @@ export interface IJetton {
     symbol: string,
     logoPath?: string,
     isEnabled: boolean,
+    blockchainMetadata?: undefined
 }
 
 export interface IJettonWithTitle extends IJetton {
@@ -78,12 +101,19 @@ export interface IJettonWithTitle extends IJetton {
     subtitle?: string
 }
 
+
+export interface INFTCollectionMetadata {
+    attributes: {traitType: string, values: string[]}[],
+}
+
+
 export interface INftCollection {
     address: string,
     name: string,
     description?: string,
     logoPath?: string,
     isEnabled: boolean,
+    blockchainMetadata?: INFTCollectionMetadata
 }
 
 export interface INftCollectionWithTitle extends INftCollection {

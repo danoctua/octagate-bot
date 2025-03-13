@@ -1,6 +1,6 @@
 'use client';
 
-import React, {ChangeEvent, FC, PropsWithChildren, useCallback, useEffect, useMemo, useState} from "react";
+import React, {ChangeEvent, FC, PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState} from "react";
 import {Page} from "@/components/layout/Page";
 import Header from "@/components/ui/Header/Header";
 import {Cell, Info, Input, Section, Skeleton, Subheadline, Switch, Title} from "@telegram-apps/telegram-ui";
@@ -21,6 +21,7 @@ const ResourcePage: FC<PropsWithChildren<{
     resourceStaticPath: string
     resourceType: "NFT collection" | "jetton",
     onNewResourceCreated: (address: string) => void,
+    children?: ReactNode,
 }>> = ({
            inputAddress,
            resource,
@@ -30,12 +31,13 @@ const ResourcePage: FC<PropsWithChildren<{
            resourceStaticPath,
            resourceType,
            onNewResourceCreated,
+           children
        }) => {
     const [address, setAddress] = useState<string>(inputAddress || "");
     const [addressError, setAddressError] = useState<string | undefined>(undefined);
     const [isEnabled, setIsEnabled] = useState<boolean>(false);
     const [isFormValid, setIsFormValid] = useState<boolean>(false);
-
+    const [expandedId, setExpandedId] = useState<number | undefined>(undefined);
 
     useEffect(() => {
         if (!resource) return
@@ -125,55 +127,56 @@ const ResourcePage: FC<PropsWithChildren<{
     const renderForm = useMemo(
         () => {
             return (
-                <Section
-                    footer={
-                        addressError &&
-                        <Section.Footer className={"error"}>
-                            {addressError}
-                        </Section.Footer>
-                    }
-                >
-                    <Skeleton visible={isLoading}>
-                        <Input
-                            value={address}
-                            status={addressError ? "error" : "default"}
-                            placeholder={"EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT"}
-                            header={"Bounceable address"}
-                            readOnly={inputAddress !== undefined}
-                            disabled={inputAddress !== undefined}
-                            onChange={onAddressChange}
-                        />
-                        {resource && (
-                            <>
-                                <Input
-                                    value={resource.name}
-                                    header={"Name"}
-                                    readOnly
-                                    disabled
-                                />
-                                <Input
-                                    value={resource.description}
-                                    header={"Description"}
-                                    readOnly
-                                    disabled
-                                />
-                                <Cell
-                                    Component={"label"}
-                                    after={
-                                        <Switch
-                                            checked={isEnabled}
-                                            onChange={e => setIsEnabled(!isEnabled)}
-                                        />
-                                    }
-                                    description={`Whether ${resourceType} will be displayed in the list of available ${resourceType}s`}
-                                >
-                                    Is whitelisted
-                                </Cell>
-
-                            </>
-                        )}
-                    </Skeleton>
-                </Section>
+                <>
+                    <Section
+                        footer={
+                            addressError &&
+                            <Section.Footer className={"error"}>
+                                {addressError}
+                            </Section.Footer>
+                        }
+                    >
+                        <Skeleton visible={isLoading}>
+                            <Input
+                                value={address}
+                                status={addressError ? "error" : "default"}
+                                placeholder={"EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT"}
+                                header={"Bounceable address"}
+                                readOnly={inputAddress !== undefined}
+                                disabled={inputAddress !== undefined}
+                                onChange={onAddressChange}
+                            />
+                            {resource && (
+                                <>
+                                    <Input
+                                        value={resource.name}
+                                        header={"Name"}
+                                        readOnly
+                                        disabled
+                                    />
+                                    <Input
+                                        value={resource.description}
+                                        header={"Description"}
+                                        readOnly
+                                        disabled
+                                    />
+                                    <Cell
+                                        Component={"label"}
+                                        after={
+                                            <Switch
+                                                checked={isEnabled}
+                                                onChange={e => setIsEnabled(!isEnabled)}
+                                            />
+                                        }
+                                        description={`Whether ${resourceType} will be displayed in the list of available ${resourceType}s`}
+                                    >
+                                        Is whitelisted
+                                    </Cell>
+                                </>
+                            )}
+                        </Skeleton>
+                    </Section>
+                </>
             )
         }, [address, addressError, inputAddress, isEnabled, isLoading, onAddressChange, resource, resourceType]
     )
@@ -182,6 +185,7 @@ const ResourcePage: FC<PropsWithChildren<{
         <Page back>
             {renderHeader}
             {renderForm}
+            {children}
             <FixedBottomSection
                 text={"Save"}
                 disabled={!isFormValid}

@@ -10,6 +10,8 @@ CUSTOM_TITLE_TEMPLATE = "Whale #{rank}"
 
 DEFAULT_WALLET_TRACK_EXPIRATION = 60 * 60 * 24 * 365 * 10  # 10 years
 
+ASYNC_TASK_REDIS_PREFIX = "atask"
+
 # ------------------ Redis --------------------
 UPDATED_WALLETS_SET_NAME = "updated_wallets"
 DISCONNECTED_WALLETS_SET_NAME = "disconnected_wallets"
@@ -45,3 +47,7 @@ DEFAULT_AVATAR_PATH = DEFAULTS_PATH / "avatar.webp"
 REQUEST_TIMEOUT = 30
 CONNECT_TIMEOUT = 10
 READ_TIMEOUT = 30
+PROMOTE_JETTON_TEMPLATE = (
+    "https://app.ston.fi/swap?chartVisible=false&ft=TON&tt={jetton_master_address}"
+)
+PROMOTE_NFT_COLLECTION_TEMPLATE = "https://getgems.io/collection/{collection_address}"

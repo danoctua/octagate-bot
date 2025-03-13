@@ -3,9 +3,13 @@ from abc import ABC
 
 from sqlalchemy import desc
 
-from core.dtos.chat import (
-    CreateTelegramChatJettonRuleDTO,
+from core.dtos.chat.rules.nft import (
     CreateTelegramChatNFTCollectionRuleDTO,
+    UpdateTelegramChatNFTCollectionRuleDTO,
+)
+from core.dtos.chat.rules.jetton import (
+    CreateTelegramChatJettonRuleDTO,
+    UpdateTelegramChatJettonRuleDTO,
 )
 from core.models.chat import TelegramChatJetton, TelegramChatNFTCollection
 from core.services.base import BaseService
@@ -15,16 +19,18 @@ logger = logging.getLogger(__name__)
 
 
 TelegramChatRuleType = TelegramChatJetton | TelegramChatNFTCollection
-TelegramChatRuleDTOType = (
+CreateTelegramChatRuleDTOType = (
     CreateTelegramChatJettonRuleDTO | CreateTelegramChatNFTCollectionRuleDTO
+)
+UpdateTelegramChatRuleDTOType = (
+    UpdateTelegramChatJettonRuleDTO | UpdateTelegramChatNFTCollectionRuleDTO
 )
 
 
 class TelegramChatBlockchainRuleBaseService(BaseService, ABC):
     model: type[TelegramChatRuleType]
-    dto: type[CreateTelegramChatJettonRuleDTO]
 
-    def create(self, dto: TelegramChatRuleDTOType) -> TelegramChatRuleType:
+    def create(self, dto: CreateTelegramChatRuleDTOType) -> TelegramChatRuleType:
         new_rule = self.model(**dto.model_dump())
         self.db_session.add(new_rule)
         self.db_session.commit()
@@ -35,12 +41,13 @@ class TelegramChatBlockchainRuleBaseService(BaseService, ABC):
         return self.db_session.query(self.model).filter(self.model.id == id_).one()
 
     def update(
-        self, rule_id: int, address: str, threshold: int, is_enabled: bool
+        self,
+        rule_id: int,
+        dto: UpdateTelegramChatRuleDTOType,
     ) -> TelegramChatRuleType:
         rule = self.get(rule_id)
-        rule.address = address
-        rule.threshold = threshold
-        rule.is_enabled = is_enabled
+        for key, value in dto.model_dump().items():
+            setattr(rule, key, value)
         self.db_session.commit()
         logger.debug(f"{rule!r} updated.")
         return rule
@@ -61,9 +68,7 @@ class TelegramChatBlockchainRuleBaseService(BaseService, ABC):
 
 class TelegramChatJettonService(TelegramChatBlockchainRuleBaseService):
     model = TelegramChatJetton
-    dto = CreateTelegramChatJettonRuleDTO
 
 
 class TelegramChatNFTCollectionService(TelegramChatBlockchainRuleBaseService):
     model = TelegramChatNFTCollection
-    dto = CreateTelegramChatNFTCollectionRuleDTO
