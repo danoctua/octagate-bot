@@ -17,6 +17,7 @@ services:
       context: .
       dockerfile: backend.Dockerfile
       target: telegram-bot
+    image: octagate-telegram-bot
     env_file:
       - ./bot_ui/config/.env
       - ./core/config/.env
@@ -41,21 +42,21 @@ services:
     networks:
       - internal
 
-  wallet-indexer:
+  indexer:
     <<: *x-python-service
     build:
       context: .
       dockerfile: backend.Dockerfile
-      target: wallet-indexer
-    image: wallet-indexer
+      target: indexer
+    image: octagate-indexer
     env_file:
-      - ./wallet_indexer/config/.env
+      - indexer/config/.env
       - ./core/config/.env
     restart: on-failure
     command: [
       "celery",
       "-A",
-      "wallet_indexer.celery_app:app",
+      "indexer.celery_app:app",
       "worker",
       "-Q",
       "wallet-fetch-queue",
@@ -65,19 +66,19 @@ services:
       - WORKER_CONCURRENCY=8
     volumes:
       - ./core:/app/core
-      - ./wallet_indexer:/app/wallet_indexer
+      - ./indexer:/app/indexer
 
   load-noticed-wallets:
     <<: *x-python-service
-    image: wallet-indexer
+    image: octagate-indexer
     env_file:
-      - ./wallet_indexer/config/.env
+      - indexer/config/.env
       - ./core/config/.env
     restart: on-failure
     command: [
       "celery",
       "-A",
-      "wallet_indexer.celery_app:app",
+      "indexer.celery_app:app",
       "worker",
       "-Q",
       "noticed-wallets-upload-queue",
@@ -88,7 +89,7 @@ services:
       - LOAD_WALLETS=1
     volumes:
       - ./core:/app/core
-      - ./wallet_indexer:/app/wallet_indexer
+      - ./indexer:/app/indexer
 
   community-manager:
     <<: *x-python-service
@@ -96,6 +97,7 @@ services:
       context: .
       dockerfile: backend.Dockerfile
       target: community-manager
+    image: octagate-community-manager
     env_file:
       - ./community_manager/config/.env
       - ./core/config/.env
@@ -112,23 +114,25 @@ services:
       - ./community_manager:/app/community_manager
       - ./core:/app/core
 
-  community-manager-scheduler:
+  scheduler:
     <<: *x-python-service
     build:
       context: .
       dockerfile: backend.Dockerfile
-      target: community-manager
+      target: scheduler
+    image: octagate-scheduler
     env_file:
       - ./community_manager/config/.env
       - ./core/config/.env
     command: [
       "celery",
       "-A",
-      "community_manager.celery_app:app",
+      "scheduler.celery_app:app",
       "beat",
       "--loglevel=info"
     ]
     volumes:
+      - ./scheduler:/app/scheduler
       - ./community_manager:/app/community_manager
       - ./core:/app/core
 
@@ -138,6 +142,7 @@ services:
       context: .
       dockerfile: backend.Dockerfile
       target: api
+    image: octagate-api
     env_file:
       - ./api/config/.env
       - ./core/config/.env

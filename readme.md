@@ -7,7 +7,7 @@
 3. Make sure to copy and fill the templates for the following files:
 - `core/config/.env.template` to `core/config/.env`
 - `bot_ui/config/.env.template` to `bot_ui/config/.env`
-- `wallet_indexer/config/.env.template` to `wallet_indexer/config/.env`
+- `indexer/config/.env.template` to `indexer/config/.env`
 
 ## Installation
 To install and run the project, follow these steps:
@@ -86,7 +86,7 @@ To install and run the project, follow these steps:
   make setup
   ```
 
-- **setup-venv**: Installs the required Python packages for the project using pip. Requirements are defined in multiple `requirements.txt` files located in the `core`, `bot_ui`, and `wallet_indexer` directories.
+- **setup-venv**: Installs the required Python packages for the project using pip. Requirements are defined in multiple `requirements.txt` files located in the `core`, `bot_ui`, and `indexer` directories.
 
   ```bash
   make setup-venv

@@ -39,6 +39,7 @@ class CoreSettings(BaseSettings):
         case_sensitive=False,
         validate_default=True,
     )
+    redis_task_status_expiration: int = 300
 
     _blacklisted_wallets: list[str] | None = None
 
@@ -51,6 +52,8 @@ class CoreSettings(BaseSettings):
             self._blacklisted_wallets = f.read().splitlines()
 
         return self._blacklisted_wallets
+
+    beat_schedule_filename: str = "/tmp/celerybeat-schedule"
 
 
 core_settings = CoreSettings()

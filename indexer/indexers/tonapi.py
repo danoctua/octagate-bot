@@ -10,7 +10,8 @@ from pytonapi.exceptions import TONAPIInternalServerError
 from pytonapi.schema.jettons import JettonHolders, JettonsBalances, JettonInfo
 from pytonapi.schema.nft import NftItems, NftCollection
 
-from wallet_indexer.settings import wallet_indexer_settings
+from core.dtos.resource import NftItemMetadataDTO, NftCollectionMetadataDTO
+from indexer.settings import wallet_indexer_settings
 
 
 logger = logging.getLogger(__name__)
@@ -158,4 +159,30 @@ class TonApiService:
         """
         return await self._tonapi.nft.get_collection_by_collection_address(
             account_id=address
+        )
+
+    async def parse_nft_collection_metadata(
+        self, address: str, partial: bool = True
+    ) -> NftCollectionMetadataDTO:
+        """
+        Parse NFT collection metadata.
+
+        :param address: NFT address
+        :param partial: Partial parsing meaning that only first batch will be fetched and based on it metadata will be returned
+        :return: list of NFT collection attributes
+        """
+        items_metadata = []
+        batch_idx = 1
+        async for batch in self.get_all_nft_items(collection_address=address):
+            logger.info("Processing batch %d of %s", batch_idx, address)
+            nft_items = batch.nft_items
+            for item in nft_items:
+                items_metadata.append(NftItemMetadataDTO.from_nft_item(item))
+
+            if partial:
+                # When partial - break after first batch
+                break
+
+        return NftCollectionMetadataDTO.from_items_metadata(
+            items_metadata=items_metadata
         )

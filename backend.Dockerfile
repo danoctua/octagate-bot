@@ -17,7 +17,7 @@ COPY setup.cfg .
 
 RUN pip install -e .
 
-COPY wallet_indexer ./wallet_indexer
+COPY indexer ./indexer
 COPY core ./core
 
 # Stage 2: Build the telegram-bot image
@@ -28,11 +28,11 @@ RUN pip install -r requirements-bot-ui.txt
 
 COPY bot_ui ./bot_ui
 
-# Stage 3: Build the wallet-indexer image
-FROM octagate-base AS wallet-indexer
+# Stage 3: Build the indexer image
+FROM octagate-base AS indexer
 
-COPY wallet_indexer/requirements.txt requirements-wallet-indexer.txt
-RUN pip install -r requirements-wallet-indexer.txt
+COPY indexer/requirements.txt requirements-indexer.txt
+RUN pip install -r requirements-indexer.txt
 
 
 # Stage 4: Build the community-manager image
@@ -50,3 +50,8 @@ COPY api/requirements.txt requirements-api.txt
 RUN pip install -r requirements-api.txt
 
 COPY api ./api
+
+# Stage 6: Scheduler image
+FROM community-manager as scheduler
+
+COPY scheduler ./scheduler

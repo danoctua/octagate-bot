@@ -9,16 +9,16 @@ from core.constants import (
     CELERY_WALLET_FETCH_QUEUE_NAME,
     CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME,
 )
-from wallet_indexer.celery_app import (
+from indexer.celery_app import (
     app,
 )
-from wallet_indexer.indexers.tonapi import TonApiService
+from indexer.indexers.tonapi import TonApiService
 from core.services.db import DBService
 from core.services.jetton import JettonService
 from core.services.nft import NftCollectionService, NftItemService
 from core.services.superredis import RedisService
 from core.services.wallet import JettonWalletService
-from wallet_indexer.settings import wallet_indexer_settings
+from indexer.settings import wallet_indexer_settings
 
 logger = logging.getLogger(__name__)
 
@@ -92,9 +92,3 @@ def load_noticed_wallets():
     logger.info(f"Loading {len(noticed_wallets)} noticed wallets")
     for wallet in noticed_wallets:
         fetch_wallet_details.apply_async(args=(wallet,))
-
-    app.send_task(
-        "load-noticed-wallets",
-        queue=CELERY_NOTICED_WALLETS_UPLOAD_QUEUE_NAME,
-        countdown=3,
-    )
