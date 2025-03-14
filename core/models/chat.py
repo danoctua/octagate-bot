@@ -11,9 +11,11 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.mysql import JSON
-from sqlalchemy.orm import mapped_column, relationship
+from sqlalchemy.orm import mapped_column, relationship, Mapped
 
 from core.db import Base
+from core.dtos.base import NftItemAttributeDTO
+from core.models.fields import TelegramChatNftCollectionMetadataField
 
 
 class TelegramChat(Base):
@@ -85,8 +87,8 @@ class TelegramChatNFTCollection(TelegramChatRuleBase):
     address = mapped_column(
         ForeignKey("nft_collection.address", ondelete="CASCADE"), nullable=False
     )
-    required_attributes = mapped_column(
-        JSON,
+    required_attributes: Mapped[list[NftItemAttributeDTO]] = mapped_column(
+        TelegramChatNftCollectionMetadataField,
         nullable=True,
         doc="List of required attributes to hold, e.g. `[{'rarity': 'legendary'}, {'type': 'weapon'}]`",
     )

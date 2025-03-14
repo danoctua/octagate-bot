@@ -67,6 +67,7 @@ export interface IExternalWhitelistRule extends IWhitelistRule {
 export interface IRuleEligibility extends IRule {
     actual?: number,
     isEligible: boolean,
+    requiredAttributes?: INftMetadata[],
 }
 
 

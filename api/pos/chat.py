@@ -18,13 +18,16 @@ from core.dtos.chat import (
 )
 from core.dtos.chat.rules import (
     EligibilityCheckType,
-    BaseRuleEligibilityDTO,
-    RuleEligibilityDTO,
+    ChatEligibilityRuleDTO,
     TelegramChatWithRulesDTO,
 )
+from core.dtos.chat.rules.summary import (
+    RuleEligibilitySummaryDTO,
+    TelegramChatWithEligibilitySummaryDTO,
+)
 from core.dtos.chat.rules.whitelist import WhitelistRuleDTO, WhitelistRuleExternalDTO
-from core.dtos.chat.rules.nft import NftRuleEligibilityDTO
-from core.dtos.resource import NftItemAttributeDTO
+from core.dtos.chat.rules.nft import NftEligibilityRuleDTO, NftRuleEligibilitySummaryDTO
+from core.dtos.base import NftItemAttributeDTO
 
 CHAT_INPUT_REGEX = re.compile(
     r"^(?P<chat_id>-?\d+(\.\d+)?)|^(https:\/\/t\.me\/(?P<username>[a-zA-Z0-9_]{4,32}))$"
@@ -91,7 +94,7 @@ class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatRuleCPO):
     required_attributes: list[NftItemAttributeFDO] | None = None
 
 
-class BaseRuleEligibilityFDO(BaseFDO, BaseRuleEligibilityDTO):
+class ChatEligibilityRuleFDO(BaseFDO, ChatEligibilityRuleDTO):
     @field_serializer("expected", return_type=float | int)
     def preprocess_expected(self, v: int) -> float | int:
         if not v or self.category != EligibilityCheckType.JETTON:
@@ -100,30 +103,27 @@ class BaseRuleEligibilityFDO(BaseFDO, BaseRuleEligibilityDTO):
         return to_amount(v)
 
 
-class NFTRuleEligibilityFDO(BaseFDO, NftRuleEligibilityDTO):
+class NftEligibilityRuleFDO(BaseFDO, NftEligibilityRuleDTO):
     required_attributes: list[NftItemAttributeFDO] | None
 
-    @field_serializer("expected", return_type=float | int)
-    def preprocess_expected(self, v: int) -> float | int:
-        if not v or self.category != EligibilityCheckType.JETTON:
-            return v
 
-        return to_amount(v)
+class NftRuleEligibilitySummaryFDO(BaseFDO, NftRuleEligibilitySummaryDTO):
+    required_attributes: list[NftItemAttributeFDO] | None
 
 
 class TelegramChatWithRulesFDO(BaseFDO):
     chat: TelegramChatFDO
-    rules: list[BaseRuleEligibilityFDO | NFTRuleEligibilityFDO]
+    rules: list[ChatEligibilityRuleFDO | NftEligibilityRuleFDO]
 
     @classmethod
     def from_dto(cls, dto: TelegramChatWithRulesDTO) -> Self:
         mapping = {
-            EligibilityCheckType.NFT_COLLECTION: NFTRuleEligibilityFDO,
+            EligibilityCheckType.NFT_COLLECTION: NftEligibilityRuleFDO,
         }
         return cls(
             chat=TelegramChatFDO.model_validate(dto.chat.model_dump()),
             rules=[
-                mapping.get(rule.category, BaseRuleEligibilityFDO).model_validate(
+                mapping.get(rule.category, ChatEligibilityRuleFDO).model_validate(
                     rule.model_dump()
                 )
                 for rule in dto.rules
@@ -131,7 +131,7 @@ class TelegramChatWithRulesFDO(BaseFDO):
         )
 
 
-class RuleEligibilityFDO(BaseFDO, RuleEligibilityDTO):
+class RuleEligibilitySummaryFDO(BaseFDO, RuleEligibilitySummaryDTO):
     @field_serializer("expected", return_type=float | int)
     def preprocess_expected(self, v: int) -> float | int:
         if not v or self.category != EligibilityCheckType.JETTON:
@@ -140,21 +140,26 @@ class RuleEligibilityFDO(BaseFDO, RuleEligibilityDTO):
         return to_amount(v)
 
 
-class TelegramChatWithEligibilityRulesFDO(BaseFDO):
+class TelegramChatWithEligibilitySummaryFDO(BaseFDO):
     """
     Chat with eligibility rules. Returns not only chat and rules data,
     but whether user is eligible for chat
     """
 
     chat: TelegramChatFDO
-    rules: list[RuleEligibilityFDO]
+    rules: list[RuleEligibilitySummaryFDO | NftRuleEligibilitySummaryFDO]
 
     @classmethod
-    def from_dto(cls, dto: TelegramChatWithRulesDTO) -> Self:
+    def from_dto(cls, dto: TelegramChatWithEligibilitySummaryDTO) -> Self:
+        mapping = {
+            EligibilityCheckType.NFT_COLLECTION: NftRuleEligibilitySummaryFDO,
+        }
         return cls(
             chat=TelegramChatFDO.model_validate(dto.chat.model_dump()),
             rules=[
-                RuleEligibilityFDO.model_validate(rule.model_dump())
+                mapping.get(rule.category, RuleEligibilitySummaryFDO).model_validate(
+                    rule.model_dump()
+                )
                 for rule in dto.rules
             ],
         )

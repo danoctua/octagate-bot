@@ -8,7 +8,6 @@ from core.constants import PROMOTE_JETTON_TEMPLATE, PROMOTE_NFT_COLLECTION_TEMPL
 from core.dtos.chat import TelegramChatDTO
 from core.models.chat import TelegramChatJetton, TelegramChatNFTCollection
 from core.models.chat import TelegramChatWhitelistExternalSource, TelegramChatWhitelist
-from core.utils.number import human_friendly_number
 
 
 class EligibilityCheckType(enum.Enum):
@@ -26,71 +25,13 @@ class TelegramChatEligibilityRulesDTO:
     whitelist_sources: list[TelegramChatWhitelist]
 
 
-class RuleEligibilityItemDTO(BaseModel):
-    """
-    Used for internal purposes to check if chat is eligible for promotion
-    """
-
-    id: int
-    category: EligibilityCheckType
-    title: str
-    address_raw: str | None = None  # required for blockchain rules only
-    current: float | int = 0.0
-    expected: float | int
-    is_enabled: bool
-
-    @property
-    def address(self):
-        if not self.address_raw:
-            return None
-        return raw_to_userfriendly(self.address_raw)
-
-    @property
-    def is_eligible(self):
-        return self.current >= self.expected
-
-    @property
-    def current_human_friendly(self) -> str:
-        # TODO deprecate
-        return human_friendly_number(self.current)
-
-    @property
-    def expected_human_friendly(self) -> str:
-        return human_friendly_number(self.expected)
-
-    def __repr__(self):
-        return (
-            f"<{self.__class__.__name__} "
-            f"{self.category=} "
-            f"{self.title=} "
-            f"{self.address=} "
-            f"{self.current=} "
-            f"{self.expected=}>"
-        )
-
-
-class RuleEligibilitySummaryDTO(BaseModel):
-    """
-    Used for internal purposes to check if chat is eligible for promotion
-    """
-
-    items: list[RuleEligibilityItemDTO]
-    is_admin: bool
-
-    def __bool__(self):
-        return any(item.is_eligible for item in self.items)
-
-    def __repr__(self):
-        return f"<{self.__class__.__name__} ({self.items=}) {self.is_admin=}>"
-
-
-class BaseRuleEligibilityDTO(BaseModel):
+class ChatEligibilityRuleDTO(BaseModel):
     id: int
     category: EligibilityCheckType
     title: str
     expected: int
-    photo_url: str | None
-    blockchain_address: str | None
+    photo_url: str | None = None
+    blockchain_address: str | None = None
     is_enabled: bool
 
     @computed_field
@@ -144,16 +85,6 @@ class BaseRuleEligibilityDTO(BaseModel):
         )
 
 
-class RuleEligibilityDTO(BaseRuleEligibilityDTO):
-    actual: float | None = None
-    is_eligible: bool = False
-
-
 class TelegramChatWithRulesDTO(BaseModel):
     chat: TelegramChatDTO
-    rules: list[BaseRuleEligibilityDTO]
-
-
-class TelegramChatWithEligibilitySummaryDTO(BaseModel):
-    chat: TelegramChatDTO
-    rules: list[RuleEligibilityDTO]
+    rules: list[ChatEligibilityRuleDTO]

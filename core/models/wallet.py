@@ -5,14 +5,14 @@ from sqlalchemy.orm import mapped_column
 
 from core.constants import DEFAULT_WALLET_BALANCE
 from core.db import Base
-from core.models.fields import BLOCKCHAIN_ADDRESS_RAW
+from core.models.fields import BlockchainAddressRawField
 from core.utils.number import human_friendly_number
 
 
 class UserWallet(Base):
     __tablename__ = "user_wallet"
 
-    address = mapped_column(BLOCKCHAIN_ADDRESS_RAW, primary_key=True)
+    address = mapped_column(BlockchainAddressRawField, primary_key=True)
     user_id = mapped_column(ForeignKey("user.id"), unique=True, nullable=False)
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -32,7 +32,7 @@ class UserWallet(Base):
 class JettonWallet(Base):
     __tablename__ = "jetton_wallet"
 
-    address = mapped_column(BLOCKCHAIN_ADDRESS_RAW, primary_key=True)
+    address = mapped_column(BlockchainAddressRawField, primary_key=True)
     jetton_master_address = mapped_column(
         ForeignKey("jetton.address", ondelete="CASCADE"),
         nullable=False,

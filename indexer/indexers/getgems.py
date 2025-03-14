@@ -3,7 +3,8 @@ from pathlib import Path
 from gql import Client
 from gql.transport.httpx import HTTPXAsyncTransport
 
-from core.dtos.resource import NftCollectionDTO, NftCollectionAttributeDTO
+from core.dtos.resource import NftCollectionDTO
+from core.dtos.base import NftCollectionAttributeDTO
 from indexer.utils.graphql import get_gql_by_name
 
 transport = HTTPXAsyncTransport(url="https://api.getgems.io/graphql")

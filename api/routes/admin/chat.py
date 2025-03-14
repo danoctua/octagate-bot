@@ -8,7 +8,7 @@ from api.pos.chat import (
     TelegramChatJettonRuleCPO,
     AddChatCPO,
     TelegramChatNFTCollectionRuleCPO,
-    BaseRuleEligibilityFDO,
+    ChatEligibilityRuleFDO,
     BaseTelegramChatFDO,
     TelegramChatWithRulesFDO,
     CreateWhitelistRuleCPO,
@@ -18,7 +18,7 @@ from api.pos.chat import (
     CreateWhitelistRuleExternalCPO,
     UpdateWhitelistRuleExternalCPO,
     EditChatCPO,
-    NFTRuleEligibilityFDO,
+    NftEligibilityRuleFDO,
 )
 from core.actions.chat.rule.whitelist import (
     TelegramChatWhitelistAction,
@@ -120,9 +120,9 @@ async def get_chat_jetton_rule(
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
-) -> BaseRuleEligibilityFDO:
+) -> ChatEligibilityRuleFDO:
     telegram_chat_jetton_action = TelegramChatJettonAction(db_session)
-    return BaseRuleEligibilityFDO.model_validate(
+    return ChatEligibilityRuleFDO.model_validate(
         telegram_chat_jetton_action.read(rule_id=rule_id).model_dump()
     )
 
@@ -132,9 +132,9 @@ async def add_chat_jetton_rule(
     slug: str,
     rule: TelegramChatJettonRuleCPO,
     db_session: Session = Depends(get_db_session),
-) -> BaseRuleEligibilityFDO:
+) -> ChatEligibilityRuleFDO:
     action = TelegramChatJettonAction(db_session)
-    return BaseRuleEligibilityFDO.model_validate(
+    return ChatEligibilityRuleFDO.model_validate(
         action.create(
             slug=slug,
             address_raw=rule.address,
@@ -149,9 +149,9 @@ async def update_chat_jetton_rule(
     rule_id: int,
     rule: TelegramChatJettonRuleCPO,
     db_session: Session = Depends(get_db_session),
-) -> BaseRuleEligibilityFDO:
+) -> ChatEligibilityRuleFDO:
     action = TelegramChatJettonAction(db_session)
-    return BaseRuleEligibilityFDO.model_validate(
+    return ChatEligibilityRuleFDO.model_validate(
         action.update(
             rule_id=rule_id,
             address_raw=rule.address,
@@ -166,9 +166,9 @@ async def get_chat_nft_collection_rule(
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
-) -> NFTRuleEligibilityFDO:
+) -> NftEligibilityRuleFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return NFTRuleEligibilityFDO.model_validate(
+    return NftEligibilityRuleFDO.model_validate(
         action.read(rule_id=rule_id).model_dump()
     )
 
@@ -178,9 +178,9 @@ async def add_chat_nft_collection_rule(
     slug: str,
     rule: TelegramChatNFTCollectionRuleCPO,
     db_session: Session = Depends(get_db_session),
-) -> NFTRuleEligibilityFDO:
+) -> NftEligibilityRuleFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return NFTRuleEligibilityFDO.model_validate(
+    return NftEligibilityRuleFDO.model_validate(
         action.create(
             slug=slug,
             address_raw=rule.address,
@@ -196,9 +196,9 @@ async def update_chat_nft_collection_rule(
     rule_id: int,
     rule: TelegramChatNFTCollectionRuleCPO,
     db_session: Session = Depends(get_db_session),
-) -> NFTRuleEligibilityFDO:
+) -> NftEligibilityRuleFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return NFTRuleEligibilityFDO.model_validate(
+    return NftEligibilityRuleFDO.model_validate(
         action.update(
             rule_id=rule_id,
             address_raw=rule.address,

@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from pytonapi.utils import raw_to_userfriendly
 
-from core.dtos.chat.rules import EligibilityCheckType, BaseRuleEligibilityDTO
-from core.dtos.resource import NftItemAttributeDTO
+from core.dtos.chat.rules import EligibilityCheckType, ChatEligibilityRuleDTO
+from core.dtos.base import NftItemAttributeDTO
 from core.models.chat import TelegramChatNFTCollection
 
 
@@ -21,7 +21,7 @@ class UpdateTelegramChatNFTCollectionRuleDTO(BaseTelegramChatNFTCollectionRuleDT
     ...
 
 
-class NftRuleEligibilityDTO(BaseRuleEligibilityDTO):
+class NftEligibilityRuleDTO(ChatEligibilityRuleDTO):
     required_attributes: list[NftItemAttributeDTO] | None
 
     @classmethod
@@ -46,3 +46,8 @@ class NftRuleEligibilityDTO(BaseRuleEligibilityDTO):
             if nft_collection_rule.required_attributes
             else None,
         )
+
+
+class NftRuleEligibilitySummaryDTO(NftEligibilityRuleDTO):
+    actual: float | None = None
+    is_eligible: bool = False

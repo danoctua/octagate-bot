@@ -11,10 +11,16 @@ const DisplayRuleItem = (
         rule: IRuleEligibility, readOnly: boolean, onClick?: () => void
     }
 ) => {
-    let title = ''
+    let title = '';
+    let subtitle = null;
 
     if (rule.category === "jetton" || rule.category === "nft_collection") {
         title = `Hold ${rule.expected} ${rule.title}`
+        if (rule.category === "nft_collection") {
+            subtitle = rule.requiredAttributes && rule.requiredAttributes.length > 0 ?
+                rule.requiredAttributes.map(attribute => `${attribute.traitType}: ${attribute.value}`).join(", ") :
+                null
+        }
     } else {
         title = rule.title
     }
@@ -58,6 +64,7 @@ const DisplayRuleItem = (
             after={after}
             onClick={onClick}
             style={rule.isEnabled ? undefined: {...defaultBeforeAfterStyle, textDecoration: "line-through"}}
+            subtitle={subtitle}
         >
             {title}
         </Cell>

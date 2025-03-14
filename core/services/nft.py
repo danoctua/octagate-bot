@@ -4,8 +4,8 @@ from pytonapi.schema.nft import NftCollection, NftItem as TONNftItem, NftItems
 from sqlalchemy import desc
 from sqlalchemy.exc import NoResultFound
 
-from core.dtos.resource import NftCollectionMetadataDTO, NftItemMetadataDTO
 from core.models.blockchain import NFTCollection, NftItem
+from core.dtos.resource import NftItemMetadataDTO, NftCollectionMetadataDTO
 from core.services.base import BaseService
 
 

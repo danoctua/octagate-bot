@@ -2,7 +2,8 @@ from pydantic import BaseModel, field_validator
 from pytonapi.utils import userfriendly_to_raw
 
 from api.pos.base import BaseFDO
-from core.dtos.resource import JettonDTO, NftCollectionDTO, NftCollectionAttributeDTO
+from core.dtos.resource import JettonDTO, NftCollectionDTO
+from core.dtos.base import NftCollectionAttributeDTO
 
 
 class JettonFDO(BaseFDO, JettonDTO):

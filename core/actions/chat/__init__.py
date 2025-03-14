@@ -10,13 +10,16 @@ from core.dtos.chat import (
     TelegramChatDTO,
 )
 from core.dtos.chat.rules import (
-    RuleEligibilityDTO,
     TelegramChatWithRulesDTO,
+    EligibilityCheckType,
+)
+from core.dtos.chat.rules.summary import (
+    RuleEligibilitySummaryDTO,
     TelegramChatWithEligibilitySummaryDTO,
 )
 from core.actions.authorization import AuthorizationAction
 from core.actions.base import BaseAction
-from core.dtos.chat.rules.nft import NftRuleEligibilityDTO
+from core.dtos.chat.rules.nft import NftEligibilityRuleDTO, NftRuleEligibilitySummaryDTO
 from core.exceptions.chat import (
     TelegramChatNotSufficientPrivileges,
     TelegramChatAlreadyExists,
@@ -169,6 +172,10 @@ class TelegramChatAction(BaseAction):
         )
         is_eligible = bool(eligibility_summary)
 
+        mapping = {
+            EligibilityCheckType.NFT_COLLECTION: NftRuleEligibilitySummaryDTO,
+        }
+
         return TelegramChatWithEligibilitySummaryDTO(
             chat=TelegramChatDTO(
                 id=chat.id,
@@ -183,16 +190,8 @@ class TelegramChatAction(BaseAction):
                 is_eligible=is_eligible,
             ),
             rules=[
-                RuleEligibilityDTO(
-                    id=rule.id,
-                    category=rule.category,
-                    title=rule.title,
-                    expected=rule.expected,
-                    actual=rule.current,
-                    is_eligible=rule.is_eligible,
-                    photo_url=None,
-                    blockchain_address=rule.address,
-                    is_enabled=rule.is_enabled,
+                mapping.get(rule.category, RuleEligibilitySummaryDTO).model_validate(
+                    rule.model_dump()
                 )
                 for rule in eligibility_summary.items
             ],
@@ -230,19 +229,19 @@ class TelegramChatAction(BaseAction):
             rules=sorted(
                 [
                     *(
-                        RuleEligibilityDTO.from_jetton_rule(rule)
+                        RuleEligibilitySummaryDTO.from_jetton_rule(rule)
                         for rule in eligibility_rules.jettons
                     ),
                     *(
-                        NftRuleEligibilityDTO.from_nft_collection_rule(rule)
+                        NftEligibilityRuleDTO.from_nft_collection_rule(rule)
                         for rule in eligibility_rules.nft_collections
                     ),
                     *(
-                        RuleEligibilityDTO.from_whitelist_rule(rule)
+                        RuleEligibilitySummaryDTO.from_whitelist_rule(rule)
                         for rule in eligibility_rules.whitelist_sources
                     ),
                     *(
-                        RuleEligibilityDTO.from_whitelist_external_rule(rule)
+                        RuleEligibilitySummaryDTO.from_whitelist_external_rule(rule)
                         for rule in eligibility_rules.whitelist_external_sources
                     ),
                 ],

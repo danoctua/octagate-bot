@@ -7,8 +7,10 @@ from core.actions.base import BaseAction
 from core.dtos.chat.rules import (
     EligibilityCheckType,
     TelegramChatEligibilityRulesDTO,
-    RuleEligibilityItemDTO,
-    RuleEligibilitySummaryDTO,
+)
+from core.dtos.chat.rules.summary import (
+    EligibilitySummaryInternalDTO,
+    RulesEligibilitySummaryInternalDTO,
 )
 from core.models.user import User
 from core.models.wallet import JettonWallet
@@ -30,6 +32,7 @@ from core.services.chat.user import TelegramChatUserService
 from core.services.nft import NftItemService
 from core.services.supertelethon import TelethonService
 from core.services.wallet import JettonWalletService
+from core.utils.nft import find_relevant_nft_items
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +61,7 @@ class AuthorizationAction(BaseAction):
 
     def is_user_eligible_chat_member(
         self, user_id: int, chat_id: int
-    ) -> RuleEligibilitySummaryDTO:
+    ) -> RulesEligibilitySummaryInternalDTO:
         """
         Check if user is eligible to be a chat member
         :param user_id:
@@ -181,7 +184,7 @@ class AuthorizationAction(BaseAction):
         user_jettons: list[JettonWallet],
         user_nft_items: list[NftItem],
         chat_member: TelegramChatUser | None = None,
-    ) -> RuleEligibilitySummaryDTO:
+    ) -> RulesEligibilitySummaryInternalDTO:
         """
         The rule is to have all required jetton balance OR all NFT items from the required collections
 
@@ -200,7 +203,7 @@ class AuthorizationAction(BaseAction):
         # Check if the user has all required jetton balances
         items.extend(
             [
-                RuleEligibilityItemDTO(
+                EligibilitySummaryInternalDTO(
                     id=jetton.id,
                     category=EligibilityCheckType.JETTON,
                     expected=jetton.threshold,
@@ -223,7 +226,7 @@ class AuthorizationAction(BaseAction):
         # Check if the user has all required NFT items
         items.extend(
             [
-                RuleEligibilityItemDTO(
+                EligibilitySummaryInternalDTO(
                     id=nft_collection.id,
                     category=EligibilityCheckType.NFT_COLLECTION,
                     expected=nft_collection.threshold,
@@ -231,20 +234,20 @@ class AuthorizationAction(BaseAction):
                     address_raw=nft_collection.address,
                     current=(
                         len(
-                            [
-                                nft_item.collection_address == nft_collection.address
-                                for nft_item in user_nft_items
-                            ]
+                            find_relevant_nft_items(
+                                rule=nft_collection, nft_items=user_nft_items
+                            )
                         )
                     ),
                     is_enabled=nft_collection.is_enabled,
+                    required_attributes=nft_collection.required_attributes,
                 )
                 for nft_collection in eligibility_rules.nft_collections
             ]
         )
         items.extend(
             [
-                RuleEligibilityItemDTO(
+                EligibilitySummaryInternalDTO(
                     id=external_source.id,
                     category=EligibilityCheckType.EXTERNAL_SOURCE,
                     expected=1,
@@ -257,7 +260,7 @@ class AuthorizationAction(BaseAction):
         )
         items.extend(
             [
-                RuleEligibilityItemDTO(
+                EligibilitySummaryInternalDTO(
                     id=whitelist_group.id,
                     category=EligibilityCheckType.WHITELIST,
                     expected=1,
@@ -268,7 +271,7 @@ class AuthorizationAction(BaseAction):
                 for whitelist_group in eligibility_rules.whitelist_sources
             ]
         )
-        return RuleEligibilitySummaryDTO(
+        return RulesEligibilitySummaryInternalDTO(
             items=items, is_admin=bool(chat_member and chat_member.is_admin)
         )
 

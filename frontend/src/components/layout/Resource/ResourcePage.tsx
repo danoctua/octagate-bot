@@ -148,18 +148,6 @@ const ResourcePage: FC<PropsWithChildren<{
                             />
                             {resource && (
                                 <>
-                                    <Input
-                                        value={resource.name}
-                                        header={"Name"}
-                                        readOnly
-                                        disabled
-                                    />
-                                    <Input
-                                        value={resource.description}
-                                        header={"Description"}
-                                        readOnly
-                                        disabled
-                                    />
                                     <Cell
                                         Component={"label"}
                                         after={
