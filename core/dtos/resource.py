@@ -74,7 +74,7 @@ class NftCollectionDTO(BaseModel):
     description: str | None
     logo_path: str | None
     is_enabled: bool
-    blockchain_metadata: NftCollectionMetadataDTO | None = None
+    blockchain_metadata: BaseNftCollectionMetadataDTO | None = None
 
     @classmethod
     def from_orm(cls, obj: NFTCollection) -> Self:
@@ -84,9 +84,5 @@ class NftCollectionDTO(BaseModel):
             description=obj.description,
             logo_path=obj.logo_path,
             is_enabled=obj.is_enabled,
-            blockchain_metadata=(
-                NftCollectionMetadataDTO.model_validate(obj.blockchain_metadata)
-                if obj.blockchain_metadata
-                else None
-            ),
+            blockchain_metadata=obj.blockchain_metadata,
         )

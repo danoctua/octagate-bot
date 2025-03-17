@@ -1,9 +1,9 @@
 import {useCallback, useState} from "react";
-import {fetchChatData} from "@/services";
-import {IChatConfiguration} from "@/interfaces";
+import {createChat, fetchChatData} from "@/services";
+import {IChat, IChatConfiguration} from "@/interfaces";
 
 
-const useChatData = (slug: string | undefined) => {
+const useChatData = (slug?: string | undefined) => {
     const [chat, setChat] = useState<IChatConfiguration | null>(null);
     const [isChatDataLoading, setIsChatDataLoading] = useState(false);
 
@@ -13,14 +13,23 @@ const useChatData = (slug: string | undefined) => {
         }
         setIsChatDataLoading(true);
         return await fetchChatData(slug).then((chatData: IChatConfiguration) => {
-            console.debug("Refreshing chat data", chatData);
             setChat(chatData);
-            setIsChatDataLoading(false);
             return chatData;
-        });
+        }).finally(() => setIsChatDataLoading(false));
     }, [slug])
 
-    return { chat, fetchChatData: refreshChatData, isChatDataLoading, setIsChatDataLoading };
+    const addChat = useCallback(async (chatIdentifier: string) => {
+        if (slug || !chatIdentifier) {
+            return
+        }
+
+        setIsChatDataLoading(true);
+        return await createChat({chatIdentifier}).then((chatData: IChat) => {
+            return chatData;
+        }).finally(() => setIsChatDataLoading(false));
+    }, [slug])
+
+    return { chat, fetchChatData: refreshChatData, isChatDataLoading, setIsChatDataLoading, addChat };
 }
 
 export default useChatData;

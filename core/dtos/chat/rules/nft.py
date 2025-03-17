@@ -38,8 +38,8 @@ class NftEligibilityRuleDTO(ChatEligibilityRuleDTO):
             is_enabled=nft_collection_rule.is_enabled,
             required_attributes=[
                 NftItemAttributeDTO(
-                    trait_type=attribute["trait_type"],
-                    value=attribute["value"],
+                    trait_type=attribute.trait_type,
+                    value=attribute.value,
                 )
                 for attribute in nft_collection_rule.required_attributes
             ]

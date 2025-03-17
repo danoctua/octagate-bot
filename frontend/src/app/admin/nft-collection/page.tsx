@@ -3,9 +3,9 @@
 import useNftCollectionsData from "@/hooks/data/useNftCollectionsData";
 import {useRouter} from "next/navigation";
 import {useMemo} from "react";
-import {ButtonCell, Cell, List, Section, Skeleton} from "@telegram-apps/telegram-ui";
+import {ButtonCell, Cell, Section, Skeleton, Title} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
-import {ChevronRight, CirclePlus} from "lucide-react";
+import {CirclePlus} from "lucide-react";
 import {Page} from "@/components/layout/Page";
 import Header from "@/components/ui/Header/Header";
 import Image from "next/image";
@@ -30,7 +30,6 @@ const NftCollectionsPage = () => {
                                         rounded
                                     />
                                 }
-                                after={<ChevronRight/>}
                                 subtitle={nftCollection.description}
                                 onClick={() => router.push(`/admin/nft-collection/${nftCollection.address}`)}
                                 key={nftCollection.address}
@@ -54,12 +53,11 @@ const NftCollectionsPage = () => {
         <Page back={true}>
             <Header>
                 <Image src={"/lock-chat.png"} alt={""} width={120} height={120}/>
+                <Title level={"1"} weight={"1"}>Manage Whitelisted NFT Collections</Title>
             </Header>
             <Section header={"NFT Collections"}>
                 <Skeleton visible={isNftCollectionsLoading}>
-                    <List>
-                        {renderNftCollections}
-                    </List>
+                    {renderNftCollections}
                 </Skeleton>
             </Section>
         </Page>

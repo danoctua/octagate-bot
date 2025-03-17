@@ -82,3 +82,9 @@ class TelegramChatService(BaseService):
         return (
             self.db_session.query(TelegramChat).filter(TelegramChat.slug == slug).one()
         )
+
+    def delete(self, chat_id: int) -> None:
+        chat = self.get(chat_id)
+        self.db_session.delete(chat)
+        self.db_session.commit()
+        logger.debug(f"Telegram Chat {chat.title!r} deleted.")

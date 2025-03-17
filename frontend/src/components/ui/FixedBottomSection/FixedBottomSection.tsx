@@ -1,5 +1,11 @@
-import React, {FC, PropsWithChildren} from "react";
-import {Button, Divider, FixedLayout} from "@telegram-apps/telegram-ui";
+'use client';
+
+
+import React, {FC, PropsWithChildren, ReactNode, useRef, useEffect} from "react";
+import {Button, Divider, FixedLayout, RootRenderer} from "@telegram-apps/telegram-ui";
+import {AlertTriangle, CheckCircle, Info} from "lucide-react";
+import useFlashMessages from "@/hooks/useFlashMessages";
+import {Snackbar} from "@/components/ui/Snackbar/Snackbar";
 
 
 export interface ButtonStateProps {
@@ -12,7 +18,7 @@ export interface ButtonStateProps {
 }
 
 
-const FixedBottomSection: FC<PropsWithChildren<ButtonStateProps>> = (
+export const FixedBottomButton: FC<PropsWithChildren<ButtonStateProps>> = (
     {
         text,
         mode = 'filled',
@@ -20,30 +26,89 @@ const FixedBottomSection: FC<PropsWithChildren<ButtonStateProps>> = (
         loading = false,
         disabled = false,
         size = "m",
-        children
     }
 ) => {
     return (
-        <FixedLayout value={"bottom"} style={{ background: "var(--tg-theme-secondary-bg-color)" }}>
-            <Divider/>
-            {children}
+        <Button
+            mode={mode}
+            loading={loading}
+            disabled={disabled}
+            size={size}
+            stretched
+            onClick={onClick}
+        >
+            {text}
+        </Button>
+    )
+}
+
+const FixedBottomSection: FC<PropsWithChildren<{
+    button?: ReactNode
+}>> = (
+    {
+        button,
+        children
+    }
+) => {
+
+    const {onMessageClose, messages} = useFlashMessages()
+    const fixedLayoutRef = useRef<HTMLDivElement>(null);
+    const [fixedLayoutHeight, setFixedLayoutHeight] = React.useState<number>(0);
+
+    useEffect(() => {
+        if (fixedLayoutRef.current) {
+            setFixedLayoutHeight(fixedLayoutRef.current.offsetHeight);
+        }
+    }, [button, children]);
+
+
+    const getSnackbarIcon = (type: "error" | "success" | "info" | undefined) => {
+        switch (type) {
+            case 'error':
+                return <AlertTriangle/>
+            case 'success':
+                return <CheckCircle/>
+            case 'info':
+                return <Info/>
+            default:
+                return undefined
+        }
+    }
+
+    return (
+        <>
             <div
-                style={{
-                    padding: "8px 16px"
-                }}
+                id={"custom-tweak-to-add-bottom-padding"}
+                style={{ height: `${fixedLayoutHeight + 10}px` }}
+            ></div>
+            <FixedLayout
+                className={(children || button) && "pb-1.5"}
+                value={"bottom"}
+                style={{background: "var(--tg-theme-secondary-bg-color)"}}
             >
-                <Button
-                    mode={mode}
-                    loading={loading}
-                    disabled={disabled}
-                    size={size}
-                    stretched
-                    onClick={onClick}
-                >
-                    {text}
-                </Button>
-            </div>
-        </FixedLayout>
+                <div ref={fixedLayoutRef}>
+                    {messages.length > 0 &&
+                        messages.map((message) => (
+                            <Snackbar
+                                key={message.id}
+                                onClose={() => onMessageClose(message.id)}
+                                duration={5000}
+                                before={getSnackbarIcon(message.type)}
+                            >
+                                {message.message}
+                            </Snackbar>
+                        ))
+                    }
+                    <Divider/>
+                    {children}
+                    {button &&
+                        <div className={"px-4 py-2"}>
+                            {button}
+                        </div>
+                    }
+                </div>
+            </FixedLayout>
+        </>
     )
 }
 

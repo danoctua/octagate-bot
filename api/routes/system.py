@@ -19,7 +19,7 @@ async def get_task_status_status(
         return StatusFDO(status="success", message="Task is completed successfully")
     else:
         raise HTTPException(
-            detail={"error": {"message": "Failed to complete the task"}},
+            detail="Failed to complete the task",
             status_code=502,
         )
 

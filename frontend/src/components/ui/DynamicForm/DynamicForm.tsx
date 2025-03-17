@@ -1,7 +1,7 @@
-import React, { PropsWithChildren, FC, useRef, useEffect, forwardRef, ChangeEvent } from 'react';
-import {List, ButtonCell, Input} from '@telegram-apps/telegram-ui';
-import { CirclePlus, X } from "lucide-react";
-import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
+import React, {PropsWithChildren, FC, useRef, useEffect, forwardRef, ChangeEvent} from 'react';
+import {Section, ButtonCell, Input} from '@telegram-apps/telegram-ui';
+import {CirclePlus, X} from "lucide-react";
+import FixedBottomSection, {FixedBottomButton} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 
 
 /**
@@ -58,33 +58,43 @@ const DynamicForm: FC<PropsWithChildren<{
 
     return (
         <>
-            <List>
+            <Section
+                footer={"List of valid non-negative Telegram IDs related to users to be whitelisted."}
+            >
                 {fields.map((field, index) => (
                     <div key={index}>
                         <InputWithRef
-                            ref={(el: HTMLInputElement) => { inputRefs.current[index] = el; }}
+                            ref={(el: HTMLInputElement) => {
+                                inputRefs.current[index] = el;
+                            }}
                             value={field.value}
                             status={field.status || "default"}
                             header={optionHeader && `${optionHeader} ${index + 1}`}
+                            placeholder={"Enter a Telegram ID"}
                             onKeyDown={(e: KeyboardEvent) => e.key === "Enter" && handleAddFieldWithFocus(index)}
                             onChange={(event: ChangeEvent<HTMLInputElement>) => handleInputChange(index, event)}
-                            after={<X color={"var(--tgui--secondary_hint_color)"} onClick={() => handleRemoveField(index)} />}
+                            after={<X color={"var(--tgui--secondary_hint_color)"}
+                                      onClick={() => handleRemoveField(index)}/>}
                         />
                     </div>
                 ))}
                 <ButtonCell
                     key={"--new"}
-                    before={<CirclePlus />}
+                    before={<CirclePlus/>}
                     onClick={() => handleAddFieldWithFocus()}
                 >
                     Add option
                 </ButtonCell>
-            </List>
+            </Section>
             <FixedBottomSection
-                text={"Save"}
-                disabled={!isFormValid}
-                loading={false}
-                onClick={handleSubmit}
+                button={
+                    <FixedBottomButton
+                        text={"Save"}
+                        disabled={!isFormValid}
+                        loading={false}
+                        onClick={handleSubmit}
+                    />
+                }
             />
         </>
     );

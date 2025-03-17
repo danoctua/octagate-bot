@@ -1,6 +1,6 @@
-import {ButtonCell, Cell, Input, List, Section, Selectable, Switch} from "@telegram-apps/telegram-ui";
+import {ButtonCell, Cell, Info, Input, List, Section, Selectable, Switch} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
-import {IJetton, IJettonWithTitle, INftCollection, INftCollectionWithTitle} from "@/interfaces";
+import {IJettonWithTitle, INftCollectionWithTitle} from "@/interfaces";
 import React, {useMemo, useState} from "react";
 import {ChevronDown, ChevronUp} from "lucide-react";
 
@@ -96,13 +96,16 @@ const SelectableRule = (
                 </ButtonCell>
             )
         }
-        return <List>{options}</List>
+        return options
     }, [category, displayedOptions, items, onSelect, selectedOption, showAll])
 
     return (
-        <div style={{padding: "16px 0"}}>
+        <>
             <Input
+                className={"text-end"}
                 header={"Required amount"}
+                before={<Info type={"text"} className={"whitespace-nowrap"}>Required amount</Info>}
+                after={<Info type={"text"} className={"whitespace-nowrap"}>{category}</Info>}
                 type={"number"}
                 value={expected}
                 onChange={(event) => onExpectedChange(parseInt(event.target.value))}
@@ -132,7 +135,7 @@ const SelectableRule = (
                 }
                 <Cell
                     Component={"label"}
-                    after={<Switch defaultChecked/>}
+                    after={<Switch checked onChange={() => {}}/>}
                     disabled
                     multiline
                     description={"Whether that rule grants write access to the chat"}
@@ -141,7 +144,7 @@ const SelectableRule = (
                 </Cell>
 
             </Section>
-        </div>
+        </>
     )
 }
 

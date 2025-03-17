@@ -3,6 +3,7 @@ import logging
 import sqlalchemy
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
+from telethon.errors import BadRequestError
 from telethon.utils import get_peer_id
 
 from core.dtos.chat import (
@@ -52,7 +53,7 @@ class TelegramChatAction(BaseAction):
 
         try:
             chat = await telethon_service.get_chat(chat_identifier)
-        except ValueError as e:
+        except (ValueError, BadRequestError) as e:
             logger.error(f"Chat {chat_identifier!r} not found", exc_info=e)
             raise TelegramChatNotExists(f"Chat {chat_identifier!r} not found")
 
@@ -248,3 +249,12 @@ class TelegramChatAction(BaseAction):
                 key=lambda rule: (not rule.is_enabled, rule.category.value, rule.title),
             ),
         )
+
+    async def delete(self, slug: str) -> None:
+        try:
+            chat = self.telegram_chat_service.get_by_slug(slug)
+        except NoResultFound:
+            logger.error(f"Chat with slug {slug!r} not found")
+            raise TelegramChatNotExists(f"Chat with slug {slug!r} not found")
+        self.telegram_chat_service.delete(chat.id)
+        return None

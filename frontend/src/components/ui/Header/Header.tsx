@@ -3,15 +3,7 @@ import React, {FC, PropsWithChildren} from "react";
 
 const Header: FC<PropsWithChildren<{}>> = ({children}) => {
     return (
-        <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            padding: "40px 16px",
-            gap: 12,
-            textAlign: "center"
-        }}>
+        <div className={"flex items-center justify-center flex-col py-4 gap-3 text-center"}>
             {children}
         </div>
     )

@@ -5,7 +5,7 @@ import React, {FC, PropsWithChildren, ReactNode, useCallback, useEffect, useStat
 import SelectableRule from "@/components/layout/Rule/SelectableRule/SelectableRule";
 import {Placeholder, Section, Skeleton} from "@telegram-apps/telegram-ui";
 import Image from "next/image";
-import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
+import FixedBottomSection, {FixedBottomButton} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {IJettonWithTitle, INftCollectionWithTitle, IRule} from "@/interfaces";
 
 const BlockchainRule: FC<PropsWithChildren<{
@@ -58,48 +58,44 @@ const BlockchainRule: FC<PropsWithChildren<{
 
     return (
         <>
-            <Section
-                header={
-                    <Section.Header large>
-                        Hold to get access
-                    </Section.Header>
-                }
-            >
-                {
-                    options ?
-                        options.length ?
-                            <SelectableRule
-                                title={title}
-                                items={options}
-                                category={category}
-                                onSelect={setSelectedAddress}
-                                onExpectedChange={setExpected}
-                                selectedOption={selectedAddress}
-                                expected={expected}
-                                existing={!!entity}
-                                isEnabled={isEnabled}
-                                onToggle={() => setIsEnabled(!isEnabled)}
-                            /> :
-                            <Placeholder
-                                description={`Please, try again after some ${title}s will be whitelisted`}
-                                header={`No ${title}s available`}
-                            >
-                                <Image
-                                    alt="Lost bananas"
-                                    src="/telegram.gif"
-                                    width={150}
-                                    height={150}
-                                />
-                            </Placeholder>
-                        : <Skeleton/>
-                }
-            </Section>
+            {
+                options ?
+                    options.length ?
+                        <SelectableRule
+                            title={title}
+                            items={options}
+                            category={category}
+                            onSelect={setSelectedAddress}
+                            onExpectedChange={setExpected}
+                            selectedOption={selectedAddress}
+                            expected={expected}
+                            existing={!!entity}
+                            isEnabled={isEnabled}
+                            onToggle={() => setIsEnabled(!isEnabled)}
+                        /> :
+                        <Placeholder
+                            description={`Please, try again after some ${title}s will be whitelisted`}
+                            header={`No ${title}s available`}
+                        >
+                            <Image
+                                alt="Lost bananas"
+                                src="/telegram.gif"
+                                width={150}
+                                height={150}
+                            />
+                        </Placeholder>
+                    : <Skeleton/>
+            }
             {children}
             <FixedBottomSection
-                text={"Save"}
-                disabled={!isFormValid || !isChildValid}
-                loading={isLoading}
-                onClick={onSaveButtonClick}
+                button={
+                    <FixedBottomButton
+                        text={"Save"}
+                        disabled={!isFormValid || !isChildValid}
+                        loading={isLoading}
+                        onClick={onSaveButtonClick}
+                    />
+                }
             />
         </>
     )

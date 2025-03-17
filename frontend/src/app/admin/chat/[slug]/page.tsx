@@ -8,11 +8,22 @@ import {useClientOnce} from "@/hooks/useClientOnce";
 import {notFound, useRouter} from "next/navigation";
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import DisplayRuleItem from "@/components/layout/Rule/DisplayRuleItem/DisplayRuleItem";
-import {CirclePlus, MessageCircle, Share} from "lucide-react";
-import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
+import {CirclePlus, MessageCircle, Share, Trash2} from "lucide-react";
+import FixedBottomSection, {FixedBottomButton} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {generateBotJoinLink} from "@/utils/bot";
-import {shareURL, init, openTelegramLink} from "@telegram-apps/sdk-react";
+import {shareURL, init, openTelegramLink, popup} from "@telegram-apps/sdk-react";
 import useAdminChatData from "@/hooks/data/useAdminChatData";
+import useFlashMessages from "@/hooks/useFlashMessages";
+
+
+const removeChatPopupButtons: {
+    id: string,
+    type?: "default" | "destructive" | undefined;
+    text: string;
+}[] = [
+    {id: "remove", type: "destructive", text: "Remove"},
+    {id: "cancel", type: "default", text: "Cancel"}
+]
 
 
 const RULE_CATEGORY_MAPPING: { [key: string]: string } = {
@@ -25,7 +36,8 @@ const RULE_CATEGORY_MAPPING: { [key: string]: string } = {
 
 const ChatPage = ({params}: { params: { slug: string } }) => {
 
-    const {chat, isChatDataLoading, fetchChatData, updateChatData} = useAdminChatData(params.slug);
+    const {chat, isChatDataLoading, fetchChatData, updateChatData, removeChat } = useAdminChatData(params.slug);
+    const { pushMessage } = useFlashMessages();
     const [description, setDescription] = useState<string>("");
     const router = useRouter();
 
@@ -77,12 +89,37 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
         )
     }, [chat?.chat.slug, chat?.rules, router])
 
+    const onDeleteButtonClick = useCallback(
+        async () => {
+            if (popup.open.isAvailable()) {
+                const buttonId = await popup.open({
+                    title: 'Remove chat!',
+                    message: 'Removing this chat will delete all created access conditions. Your chat will not be deleted.',
+                    buttons: removeChatPopupButtons,
+                });
+                switch (buttonId) {
+                    case "remove":
+                        await removeChat();
+                        router.push("/admin/chat");
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+        }, [removeChat, router]
+    )
+
     return (
-        <Page back={true}>
-            <ChatHeader chat={chat?.chat} isChatDataLoading={isChatDataLoading}/>
-            <div style={{padding: "16px 22px"}}>
-                <Skeleton visible={isChatDataLoading}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+        <Page
+            back={true}
+            fixedBottom={
+                <FixedBottomSection button={<FixedBottomButton text={"Save"} onClick={onSave}/>}/>
+            }
+        >
+            <ChatHeader chat={chat?.chat} isChatDataLoading={isChatDataLoading}>
+                <>
+                    <div className={"flex flex-1 justify-between gap-2 w-full"}>
                         <Button
                             stretched
                             before={<Share/>}
@@ -106,24 +143,42 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                             Open chat
                         </Button>
                     </div>
-                </Skeleton>
-            </div>
+                </>
+            </ChatHeader>
 
-            <Skeleton visible={isChatDataLoading}>
-                <Input
-                    placeholder={"Short description"}
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
-                />
-                <Section
-                    header={"To join"}
-                    footer={"Any of the rules above must be met to join the chat."}
-                >
-                    {chatJoinRules}
-                </Section>
+            <Skeleton visible={isChatDataLoading} className={"flex flex-col gap-6"}>
+                {chat &&
+                    <>
+                        <div className={"w-full"}>
+                            <Input
+                                placeholder={"Short description"}
+                                header={"Description"}
+                                value={description}
+                                onChange={(event) => setDescription(event.target.value)}
+                            />
+                        </div>
+                        <Section
+                            header={"To join"}
+                            footer={"Any of the rules above must be met to join the chat."}
+                        >
+                            {chatJoinRules}
+                        </Section>
+                        <div>
+                            <Button
+                                style={{color: "var(--tg-theme-destructive-text-color)"}}
+                                stretched
+                                mode={"white"}
+                                onClick={onDeleteButtonClick}
+                                before={<Trash2/>}
+                            >
+                                Remove chat
+                            </Button>
+                        </div>
+                    </>
+                }
             </Skeleton>
 
-            <FixedBottomSection text={"Save"} onClick={onSave}/>
+
         </Page>
     )
 }

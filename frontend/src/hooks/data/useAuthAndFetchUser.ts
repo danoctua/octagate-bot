@@ -1,29 +1,31 @@
 import {useState} from 'react';
-import apiClient, {authenticateUser} from "@/utils/apiClient";
+import {authenticateUser} from "@/utils/apiClient";
 import {useClientOnce} from "@/hooks/useClientOnce";
 import {IUser} from "@/interfaces";
+import {fetchUser} from "@/services";
 
 
 const useAuthAndFetchUser = () => {
     const [user, setUser] = useState<IUser | undefined>(undefined);
     const [isUserDataLoading, setIsUserDataLoading] = useState(false);
 
-    useClientOnce(() => {
-        const fetchUser = async () => {
-            try {
-                await authenticateUser();
-                const response = await apiClient.get("/users/me");
-                return response.data
-            } catch (error) {
-                console.error("Failed to fetch user", error);
+    const getUserDetails = async () => {
+        setIsUserDataLoading(true);
+        await authenticateUser();
+        return await fetchUser().then(
+            data => {
+                setUser(data)
+                return data;
             }
-        };
+        ).finally(() => setIsUserDataLoading(false));
+    }
 
+    useClientOnce(async () => {
         if (user) {
             return;
         }
 
-        fetchUser().then(data => setUser(data));
+        await getUserDetails();
     });
 
     return {user, setUser, isUserDataLoading, setIsUserDataLoading};

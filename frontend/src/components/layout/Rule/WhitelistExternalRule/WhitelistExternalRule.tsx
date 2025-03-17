@@ -4,7 +4,7 @@ import React, {useState, useEffect, useCallback, ChangeEvent, useMemo} from "rea
 import {Badge, ButtonCell, Cell, Input, List, Placeholder, Section, Skeleton, Switch} from "@telegram-apps/telegram-ui";
 import {useRouter} from "next/navigation";
 import useChatExternalWhitelistRuleData from "@/hooks/data/useChatExternalWhitelistRuleData";
-import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
+import FixedBottomSection, {FixedBottomButton} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {ChevronDown, ChevronUp} from "lucide-react";
 import Image from "next/image";
 
@@ -235,10 +235,14 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
                 </Skeleton>
             }
             <FixedBottomSection
-                text={"Save"}
-                onClick={handleSubmit}
-                disabled={!isFormValid || isLoading}
-                loading={isLoading}
+                button={
+                    <FixedBottomButton
+                        text={"Save"}
+                        onClick={handleSubmit}
+                        disabled={!isFormValid || isLoading}
+                        loading={isLoading}
+                    />
+                }
             />
         </>
     )

@@ -11,7 +11,7 @@ import {
 
 import {Page} from '@/components/layout/Page';
 
-import useAuthAndFetchUser from "@/hooks/useAuthAndFetchUser";
+import useAuthAndFetchUser from "@/hooks/data/useAuthAndFetchUser";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {mainButton, secondaryButton, useLaunchParams} from '@telegram-apps/sdk-react';
 import {Check} from "lucide-react";
@@ -22,24 +22,25 @@ import Image from "next/image";
 import {disconnectUserWallet, fetchTaskStatus, updateUserWallet} from "@/services";
 import ConnectedWalletCell from "@/components/layout/ConnectedWalletCell/ConnectedWalletCell";
 import ChatHeader from "@/components/layout/ChatHeader/ChatHeader";
-import FixedBottomSection, {ButtonStateProps} from "@/components/ui/FixedBottomSection/FixedBottomSection";
+import FixedBottomSection, {
+    ButtonStateProps,
+    FixedBottomButton
+} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import useMainButtonState from "@/hooks/useMainButtonState";
 import {useClientOnce} from "@/hooks/useClientOnce";
 import DisplayRuleItem from "@/components/layout/Rule/DisplayRuleItem/DisplayRuleItem";
 
 export default function Home() {
-    const {user, setUser, isUserDataLoading, setIsUserDataLoading} = useAuthAndFetchUser();
+    const {user, setUser, isUserDataLoading} = useAuthAndFetchUser();
     const [asyncTaskId, setAsyncTaskId] = useState<string | null>(null);
     const launchParams = useLaunchParams();
     const {connectWallet, disconnectWallet, tonConnectUI} = useTonConnect();
-    const {chat, fetchChatData, isChatDataLoading, setIsChatDataLoading} = useChatData(launchParams.startParam);
+    const {chat, fetchChatData, isChatDataLoading} = useChatData(launchParams.startParam);
     const onWalletConnectListenerAdded = useRef(false)
 
     const connectWalletAndRefresh = useCallback(async () => {
         await connectWallet();
         const handleConnectionCompleted = async () => {
-            setIsChatDataLoading(true);
-            setIsUserDataLoading(true);
             if (!tonConnectUI.wallet) {
                 return;
             }
@@ -51,13 +52,10 @@ export default function Home() {
             ).then((data) => {
                 setUser(data.user);
                 setAsyncTaskId(data.taskId);
-                setIsUserDataLoading(false);
             }).catch((error) => {
-                setIsUserDataLoading(false);
-                setIsChatDataLoading(false);
                 tonConnectUI.disconnect();
                 throw error;
-            });
+            })
         };
 
         if (!onWalletConnectListenerAdded.current) {
@@ -69,7 +67,7 @@ export default function Home() {
             window.removeEventListener("ton-connect-connection-completed", handleConnectionCompleted);
             onWalletConnectListenerAdded.current = false;
         };
-    }, [connectWallet, setIsChatDataLoading, setIsUserDataLoading, setUser, tonConnectUI]);
+    }, [connectWallet, setUser, tonConnectUI]);
 
     useClientOnce(() => {
         mainButton.mount();
@@ -169,17 +167,13 @@ export default function Home() {
     ];
 
     return (
-        <Page back={false}>
-            <ChatHeader chat={chat.chat}/>
-            <div>
-                <List>
-                    <Section>
-                        {blockchainRules}
-                    </Section>
-                </List>
-            </div>
-            {mainButtonState &&
-                <FixedBottomSection {...mainButtonState}>
+        <Page
+            increasedBottomSpace
+            back={false}
+            fixedBottom={mainButtonState &&
+                <FixedBottomSection
+                    button={<FixedBottomButton {...mainButtonState}/>}
+                >
                     {parsedWalletAddress &&
                         <ConnectedWalletCell
                             walletAddress={parsedWalletAddress}
@@ -188,6 +182,15 @@ export default function Home() {
                     }
                 </FixedBottomSection>
             }
+        >
+            <ChatHeader chat={chat.chat}/>
+            <div>
+                <List>
+                    <Section>
+                        {blockchainRules}
+                    </Section>
+                </List>
+            </div>
         </Page>
     );
 }

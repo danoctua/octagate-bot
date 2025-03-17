@@ -15,6 +15,12 @@ export const fetchTaskStatus = async (asyncTaskId: string): Promise<IStatusRespo
     return await apiClient.get(`/system/async-tasks/${asyncTaskId}`).then(response => response.data);
 }
 
+export const fetchUser = async (): Promise<IUser> => {
+    return await apiClient.get("/users/me").then(
+        response => response.data
+    )
+}
+
 export const updateUserWallet = async (walletAddress: string, tonProof: any, publicKey: string | undefined): Promise<any> => {
     return await apiClient.post("/users/wallet", {
         walletAddress: walletAddress,
@@ -45,6 +51,10 @@ export const createChat = async (chat: { chatIdentifier: string }): Promise<ICha
 
 export const updateChat = async (slug: string, description: string): Promise<IChat> => {
     return await apiClient.put(`/admin/chats/${slug}`, {description}).then(response => response.data);
+}
+
+export const deleteChat = async (slug: string): Promise<undefined> => {
+    return await apiClient.delete(`/admin/chats/${slug}`);
 }
 
 export const fetchAllJettons = async (): Promise<IJetton[]> => {

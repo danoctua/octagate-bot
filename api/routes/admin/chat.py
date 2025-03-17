@@ -78,7 +78,7 @@ async def create_chat(
     except TelegramChatAlreadyExists:
         raise HTTPException(
             detail={"error": {"message": "Chat already exists"}},
-            status_code=409,
+            status_code=400,
         )
     except TelegramChatNotSufficientPrivileges:
         raise HTTPException(
@@ -108,6 +108,21 @@ async def update_chat(
             slug=slug, description=chat.description
         )
         return BaseTelegramChatFDO.model_validate(result.model_dump())
+    except TelegramChatNotExists:
+        raise HTTPException(
+            detail={"error": {"message": "Chat not found"}},
+            status_code=404,
+        )
+
+
+@admin_chat_router.delete("/{slug}")
+async def delete_chat(
+    slug: str,
+    db_session: Session = Depends(get_db_session),
+) -> None:
+    telegram_chat_action = TelegramChatAction(db_session)
+    try:
+        await telegram_chat_action.delete(slug=slug)
     except TelegramChatNotExists:
         raise HTTPException(
             detail={"error": {"message": "Chat not found"}},

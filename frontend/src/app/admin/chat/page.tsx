@@ -2,7 +2,7 @@
 
 import useChatsData from "@/hooks/data/useChatsData";
 import {useMemo} from "react";
-import {ButtonCell, Cell, List, Section, Skeleton} from "@telegram-apps/telegram-ui";
+import {ButtonCell, Cell, List, Section, Skeleton, Title} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
 import {CirclePlus} from "lucide-react";
 import {useRouter} from "next/navigation";
@@ -54,6 +54,7 @@ const ChatsPage = () => {
         <Page back={true}>
             <Header>
                 <Image src={"/lock-chat.png"} alt={""} width={120} height={120}/>
+                <Title level={"1"} weight={"1"}>Manage Your Private Telegram Chats</Title>
             </Header>
 
 
@@ -61,9 +62,7 @@ const ChatsPage = () => {
                 <Section
                     header={"Groups and settings"}
                 >
-                    <List>
-                        {renderChats}
-                    </List>
+                    {renderChats}
                 </Section>
             </Skeleton>
         </Page>

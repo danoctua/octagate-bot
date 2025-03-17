@@ -1,12 +1,14 @@
 'use client';
 
-import {useCallback, useState} from "react";
-
-import {Page} from '@/components/layout/Page';
-import {Input, Section} from "@telegram-apps/telegram-ui";
-import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
-import {createChat} from "@/services";
+import {useCallback, useMemo, useState} from "react";
+import {Input} from "@telegram-apps/telegram-ui";
+import FixedBottomSection, {FixedBottomButton} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {useRouter} from "next/navigation";
+import BannerPage from "@/components/layout/BannerPage/BannerPage";
+import {Link} from "@/components/functional/Link/Link";
+import useChatData from "@/hooks/data/useChatData";
+import {IChat} from "@/interfaces";
+import {AxiosError} from "axios";
 
 
 const regex = /^(-?\d+(\.\d+)?)$|^(https:\/\/t\.me\/[a-zA-Z0-9_]{4,32})$/
@@ -14,10 +16,12 @@ const regex = /^(-?\d+(\.\d+)?)$|^(https:\/\/t\.me\/[a-zA-Z0-9_]{4,32})$/
 
 const NewChatPage = () => {
     const [chatIdentifier, setChatIdentifier] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
-    const [formError, setFormError] = useState<string | null>(null);
+    const [isPermissionError, setIsPermissionError] = useState<boolean>(false);
+    const [newChatSlug, setNewChatSlug] = useState<string | null>(null);
     const router = useRouter();
+
+    const { addChat, isChatDataLoading } = useChatData();
 
     const validateChatIdentifier = (newChatIdentifier: string) => {
         if (!newChatIdentifier) {
@@ -36,80 +40,103 @@ const NewChatPage = () => {
             setChatIdentifier(input);
             const isValid = validateChatIdentifier(input);
             setIsDisabled(!isValid);
-            if (!isValid) {
-                setFormError("Invalid chat identifier. It should be chat ID or a proper link to chat, e.g. https://t.me/telegram");
-            } else {
-                setFormError(null);
-            }
         },
         []
     )
 
     const onAddChatButtonClick = useCallback(
         () => {
-            if (!chatIdentifier) {
+            if (!chatIdentifier || isDisabled || isChatDataLoading) {
                 return;
             }
-            setIsDisabled(true);
-            setIsLoading(true);
-            createChat({chatIdentifier: chatIdentifier}).then(
-                (chatData) => {
-                    router.push(`/admin/chat/${chatData.slug}`)
+            addChat(chatIdentifier).then(
+                (chat: IChat | undefined) => {
+                    chat && setNewChatSlug(chat.slug);
                 }
             ).catch(
-                e => {
-                    let errorMessage = `Failed to add chat ${chatIdentifier}`;
-
-                    if (
-                        e.response && e.response.data && e.response.data.detail
-                        && e.response.data.detail.error
-                        && e.response.data.detail.error.message
-                    ) {
-                        errorMessage = e.response.data.detail.error.message;
+                (e: AxiosError) => {
+                    if (e.response && e.response.status === 409) {
+                        setIsPermissionError(true)
+                    } else {
+                        throw e
                     }
-                    setFormError(errorMessage);
                 }
             );
-            setIsLoading(false);
         },
-        [chatIdentifier, router]
+        [addChat, chatIdentifier, isChatDataLoading, isDisabled]
     )
 
-    let footerDefaultText = "Сhat or channel should include Gateway bot with admin privileges";
-
-    return (
-        <Page back={true}>
-            <Section
-                header={<Section.Header large>Add chat or channel</Section.Header>}
-                footer={
-                    <div>
-                        {formError &&
-                            <Section.Footer className={"error"}>
-                                {formError}
-                            </Section.Footer>
-                        }
-                        <Section.Footer>
-                            {footerDefaultText}
-                        </Section.Footer>
+    return useMemo(() => {
+        if (isPermissionError) {
+            return (
+                <BannerPage
+                    logoUrl={"/chain.png"}
+                    title={"Add Gateway bot to the chat"}
+                    subtitle={"The bot required to manage access. Add it to the chat before continuing. Bot doesn’t read messages inside the chat. "}
+                    fixedBottom={
+                        <FixedBottomSection
+                            button={
+                                <FixedBottomButton
+                                    text={"Back to configuration"}
+                                    onClick={() => setIsPermissionError(false)}
+                                />
+                            }
+                        />
+                    }
+                />
+            )
+        } else if (newChatSlug) {
+            return (
+                <BannerPage
+                    logoUrl={"/confetti.png"}
+                    title={"Chat Added. Configure it"}
+                    subtitle={"Great! Your chat is now connected to Gateway. Now it’s time to set access conditions."}
+                    fixedBottom={
+                        <FixedBottomSection
+                            button={
+                                <FixedBottomButton
+                                    text={"Set Access Conditions"}
+                                    onClick={() => router.push(`/admin/chat/${newChatSlug}`)}
+                                />
+                            }
+                        />
+                    }
+                />
+            )
+        }
+        return (
+            <BannerPage
+                logoUrl={"/chain.png"}
+                title={"Add Telegram Chat"}
+                subtitle={
+                    <div className={"flex flex-col items-center"}>
+                        <div>Enter your Telegram group link or chat ID (e.g. @yourgroup or -1001234567890).</div>
+                        <Link href={"https://t.me/telegram"} target={"_blank"}>
+                            Where to find group link or chat ID?
+                        </Link>
                     </div>
+                }
+                fixedBottom={
+                    <FixedBottomSection
+                        button={
+                            <FixedBottomButton
+                                text={"Continue"}
+                                disabled={isDisabled || isChatDataLoading}
+                                loading={isChatDataLoading}
+                                onClick={onAddChatButtonClick}
+                            />
+                        }
+                    />
                 }
             >
                 <Input
                     placeholder={"Chat or channel ID"}
-                    status={formError ? "error" : "default"}
                     value={chatIdentifier || ""}
                     onChange={(event) => setChatIdOnChange(event.target.value)}
                 />
-            </Section>
-
-            <FixedBottomSection
-                text={"Save"}
-                disabled={isDisabled}
-                loading={isLoading}
-                onClick={onAddChatButtonClick}
-            />
-        </Page>
-    )
+            </BannerPage>
+        )
+    }, [chatIdentifier, isDisabled, isChatDataLoading, isPermissionError, newChatSlug, onAddChatButtonClick, router, setChatIdOnChange])
 }
 
 

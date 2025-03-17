@@ -121,20 +121,16 @@ const WhitelistRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: number }
                 )
                 }
             </Section>
-            <Section
-                header={"Telegram IDs"}
-                footer={"List of valid non-negative Telegram IDs related to users to be whitelisted."}
-            >
-                <DynamicForm
-                    fields={fields}
-                    handleInputChange={handleWhitelistInputChange}
-                    handleAddField={handleAddWhitelistOption}
-                    handleRemoveField={handleRemoveWhitelistOption}
-                    isFormValid={isFormValid}
-                    handleSubmit={handleSubmit}
-                    optionHeader={"Telegram ID"}
-                />
-            </Section>
+
+            <DynamicForm
+                fields={fields}
+                handleInputChange={handleWhitelistInputChange}
+                handleAddField={handleAddWhitelistOption}
+                handleRemoveField={handleRemoveWhitelistOption}
+                isFormValid={isFormValid}
+                handleSubmit={handleSubmit}
+                optionHeader={"Telegram ID"}
+            />
         </>
     )
 }

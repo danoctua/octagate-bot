@@ -1,12 +1,12 @@
 'use client';
 
-import {useEffect, useState, type PropsWithChildren} from 'react';
+import {useState, type PropsWithChildren} from 'react';
 import {
     miniApp,
     useLaunchParams,
     useSignal,
 } from '@telegram-apps/sdk-react';
-import {AppRoot, Snackbar} from '@telegram-apps/telegram-ui';
+import {AppRoot} from '@telegram-apps/telegram-ui';
 
 import {ErrorBoundary} from '@/components/layout/ErrorBoundary';
 import {ErrorPage} from '@/components/layout/ErrorPage';
@@ -16,20 +16,8 @@ import {init} from '@/core/init';
 
 import './styles.css';
 import {useTelegramMock} from "@/hooks/useTelegramMock";
-import {AlertTriangle} from "lucide-react";
-import {AxiosError} from "axios";
-import {errorEmitter} from '@/utils/apiClient';
 import {TonConnectUIProvider} from "@tonconnect/ui-react";
 import {usePathname} from "next/navigation";
-
-
-interface ErrorResponseData {
-    detail?: {
-        error?: {
-            message?: string;
-        };
-    } | string;
-}
 
 
 function RootInner({children}: PropsWithChildren) {
@@ -52,54 +40,13 @@ function RootInner({children}: PropsWithChildren) {
 
     const isDark = useSignal(miniApp.isDark);
 
-    useEffect(() => {
-        const extractErrorMessage = (error: AxiosError): string => {
-            if (!error.response || !error.response.data) {
-                return 'Something went wrong';
-            }
-
-            const _error = error.response.data as ErrorResponseData;
-
-            if (typeof _error.detail === "object" && _error.detail?.error?.message) {
-                return _error.detail.error.message;
-            } else if (
-                typeof _error.detail === 'string'
-            ) {
-                return _error.detail;
-            }
-            return "Something went wrong"
-        }
-
-        const handleError = (error: AxiosError) => {
-            if (!error.response) return;
-            console.error('API error', error.response.status, error.response.data);
-            setApiError(extractErrorMessage(error));
-        };
-
-        errorEmitter.on("apiError", handleError);
-
-        return () => {
-            errorEmitter.off("apiError", handleError);
-        };
-    }, []);
-
     return (
         <AppRoot
             appearance={isDark ? 'dark' : 'light'}
-            platform={['macos', 'ios'].includes(lp.platform) ? 'ios' : 'base'}
+            platform={ 'ios' }
         >
             {children}
-            {
-                apiError &&
-                <Snackbar
-                    before={<AlertTriangle/>}
-                    duration={5000}
-                    description={apiError}
-                    onClose={() => setApiError(undefined)}
-                >
-                    An unexpected error occurred
-                </Snackbar>
-            }
+
         </AppRoot>
     );
 }

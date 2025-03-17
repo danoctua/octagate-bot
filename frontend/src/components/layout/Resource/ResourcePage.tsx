@@ -5,7 +5,7 @@ import {Page} from "@/components/layout/Page";
 import Header from "@/components/ui/Header/Header";
 import {Cell, Info, Input, Section, Skeleton, Subheadline, Switch, Title} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
-import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
+import FixedBottomSection, {FixedBottomButton} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {Link} from "@/components/functional/Link/Link";
 import {ExternalLink} from "lucide-react";
 import {IJetton, INftCollection} from "@/interfaces";
@@ -175,9 +175,14 @@ const ResourcePage: FC<PropsWithChildren<{
             {renderForm}
             {children}
             <FixedBottomSection
-                text={"Save"}
-                disabled={!isFormValid}
-                onClick={onSaveButtonClick}
+                button={
+                    <FixedBottomButton
+                        text={"Save"}
+                        disabled={!isFormValid}
+                        onClick={onSaveButtonClick}
+                    />
+                }
+
             />
         </Page>
     )

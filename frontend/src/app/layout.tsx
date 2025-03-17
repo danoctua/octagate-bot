@@ -16,7 +16,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const locale = 'en';
   return (
     <html lang={locale}>
-    <body style={{ paddingBottom: '120px' }}>
+    <body className={"min-h-screen"}>
       <Root>
         {children}
       </Root>

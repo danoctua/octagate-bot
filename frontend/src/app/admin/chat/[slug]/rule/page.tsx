@@ -1,7 +1,7 @@
 'use client';
 
 import {Page} from "@/components/layout/Page";
-import {Select, Title} from "@telegram-apps/telegram-ui";
+import {SegmentedControl, Select, Title} from "@telegram-apps/telegram-ui";
 import {useMemo, useState} from "react";
 import JettonRule from "@/components/layout/Rule/JettonRule/JettonRule";
 import NftCollectionRule from "@/components/layout/Rule/NftCollectionRule/NftCollectionRule";
@@ -12,8 +12,8 @@ import WhitelistExternalRule from "@/components/layout/Rule/WhitelistExternalRul
 const TABS = [
     {title: "Token", type: "jetton"},
     {title: "NFT", type: "nftCollection"},
-    {title: "Whitelist", type: "whitelist"},
-    {title: "External API", type: "externalApi"},
+    {title: "ID Match", type: "whitelist"},
+    {title: "API check", type: "externalApi"},
 ]
 
 
@@ -39,26 +39,27 @@ const NewRulePage = ({params}: { params: { slug: string } }) => {
 
     return (
         <Page back={true}>
-            <div style={{padding: "44px 32px"}}>
-                <Title level={"1"} style={{textAlign: "center"}}>
-                    New condition
-                </Title>
-            </div>
+            <>
+                <div style={{padding: "44px 32px"}}>
+                    <Title level={"1"} weight={"1"} style={{textAlign: "center"}}>
+                        Add condition
+                    </Title>
+                </div>
 
-            <Select header={"Type"} onChange={e => setSelectedTab(e.target.value)}>
-                {
-                    TABS.map((tab, index) => (
-                        <option
-                            key={index}
-                            value={tab.type}
-                            selected={selectedTab === tab.type}
-                            onSelect={() => setSelectedTab(tab.type)}
-                        >
-                            {tab.title}
-                        </option>
-                    ))
-                }
-            </Select>
+                <SegmentedControl>
+                    {
+                        TABS.map((tab, index) => (
+                            <SegmentedControl.Item
+                                key={index}
+                                selected={selectedTab === tab.type}
+                                onClick={() => setSelectedTab(tab.type)}
+                            >
+                                {tab.title}
+                            </SegmentedControl.Item>
+                        ))
+                    }
+                </SegmentedControl>
+            </>
 
             {renderTab}
             {/*Not fixed bottom section as they should be owned by each tab*/}
