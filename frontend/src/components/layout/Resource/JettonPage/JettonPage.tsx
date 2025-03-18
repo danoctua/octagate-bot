@@ -7,11 +7,11 @@ import ResourcePage from "@/components/layout/Resource/ResourcePage";
 
 
 const JettonPage: FC<PropsWithChildren<{ address?: string }>> = ({address, children}) => {
-    const {jetton, isLoading, addJetton, toggleJetton} = useJettonData(address);
+    const {jetton, isLoading, toggleJetton} = useJettonData(address);
     const router = useRouter();
 
 
-    const onJettonCreated = useCallback(
+    const onSave = useCallback(
         (_: string) => {
             router.push(`/admin/jetton`)
         },
@@ -20,14 +20,12 @@ const JettonPage: FC<PropsWithChildren<{ address?: string }>> = ({address, child
 
     return (
         <ResourcePage
-            inputAddress={address}
             resource={jetton}
             isLoading={isLoading}
-            addResource={addJetton}
             toggleResource={toggleJetton}
             resourceStaticPath={"/dynamic/jettons"}
             resourceType={"jetton"}
-            onNewResourceCreated={onJettonCreated}
+            onSave={onSave}
         />
     )
 }

@@ -8,22 +8,23 @@ import ResourcePage from "@/components/layout/Resource/ResourcePage";
 import {Accordion, Cell, IconButton, Placeholder, Section, Skeleton} from "@telegram-apps/telegram-ui";
 import {Dot, RefreshCw} from "lucide-react";
 import Image from "next/image";
+import useFlashMessages from "@/hooks/useFlashMessages";
 
 
 const NftCollectionPage: FC<PropsWithChildren<{ address?: string }>> = ({address, children}) => {
     const {
         nftCollection,
         isLoading,
-        addNftCollection,
         toggleNftCollection,
         refreshMetadata,
         isMetadataLoading
     } = useNftCollectionData(address);
     const router = useRouter();
     const [expandedId, setExpandedId] = useState<number | undefined>(undefined);
+    const { pushMessage } = useFlashMessages();
     const [isRefreshDisabled, setIsRefreshDisabled] = useState<boolean>(false);
 
-    const onNftCollectionCreated = useCallback(
+    const onSave = useCallback(
         (_: string) => {
             router.push(`/admin/nft-collection`)
         }, [router]
@@ -32,8 +33,14 @@ const NftCollectionPage: FC<PropsWithChildren<{ address?: string }>> = ({address
     const onRefreshMetadata = useCallback(async () => {
         if (!nftCollection) return
         setIsRefreshDisabled(true)
-        await refreshMetadata(nftCollection.address)
-    }, [nftCollection, refreshMetadata])
+        await refreshMetadata(nftCollection.address).then(() => {
+            pushMessage(
+                "Metadata refresh submitted",
+                "Metadata refresh has submitted successfully, but it may take some time to update.",
+                "info",
+            )
+        })
+    }, [nftCollection, pushMessage, refreshMetadata])
 
     const renderChildren = useMemo(() => {
         if (!nftCollection) return
@@ -99,14 +106,12 @@ const NftCollectionPage: FC<PropsWithChildren<{ address?: string }>> = ({address
 
     return (
         <ResourcePage
-            inputAddress={address}
             resource={nftCollection}
             isLoading={isLoading}
-            addResource={addNftCollection}
             toggleResource={toggleNftCollection}
             resourceStaticPath={"/dynamic/nfts"}
             resourceType={"NFT collection"}
-            onNewResourceCreated={onNftCollectionCreated}
+            onSave={onSave}
         >
             {renderChildren}
         </ResourcePage>

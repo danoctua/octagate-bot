@@ -50,7 +50,7 @@ class NftCollectionService(BaseService):
         self, address: str, blockchain_metadata: NftCollectionMetadataDTO
     ) -> NFTCollection:
         nft_collection = self.get(address=address)
-        nft_collection.blockchain_metadata = blockchain_metadata.model_dump()
+        nft_collection.blockchain_metadata = blockchain_metadata
         self.db_session.commit()
         logger.info(f"NFT Collection {nft_collection.name!r} metadata updated.")
         return nft_collection

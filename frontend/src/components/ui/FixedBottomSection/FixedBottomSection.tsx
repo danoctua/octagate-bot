@@ -75,6 +75,8 @@ const FixedBottomSection: FC<PropsWithChildren<{
         }
     }
 
+    console.log("FixedBottomSection rendered", messages);
+
     return (
         <>
             <div
@@ -82,7 +84,6 @@ const FixedBottomSection: FC<PropsWithChildren<{
                 style={{height: `${fixedLayoutHeight + 10}px`}}
             ></div>
             <FixedLayout
-                className={(children || button) ? "pb-1.5" : ""}
                 value={"bottom"}
             >
                 <div ref={fixedLayoutRef}>
@@ -93,13 +94,15 @@ const FixedBottomSection: FC<PropsWithChildren<{
                                 onClose={() => onMessageClose(message.id)}
                                 duration={200000}
                                 before={getSnackbarIcon(message.type)}
+                                description={message.message}
                             >
-                                {message.message}
+                                {message.title}
                             </Snackbar>
                         ))
                     }
                     <div
                         style={{background: "var(--tg-theme-secondary-bg-color)"}}
+                        className={(children || button) ? "pb-1.5" : ""}
                     >
                         <Divider/>
                         {children}

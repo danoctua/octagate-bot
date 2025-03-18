@@ -83,7 +83,7 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
             placeholder: "Whitelist for Diamond NOT holders"
         },
         url: {
-            header: "URL",
+            header: "API endpoint",
             value: url,
             onChange: handleUpdateUrl,
             error: errors.url,
@@ -159,7 +159,7 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
                 {showAll ? "Show less" : "Show all"}
             </ButtonCell>
         )
-        return <List>{items}</List>;
+        return items;
     }, [displayUsers, rule, showAll])
 
     const renderErrors = useMemo(() => {
