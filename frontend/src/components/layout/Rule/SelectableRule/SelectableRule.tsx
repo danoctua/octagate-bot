@@ -103,7 +103,6 @@ const SelectableRule = (
         <>
             <Input
                 className={"text-end"}
-                header={"Required amount"}
                 before={<Info type={"text"} className={"whitespace-nowrap"}>Required amount</Info>}
                 after={<Info type={"text"} className={"whitespace-nowrap"}>{category}</Info>}
                 type={"number"}

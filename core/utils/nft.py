@@ -13,7 +13,7 @@ def find_relevant_nft_items(
         if nft_item.collection_address == rule.address:
             if rule.required_attributes:
                 # Iterate over attributes of the NFT item and check if all the required attributes are present
-                if all(
+                if not all(
                     any(
                         attribute.trait_type == nft_item_attribute.trait_type
                         and attribute.value == nft_item_attribute.value
@@ -21,5 +21,7 @@ def find_relevant_nft_items(
                     )
                     for attribute in nft_item.blockchain_metadata.attributes
                 ):
-                    relevant_nft_items.append(nft_item)
+                    continue
+
+            relevant_nft_items.append(nft_item)
     return relevant_nft_items
