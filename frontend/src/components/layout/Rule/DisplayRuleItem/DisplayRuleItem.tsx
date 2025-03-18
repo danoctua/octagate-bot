@@ -34,7 +34,7 @@ const DisplayRuleItem = (
         after = (
             rule.isEligible ?
                 <Check style={defaultBeforeAfterStyle}/> :
-                <Text style={defaultBeforeAfterStyle}>Not yet</Text>
+                <Text className={"whitespace-nowrap"} style={defaultBeforeAfterStyle}>Not yet</Text>
         )
     } else {
         switch (rule.category) {

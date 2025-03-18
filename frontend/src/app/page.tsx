@@ -2,7 +2,6 @@
 
 import {
     Cell,
-    List,
     Placeholder,
     Section,
     Spinner,
