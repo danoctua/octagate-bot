@@ -22,7 +22,6 @@ import {usePathname} from "next/navigation";
 
 function RootInner({children}: PropsWithChildren) {
     const isDev = process.env.NODE_ENV === 'development';
-    const [apiError, setApiError] = useState<string | undefined>(undefined);
 
     // Mock Telegram environment in development mode if needed.
     if (isDev) {
@@ -43,7 +42,8 @@ function RootInner({children}: PropsWithChildren) {
     return (
         <AppRoot
             appearance={isDark ? 'dark' : 'light'}
-            platform={ 'ios' }
+            platform={['macos', 'ios'].includes(lp.platform) ? 'ios' : 'base'}
+
         >
             {children}
 

@@ -184,13 +184,9 @@ export default function Home() {
             }
         >
             <ChatHeader chat={chat.chat}/>
-            <div>
-                <List>
-                    <Section>
-                        {blockchainRules}
-                    </Section>
-                </List>
-            </div>
+            <Section>
+                {blockchainRules}
+            </Section>
         </Page>
     );
 }
