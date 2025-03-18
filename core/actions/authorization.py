@@ -209,7 +209,7 @@ class AuthorizationAction(BaseAction):
                     expected=jetton.threshold,
                     title=jetton.jetton.name,
                     address_raw=jetton.address,
-                    current=(
+                    actual=(
                         user_jetton_wallet.balance
                         if (
                             user_jetton_wallet := user_jettons_by_master_address.get(
@@ -232,7 +232,7 @@ class AuthorizationAction(BaseAction):
                     expected=nft_collection.threshold,
                     title=nft_collection.nft_collection.name,
                     address_raw=nft_collection.address,
-                    current=(
+                    actual=(
                         len(
                             find_relevant_nft_items(
                                 rule=nft_collection, nft_items=user_nft_items
@@ -252,7 +252,7 @@ class AuthorizationAction(BaseAction):
                     category=EligibilityCheckType.EXTERNAL_SOURCE,
                     expected=1,
                     title=external_source.name,
-                    current=cls.is_whitelisted(user=user, rule=external_source),
+                    actual=cls.is_whitelisted(user=user, rule=external_source),
                     is_enabled=external_source.is_enabled,
                 )
                 for external_source in eligibility_rules.whitelist_external_sources
@@ -265,7 +265,7 @@ class AuthorizationAction(BaseAction):
                     category=EligibilityCheckType.WHITELIST,
                     expected=1,
                     title=whitelist_group.name,
-                    current=cls.is_whitelisted(user=user, rule=whitelist_group),
+                    actual=cls.is_whitelisted(user=user, rule=whitelist_group),
                     is_enabled=whitelist_group.is_enabled,
                 )
                 for whitelist_group in eligibility_rules.whitelist_sources

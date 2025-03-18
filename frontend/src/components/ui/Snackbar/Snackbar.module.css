@@ -4,12 +4,13 @@
   position: relative;
   user-select: none;
 
-  left: 10px;
-  right: 10px;
+  /*left: 10px;*/
+  /*right: 10px;*/
+  padding: 0 18px;
   bottom: 10px;
 
   box-sizing: border-box;
-  max-inline-size: 460px;
+  /*max-inline-size: 460px;*/
   animation: verticalIntro 340ms cubic-bezier(.3, .3, .5, 1);
   transition: transform 320ms cubic-bezier(.3, .3, .5, 1);
 }

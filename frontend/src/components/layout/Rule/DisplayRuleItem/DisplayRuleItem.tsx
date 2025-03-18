@@ -33,7 +33,7 @@ const DisplayRuleItem = (
     if (readOnly) {
         after = (
             rule.isEligible ?
-                <Check style={defaultBeforeAfterStyle}/> :
+                <Check style={{color: "var(--tg-theme-accent-text-color)"}}/> :
                 <Text className={"whitespace-nowrap"} style={defaultBeforeAfterStyle}>Not yet</Text>
         )
     } else {

@@ -1,11 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from pytonapi.utils import raw_to_userfriendly
 
 from core.dtos.base import NftItemAttributeDTO
 from core.dtos.chat import TelegramChatDTO
 from core.dtos.chat.rules import EligibilityCheckType, ChatEligibilityRuleDTO
 from core.dtos.chat.rules.nft import NftRuleEligibilitySummaryDTO
-from core.utils.number import human_friendly_number
 
 
 class EligibilitySummaryInternalDTO(BaseModel):
@@ -17,7 +16,7 @@ class EligibilitySummaryInternalDTO(BaseModel):
     category: EligibilityCheckType
     title: str
     address_raw: str | None = None  # required for blockchain rules only
-    current: float | int = 0.0
+    actual: float | int = 0.0
     expected: float | int
     is_enabled: bool
     required_attributes: list[NftItemAttributeDTO] | None = None
@@ -28,18 +27,9 @@ class EligibilitySummaryInternalDTO(BaseModel):
             return None
         return raw_to_userfriendly(self.address_raw)
 
-    @property
+    @computed_field(return_type=bool)
     def is_eligible(self):
-        return self.current >= self.expected
-
-    @property
-    def current_human_friendly(self) -> str:
-        # TODO deprecate
-        return human_friendly_number(self.current)
-
-    @property
-    def expected_human_friendly(self) -> str:
-        return human_friendly_number(self.expected)
+        return self.actual >= self.expected
 
     def __repr__(self):
         return (
@@ -47,7 +37,7 @@ class EligibilitySummaryInternalDTO(BaseModel):
             f"{self.category=} "
             f"{self.title=} "
             f"{self.address=} "
-            f"{self.current=} "
+            f"{self.actual=} "
             f"{self.expected=}>"
         )
 

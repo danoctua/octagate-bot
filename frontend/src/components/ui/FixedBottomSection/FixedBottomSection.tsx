@@ -79,12 +79,11 @@ const FixedBottomSection: FC<PropsWithChildren<{
         <>
             <div
                 id={"custom-tweak-to-add-bottom-padding"}
-                style={{ height: `${fixedLayoutHeight + 10}px` }}
+                style={{height: `${fixedLayoutHeight + 10}px`}}
             ></div>
             <FixedLayout
                 className={(children || button) ? "pb-1.5" : ""}
                 value={"bottom"}
-                style={{background: "var(--tg-theme-secondary-bg-color)"}}
             >
                 <div ref={fixedLayoutRef}>
                     {messages.length > 0 &&
@@ -92,20 +91,24 @@ const FixedBottomSection: FC<PropsWithChildren<{
                             <Snackbar
                                 key={message.id}
                                 onClose={() => onMessageClose(message.id)}
-                                duration={5000}
+                                duration={200000}
                                 before={getSnackbarIcon(message.type)}
                             >
                                 {message.message}
                             </Snackbar>
                         ))
                     }
-                    <Divider/>
-                    {children}
-                    {button &&
-                        <div className={"px-4 py-2"}>
-                            {button}
-                        </div>
-                    }
+                    <div
+                        style={{background: "var(--tg-theme-secondary-bg-color)"}}
+                    >
+                        <Divider/>
+                        {children}
+                        {button &&
+                            <div className={"px-4 py-2"}>
+                                {button}
+                            </div>
+                        }
+                    </div>
                 </div>
             </FixedLayout>
         </>

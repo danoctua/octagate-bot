@@ -115,7 +115,7 @@ class NftItemService(BaseService):
             address=nft_item.address.to_raw(),
             owner_address=nft_item.owner.address.to_raw(),
             collection_address=nft_item.collection.address.to_raw(),
-            blockchain_metadata=NftItemMetadataDTO.from_nft_item(nft_item).model_dump(),
+            blockchain_metadata=NftItemMetadataDTO.from_nft_item(nft_item),
         )
         self.db_session.add(nft)
         logger.info(f"NFT Item {nft.address!r} created.")
@@ -124,9 +124,7 @@ class NftItemService(BaseService):
     def _update(self, nft_item: TONNftItem, nft: NftItem) -> NftItem:
         """The only updatable field is the owner address."""
         nft.owner_address = nft_item.owner.address.to_raw()
-        nft.blockchain_metadata = NftItemMetadataDTO.from_nft_item(
-            nft_item
-        ).model_dump()
+        nft.blockchain_metadata = NftItemMetadataDTO.from_nft_item(nft_item)
         self.db_session.add(nft)
         logger.info(f"NFT Item {nft.address!r} updated.")
         return nft

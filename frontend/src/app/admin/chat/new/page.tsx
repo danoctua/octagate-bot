@@ -88,6 +88,7 @@ const NewChatPage = () => {
         } else if (newChatSlug) {
             return (
                 <BannerPage
+                    back
                     logoUrl={"/confetti.png"}
                     title={"Chat Added. Configure it"}
                     subtitle={"Great! Your chat is now connected to Gateway. Now it’s time to set access conditions."}

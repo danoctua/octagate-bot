@@ -4,6 +4,7 @@ import {backButton} from '@telegram-apps/sdk-react';
 import {PropsWithChildren, ReactNode, useEffect} from 'react';
 import {useRouter} from 'next/navigation';
 import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
+import {List} from "@telegram-apps/telegram-ui";
 
 export function Page({children, back = true, fixedBottom = null, increasedBottomSpace = false}: PropsWithChildren<{
     /**
@@ -34,12 +35,12 @@ export function Page({children, back = true, fixedBottom = null, increasedBottom
         });
     }, [router]);
 
-    let classNames = ["px-4", "py-3", "flex", "flex-1", "flex-col", "gap-6"]
+    let classNames = ["flex", "flex-1", "flex-col", "gap-6"]
 
     return <div className={"flex flex-col min-h-screen"}>
-        <div className={classNames.join(' ')}>
+        <List className={classNames.join(' ')}>
             {children}
-        </div>
+        </List>
         {fixedBottom}
     </div>;
 }
