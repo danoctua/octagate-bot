@@ -82,7 +82,7 @@ const FixedBottomSection: FC<PropsWithChildren<{
                 style={{ height: `${fixedLayoutHeight + 10}px` }}
             ></div>
             <FixedLayout
-                className={(children || button) && "pb-1.5"}
+                className={(children || button) ? "pb-1.5" : ""}
                 value={"bottom"}
                 style={{background: "var(--tg-theme-secondary-bg-color)"}}
             >
