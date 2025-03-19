@@ -3,7 +3,7 @@
 ## Project Structure
 
 ```
-backend
+lets-go (current root)
 ├── internal/              # Shared core components
 │   ├── models/           # Core domain models
 │   │   ├── entity/      # Business entities
@@ -20,7 +20,7 @@ backend
 │   │   ├── chat/        # Chat functionality
 │   │   ├── user/        # User management
 │   │   ├── storage/     # Storage operations
-│   │   └── telethon/    # Telegram client operations
+│   │   └── mtproto/     # MTProto client operations
 │   ├── actions/         # Business actions/use cases
 │   │   ├── auth/       # Authorization actions
 │   │   ├── nft/        # NFT-related actions
@@ -28,11 +28,10 @@ backend
 │   │   ├── wallet/     # Wallet-related actions
 │   │   └── chat/       # Chat-related actions
 │   ├── config/          # Configuration management
-│   └── pkg/             # Shared utilities
-│       ├── logger/      # Logging
-│       ├── validator/   # Validation
-│       ├── errors/      # Error types
-│       └── middleware/  # Common middleware
+│   ├── logger/          # Logging utilities
+│   ├── validator/       # Validation utilities
+│   ├── errors/          # Error types and handling
+│   └── middleware/      # Common middleware
 ├── services/            # Microservices
 │   ├── api/            # API Service
 │   │   ├── handlers/   # HTTP handlers
@@ -66,61 +65,122 @@ backend
 ## Migration Strategy
 
 ### Phase 1: Core Infrastructure
-1. **Shared Core Components**
-   - Set up Go modules and project structure
-   - Migrate core domain models with proper validation tags
-   - Implement repository interfaces and base implementations
-   - Set up shared utilities (logging, config, errors)
+1. **Core Exceptions & Utils**
+   - Set up error types and handling
+   - Implement validation utilities
+   - Set up logging system
+   - Foundation for all other components
 
-2. **Database Layer**
+2. **Core Config**
+   - Implement configuration management
+   - Set up environment handling
+   - Configure service-specific settings
+
+3. **Core Database & Cache**
    - Implement GORM repositories with MySQL connection pooling
    - Set up Redis for caching and session management
    - Migrate database schemas and implement migrations
+   - Define database interfaces and base implementations
 
-### Phase 2: Service Migration
-Migrate services in parallel with dedicated teams:
+4. **Core Models & DTOs**
+   - Migrate domain models with proper validation tags
+   - Implement DTOs for data transfer
+   - Set up model relationships
+   - Add GORM tags for database mapping
 
-1. **API Service**
-   - Set up Fiber framework with middleware
-   - Implement authentication and authorization
-   - Migrate REST endpoints
-   - Set up API documentation with Swagger
+5. **Core Base Services**
+   - Implement base service structure
+   - Set up TON blockchain interactions
+   - Configure storage operations
+   - Establish service patterns
 
-2. **Indexer Service**
-   - Implement blockchain event listeners
-   - Set up worker pools for processing
-   - Migrate indexing logic
-   - Implement error recovery and retry mechanisms
+### Phase 2: Core Business Logic
+1. **Core Business Services**
+   - Wallet management
+   - Jetton operations
+   - NFT operations
+   - User management
+   - Chat functionality
+   - MTProto client operations
 
-3. **Scheduler Service**
-   - Set up cron job management
-   - Implement task queue with Redis
-   - Migrate scheduled tasks
-   - Set up monitoring and alerts
+2. **Core Actions**
+   - Base action structure
+   - Authorization actions
+   - Wallet actions
+   - Jetton actions
+   - NFT actions
+   - Chat actions
+
+### Phase 3: Microservices Infrastructure
+1. **Shared Components**
+   - Service-specific configurations
+   - Common utilities
+   - Shared middleware
+   - Background job system (asynq)
+
+2. **Background Job System**
+   - Set up asynq for task queue management
+   - Configure Redis for job storage
+   - Implement worker pools
+   - Set up monitoring and retry mechanisms
+
+### Phase 4: Microservices
+1. **Indexer Service**
+   - Background job processing
+   - Blockchain event handling
+   - Data indexing
+   - Event processing
+
+2. **Scheduler Service**
+   - Task scheduling
+   - Cron job management
+   - Background task coordination
+   - Job monitoring
+
+3. **Community Manager Service**
+   - Community-wide operations
+   - Background tasks
+   - Event processing
+   - Separate from bot_ui for better scaling
 
 4. **Bot UI Service**
-   - Set up Telegram bot framework
-   - Implement WebSocket handlers
-   - Migrate bot commands and interactions
-   - Set up state management
+   - User interactions
+   - Command handling
+   - Real-time responses
+   - Telegram bot integration
+   - Separate from community_manager for better user experience
 
-5. **Community Manager**
-   - Implement community management logic
-   - Set up notification system
-   - Migrate moderation features
-   - Implement analytics
+5. **API Service**
+   - HTTP endpoints
+   - Service integration
+   - API documentation
+   - Authentication and authorization
 
 ## Key Technical Decisions
 
 ### 1. Framework & Libraries
-- **HTTP Router**: Fiber (performance + middleware ecosystem)
-- **ORM**: GORM with MySQL driver
-- **Caching**: Redis (distributed caching + pub/sub)
+- **HTTP Router**: Gin (performance + middleware ecosystem)
+- **ORM**: GORM
+  - Rich feature set
+  - Good documentation
+  - Active community
+  - Type safety
+  - Note: Combining Python's `core/db.py` and `core/services/db.py` into a single Go package for better cohesion and idiomatic Go structure
+- **Caching**: Redis
+  - Fast in-memory storage
+  - Pub/sub capabilities
+  - Session management
+  - Rate limiting
 - **Validation**: go-playground/validator
 - **Logging**: zap (structured logging)
 - **Configuration**: viper
 - **Testing**: testify + gomock
 - **Documentation**: swaggo
+- **Telegram Integration**:
+  - Bot API: telegram-bot-api (github.com/go-telegram-bot-api/telegram-bot-api)
+  - MTProto Client: gotd/td (github.com/gotd/td)
+- **CLI Tools**: Cobra
+- **Background Jobs**: asynq (Redis-based task queue)
 
 ### 2. Communication Patterns
 - **Inter-service**: gRPC for synchronous, NATS for async
@@ -134,6 +194,46 @@ Migrate services in parallel with dedicated teams:
 - **Dependency Injection**: wire for compile-time DI
 - **Testing**: Table-driven tests + integration tests
 - **Documentation**: godoc + OpenAPI/Swagger
+
+## Service Architecture
+
+### Core Services
+- Located in `internal/` directory
+- Shared business logic
+- Common interfaces
+- Reusable components
+
+### Microservices
+- Located in `services/` directory
+- Independent deployment
+- Service-specific logic
+- Clear boundaries
+
+### Service Separation Principles
+1. **Single Responsibility**
+   - Each service has one primary purpose
+   - Clear boundaries between services
+   - Minimal cross-service dependencies
+
+2. **Independent Scaling**
+   - Services can be scaled independently
+   - Resource allocation per service
+   - Load balancing per service
+
+3. **Independent Deployment**
+   - Services can be deployed separately
+   - Version control per service
+   - Rollback capability per service
+
+4. **Independent Error Handling**
+   - Service-specific error handling
+   - Isolated failure domains
+   - Independent monitoring
+
+5. **Communication Patterns**
+   - Well-defined interfaces
+   - Clear API contracts
+   - Versioned APIs
 
 ## Interface Design Patterns
 
