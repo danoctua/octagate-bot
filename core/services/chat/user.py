@@ -7,15 +7,19 @@ from core.services.chat import logger
 
 
 class TelegramChatUserService(BaseService):
-    def create(self, chat_id: int, user_id: int, is_admin: bool) -> TelegramChatUser:
+    def _create(self, chat_id: int, user_id: int, is_admin: bool) -> TelegramChatUser:
         chat_user = TelegramChatUser(
             chat_id=chat_id,
             user_id=user_id,
             is_admin=is_admin,
         )
         self.db_session.add(chat_user)
-        self.db_session.commit()
         logger.debug(f"Telegram Chat User {chat_user!r} created.")
+        return chat_user
+
+    def create(self, chat_id: int, user_id: int, is_admin: bool) -> TelegramChatUser:
+        chat_user = self._create(chat_id, user_id, is_admin)
+        self.db_session.commit()
         return chat_user
 
     def get(self, chat_id: int, user_id: int) -> TelegramChatUser:
@@ -46,8 +50,13 @@ class TelegramChatUserService(BaseService):
         query = query.group_by(TelegramChatUser.chat_id)
         return dict(query.all())
 
-    def get_all(self, user_ids: list[int] | None = None) -> list[TelegramChatUser]:
+    def get_all(
+        self, chat_id: int | None = None, user_ids: list[int] | None = None
+    ) -> list[TelegramChatUser]:
         query = self.db_session.query(TelegramChatUser)
+
+        if chat_id is not None:
+            query = query.filter(TelegramChatUser.chat_id == chat_id)
 
         if user_ids:
             query = query.filter(TelegramChatUser.user_id.in_(user_ids))
@@ -114,3 +123,27 @@ class TelegramChatUserService(BaseService):
         ).delete(synchronize_session="fetch")
         self.db_session.commit()
         logger.debug(f"Telegram Chat User {user_id!r} in chat {chat_id!r} deleted.")
+
+    def create_batch(self, chat_id: int, user_ids: list[int]) -> list[TelegramChatUser]:
+        existing_chat_users = self.get_all(chat_id=chat_id, user_ids=user_ids)
+        existing_chat_user_ids = {
+            chat_user.user_id for chat_user in existing_chat_users
+        }
+
+        new_chat_members = set(user_ids) - existing_chat_user_ids
+
+        chat_users = [
+            self._create(chat_id=chat_id, user_id=user_id, is_admin=False)
+            for user_id in new_chat_members
+        ]
+        self.db_session.commit()
+
+        return chat_users
+
+    def delete_batch(self, chat_id: int, user_ids: list[int]) -> None:
+        self.db_session.query(TelegramChatUser).filter(
+            TelegramChatUser.chat_id == chat_id,
+            TelegramChatUser.user_id.in_(user_ids),
+        ).delete(synchronize_session="fetch")
+        self.db_session.commit()
+        logger.debug(f"Telegram Chat Users {user_ids!r} in chat {chat_id!r} deleted.")

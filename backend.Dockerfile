@@ -20,22 +20,14 @@ RUN pip install -e .
 COPY indexer ./indexer
 COPY core ./core
 
-# Stage 2: Build the telegram-bot image
-FROM octagate-base AS telegram-bot
-
-COPY bot_ui/requirements.txt requirements-bot-ui.txt
-RUN pip install -r requirements-bot-ui.txt
-
-COPY bot_ui ./bot_ui
-
-# Stage 3: Build the indexer image
+# Stage 2: Build the indexer image
 FROM octagate-base AS indexer
 
 COPY indexer/requirements.txt requirements-indexer.txt
 RUN pip install -r requirements-indexer.txt
 
 
-# Stage 4: Build the community-manager image
+# Stage 3: Build the community-manager image
 FROM octagate-base AS community-manager
 
 COPY community_manager/requirements.txt requirements-community-manager.txt
@@ -43,7 +35,7 @@ RUN pip install -r requirements-community-manager.txt
 
 COPY community_manager ./community_manager
 
-# Stage 5: FastAPI application
+# Stage 4: FastAPI application
 FROM octagate-base AS api
 
 COPY api/requirements.txt requirements-api.txt
@@ -51,7 +43,7 @@ RUN pip install -r requirements-api.txt
 
 COPY api ./api
 
-# Stage 6: Scheduler image
+# Stage 5: Scheduler image
 FROM community-manager as scheduler
 
 COPY scheduler ./scheduler

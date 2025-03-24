@@ -2,6 +2,7 @@ import logging
 from collections import defaultdict
 
 from sqlalchemy.orm import Session
+from telethon import TelegramClient
 
 from core.actions.base import BaseAction
 from core.dtos.chat.rules import (
@@ -12,6 +13,7 @@ from core.dtos.chat.rules.summary import (
     EligibilitySummaryInternalDTO,
     RulesEligibilitySummaryInternalDTO,
 )
+from core.dtos.user import TelegramUserDTO
 from core.models.user import User
 from core.models.wallet import JettonWallet
 from core.models.blockchain import NftItem
@@ -44,7 +46,9 @@ class AuthorizationAction(BaseAction):
     This is the only low-level action that could be used in the high-level actions
     """
 
-    def __init__(self, db_session: Session) -> None:
+    def __init__(
+        self, db_session: Session, telethon_client: TelegramClient | None = None
+    ) -> None:
         super().__init__(db_session)
         self.jetton_wallet_service = JettonWalletService(db_session)
         self.telegram_chat_user_service = TelegramChatUserService(db_session)
@@ -58,6 +62,8 @@ class AuthorizationAction(BaseAction):
         self.telegram_chat_whitelist_group_service = TelegramChatWhitelistService(
             db_session
         )
+        self.telethon_service = TelethonService(client=telethon_client)
+        self.telethon_service.start()
 
     def is_user_eligible_chat_member(
         self, user_id: int, chat_id: int
@@ -296,10 +302,8 @@ class AuthorizationAction(BaseAction):
             logger.info("No ineligible chat members found")
             return
 
-        telethon_service = TelethonService()
-        await telethon_service.start()
         for member in ineligible_members:
-            await telethon_service.kick_chat_member(
+            await self.telethon_service.kick_chat_member(
                 chat_id=member.chat_id, telegram_user_id=member.user.telegram_id
             )
             self.telegram_chat_user_service.delete(
@@ -310,4 +314,96 @@ class AuthorizationAction(BaseAction):
             )
         else:
             logger.info("No ineligible chat members found")
-        await telethon_service.stop()
+        await self.telethon_service.stop()
+
+    async def on_chat_members_in(
+        self,
+        users: list[TelegramUserDTO],
+        chat_id: int,
+    ) -> None:
+        """
+        Handle the event when users join the chat
+        :param users: Users that joined the chat
+        :param chat_id: Chat ID
+        :return:
+        """
+        for user in users:
+            local_user = self.user_service.get_or_create(user)
+            if eligibility_summary := self.is_user_eligible_chat_member(
+                user_id=local_user.id, chat_id=chat_id
+            ):
+                self.telegram_chat_user_service.create_or_update(
+                    chat_id=chat_id,
+                    user_id=local_user.id,
+                    is_admin=False,
+                )
+                logger.debug(
+                    f"User {local_user.telegram_id!r} was added to chat {chat_id!r}"
+                )
+            else:
+                await self.telethon_service.kick_chat_member(
+                    chat_id=chat_id, telegram_user_id=user.telegram_id
+                )
+                logger.warning(
+                    f"User {local_user.telegram_id!r} is not eligible to join chat {chat_id!r} even though was added. Kicking the user",
+                    extra={
+                        "eligibility_summary": eligibility_summary,
+                    },
+                )
+
+    async def on_chat_members_out(
+        self,
+        users: list[TelegramUserDTO],
+        chat_id: int,
+    ) -> None:
+        """
+        Handle the event when users leave the chat
+        :param chat_id: Chat ID
+        :param users: List of users that left the chat
+        """
+        local_users = self.user_service.get_all(
+            telegram_ids=[user.id for user in users]
+        )
+        self.telegram_chat_user_service.delete_batch(
+            chat_id=chat_id, user_ids=[user.telegram_id for user in local_users]
+        )
+        logger.debug(
+            f"{len(local_users)} users removed from chat {chat_id!r} as they are out of chat."
+        )
+
+    async def on_join_request(
+        self,
+        telegram_user_id: int,
+        chat_id: int,
+    ) -> None:
+        telegram_user = await self.telethon_service.get_user(telegram_user_id)
+        local_user = self.user_service.get_or_create(
+            TelegramUserDTO.from_telethon_user(telegram_user)
+        )
+        if eligibility_summary := self.is_user_eligible_chat_member(
+            user_id=local_user.id, chat_id=chat_id
+        ):
+            await self.telethon_service.approve_chat_join_request(
+                chat_id=chat_id, telegram_user_id=local_user.telegram_id
+            )
+            self.telegram_chat_user_service.create_or_update(
+                chat_id=chat_id,
+                user_id=local_user.id,
+                is_admin=False,
+            )
+            logger.info(
+                f"User {local_user.telegram_id!r} was approved to join chat {chat_id!r}",
+                extra={
+                    "eligibility_summary": eligibility_summary,
+                },
+            )
+        else:
+            await self.telethon_service.decline_chat_join_request(
+                chat_id=chat_id, telegram_user_id=local_user.telegram_id
+            )
+            logger.warning(
+                f"User {local_user.telegram_id!r} is not eligible to join chat {chat_id!r}. Declining the request.",
+                extra={
+                    "eligibility_summary": eligibility_summary,
+                },
+            )

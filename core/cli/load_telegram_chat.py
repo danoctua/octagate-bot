@@ -13,7 +13,7 @@ from core.settings import core_settings
 
 async def load_telegram_chat(chat_id: int) -> None:
     telethon_service = TelethonService()
-    await telethon_service.start()
+    telethon_service.start()
 
     click.echo(f"Loading chat {chat_id!r}...")
 

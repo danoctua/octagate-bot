@@ -47,7 +47,7 @@ class TelegramChatAction(BaseAction):
 
     async def create(self, chat_identifier: str | int) -> BaseTelegramChatDTO:
         telethon_service = TelethonService()
-        await telethon_service.start()
+        telethon_service.start()
 
         logger.info(f"Loading chat {chat_identifier!r}...")
 

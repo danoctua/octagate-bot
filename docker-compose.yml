@@ -11,24 +11,6 @@ x-python-service:
 
 
 services:
-  telegram-bot:
-    <<: *x-python-service
-    build:
-      context: .
-      dockerfile: backend.Dockerfile
-      target: telegram-bot
-    image: octagate-telegram-bot
-    env_file:
-      - ./bot_ui/config/.env
-      - ./core/config/.env
-      - ./config/.env
-    ports:
-      - "433:433"
-    volumes:
-      - ./bot_ui:/app/bot_ui
-      - ./core:/app/core
-      - /etc/letsencrypt:/etc/certbot:ro
-    command: ["python3", "bot_ui/__init__.py"]
 
   transaction-lookup:
     build:
@@ -91,7 +73,7 @@ services:
       - ./core:/app/core
       - ./indexer:/app/indexer
 
-  community-manager:
+  community-manager-tasks:
     <<: *x-python-service
     build:
       context: .
@@ -110,6 +92,17 @@ services:
       "system-queue",
       "--loglevel=info"
     ]
+    volumes:
+      - ./community_manager:/app/community_manager
+      - ./core:/app/core
+
+  community-manager:
+    <<: *x-python-service
+    image: octagate-community-manager
+    env_file:
+      - ./community_manager/config/.env
+      - ./core/config/.env
+    command: ["python3", "community_manager/entrypoint.py"]
     volumes:
       - ./community_manager:/app/community_manager
       - ./core:/app/core
