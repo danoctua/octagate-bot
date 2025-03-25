@@ -78,7 +78,7 @@ async def create_chat(
     except TelegramChatAlreadyExists:
         raise HTTPException(
             detail={"error": {"message": "Chat already exists"}},
-            status_code=400,
+            status_code=409,
         )
     except TelegramChatNotSufficientPrivileges:
         raise HTTPException(
@@ -87,7 +87,7 @@ async def create_chat(
                     "message": "You have to add bot to chat with admin rights to invite users first"
                 }
             },
-            status_code=409,
+            status_code=400,
         )
     except TelegramChatNotExists:
         raise HTTPException(

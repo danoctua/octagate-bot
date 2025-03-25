@@ -2,7 +2,7 @@
 
 
 import React, {FC, PropsWithChildren, ReactNode, useRef, useEffect} from "react";
-import {Button, Divider, FixedLayout, RootRenderer} from "@telegram-apps/telegram-ui";
+import {Button, Divider, FixedLayout} from "@telegram-apps/telegram-ui";
 import {AlertTriangle, CheckCircle, Info} from "lucide-react";
 import useFlashMessages from "@/hooks/useFlashMessages";
 import {Snackbar} from "@/components/ui/Snackbar/Snackbar";
@@ -16,6 +16,8 @@ export interface ButtonStateProps {
     mode?: 'filled' | 'bezeled' | 'plain' | 'gray' | 'outline' | 'white';
     size?: 's' | 'm' | 'l';
 }
+
+const DEFAULT_NOTIFICATION_DURATION = 5000;
 
 
 export const FixedBottomButton: FC<PropsWithChildren<ButtonStateProps>> = (
@@ -75,8 +77,6 @@ const FixedBottomSection: FC<PropsWithChildren<{
         }
     }
 
-    console.log("FixedBottomSection rendered", messages);
-
     return (
         <>
             <div
@@ -86,13 +86,13 @@ const FixedBottomSection: FC<PropsWithChildren<{
             <FixedLayout
                 value={"bottom"}
             >
-                <div ref={fixedLayoutRef}>
+                <div ref={fixedLayoutRef} className={"flex flex-col gap-2"}>
                     {messages.length > 0 &&
                         messages.map((message) => (
                             <Snackbar
                                 key={message.id}
                                 onClose={() => onMessageClose(message.id)}
-                                duration={200000}
+                                duration={DEFAULT_NOTIFICATION_DURATION}
                                 before={getSnackbarIcon(message.type)}
                                 description={message.message}
                             >

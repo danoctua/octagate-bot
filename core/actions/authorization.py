@@ -63,7 +63,6 @@ class AuthorizationAction(BaseAction):
             db_session
         )
         self.telethon_service = TelethonService(client=telethon_client)
-        self.telethon_service.start()
 
     def is_user_eligible_chat_member(
         self, user_id: int, chat_id: int
@@ -302,6 +301,8 @@ class AuthorizationAction(BaseAction):
             logger.info("No ineligible chat members found")
             return
 
+        await self.telethon_service.start()
+
         for member in ineligible_members:
             await self.telethon_service.kick_chat_member(
                 chat_id=member.chat_id, telegram_user_id=member.user.telegram_id
@@ -327,6 +328,7 @@ class AuthorizationAction(BaseAction):
         :param chat_id: Chat ID
         :return:
         """
+        await self.telethon_service.start()
         for user in users:
             local_user = self.user_service.get_or_create(user)
             if eligibility_summary := self.is_user_eligible_chat_member(
@@ -376,6 +378,7 @@ class AuthorizationAction(BaseAction):
         telegram_user_id: int,
         chat_id: int,
     ) -> None:
+        await self.telethon_service.start()
         telegram_user = await self.telethon_service.get_user(telegram_user_id)
         local_user = self.user_service.get_or_create(
             TelegramUserDTO.from_telethon_user(telegram_user)

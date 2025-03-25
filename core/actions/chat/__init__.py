@@ -44,15 +44,13 @@ class TelegramChatAction(BaseAction):
         self.telegram_chat_service = TelegramChatService(db_session)
         self.telegram_chat_user_service = TelegramChatUserService(db_session)
         self.authorization_action = AuthorizationAction(db_session)
+        self.telethon_service = TelethonService()
 
     async def create(self, chat_identifier: str | int) -> BaseTelegramChatDTO:
-        telethon_service = TelethonService()
-        telethon_service.start()
-
         logger.info(f"Loading chat {chat_identifier!r}...")
-
+        await self.telethon_service.start()
         try:
-            chat = await telethon_service.get_chat(chat_identifier)
+            chat = await self.telethon_service.get_chat(chat_identifier)
         except (ValueError, BadRequestError) as e:
             logger.error(f"Chat {chat_identifier!r} not found", exc_info=e)
             raise TelegramChatNotExists(f"Chat {chat_identifier!r} not found")
@@ -63,7 +61,7 @@ class TelegramChatAction(BaseAction):
                 f"Bot user has no rights to change chat info: {chat_identifier!r}"
             )
 
-        logo_path = await telethon_service.download_profile_photo(chat)
+        logo_path = await self.telethon_service.download_profile_photo(chat)
         try:
             telegram_chat = self.telegram_chat_service.create(
                 chat_id=get_peer_id(chat, add_mark=True),
@@ -78,7 +76,7 @@ class TelegramChatAction(BaseAction):
             logger.info(
                 f"Creating chat invite link for new chat {chat_identifier!r}..."
             )
-            invite_link = await telethon_service.get_invite_link(chat)
+            invite_link = await self.telethon_service.get_invite_link(chat)
             self.telegram_chat_service.refresh_invite_link(
                 chat_identifier, invite_link.link
             )
@@ -91,7 +89,7 @@ class TelegramChatAction(BaseAction):
         logger.info(f"Loading chat participants or chat {chat_identifier!r}...")
 
         chat_participants_count = 0
-        async for participant_user in telethon_service.get_participants(
+        async for participant_user in self.telethon_service.get_participants(
             chat_identifier
         ):
             if participant_user.bot:

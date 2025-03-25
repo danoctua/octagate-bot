@@ -19,7 +19,7 @@ const BannerPage: FC<PropsWithChildren<{
             back={back}
             fixedBottom={fixedBottom}
         >
-            <div className={"flex items-center justify-center flex-col py-8"}>
+            <div className={"flex flex-1 items-center justify-center flex-col py-8"}>
                 <div id={"title"} className={"flex items-center justify-center flex-col px-6 gap-4 text-center"}>
                     <Image src={logoUrl} alt={"logo"} width={112} height={112}/>
                     <div className={"flex items-center justify-center flex-col gap-3"}>

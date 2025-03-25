@@ -34,8 +34,8 @@ class TelethonService:
 
         :param client: Allows drilling down the TelegramClient instance from the update event.
         """
-        session = MemorySession()
         if not client:
+            session = MemorySession()
             client = TelegramClient(
                 session,
                 core_settings.telegram_app_id,
@@ -43,10 +43,10 @@ class TelethonService:
             )
         self.client = client
 
-    def start(self) -> None:
+    async def start(self) -> None:
         if self.client.is_connected():
             return
-        self.client.start(bot_token=core_settings.telegram_bot_token)
+        await self.client.start(bot_token=core_settings.telegram_bot_token)
 
     async def stop(self) -> None:
         await self.client.disconnect()
