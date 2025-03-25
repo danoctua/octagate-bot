@@ -72,6 +72,7 @@ const NewChatPage = () => {
         if (isPermissionError) {
             return (
                 <BannerPage
+                    back
                     logoUrl={"/chain.png"}
                     title={"Add Gateway bot to the chat"}
                     subtitle={"The bot required to manage access. Add it to the chat before continuing. Bot doesn’t read messages inside the chat. "}
@@ -114,6 +115,7 @@ const NewChatPage = () => {
         }
         return (
             <BannerPage
+                back
                 logoUrl={"/chain.png"}
                 title={"Add Telegram Chat"}
                 subtitle={

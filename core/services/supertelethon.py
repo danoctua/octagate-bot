@@ -48,6 +48,11 @@ class TelethonService:
             return
         await self.client.start(bot_token=core_settings.telegram_bot_token)
 
+    def start_sync(self) -> None:
+        if self.client.is_connected():
+            return
+        self.client.start(bot_token=core_settings.telegram_bot_token)
+
     async def stop(self) -> None:
         await self.client.disconnect()
 
