@@ -107,7 +107,9 @@ class TelegramChatWhitelistBase(Base):
     __abstract__ = True
 
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    chat_id = mapped_column(ForeignKey("telegram_chat.id"), nullable=False)
+    chat_id = mapped_column(
+        ForeignKey("telegram_chat.id", ondelete="CASCADE"), nullable=False
+    )
     name = mapped_column(String(255), nullable=False)
     description = mapped_column(String(255), nullable=True)
     is_enabled = mapped_column(Boolean, nullable=False, default=True)
