@@ -10,7 +10,6 @@ const useChatsData = () => {
 
     useClientOnce(() => {
         fetchChats().then((chatsData: IBaseChat[]) => {
-            console.debug("Fetching chats", chatsData);
             setChats(chatsData);
             setIsChatsLoading(false);
         }).catch((error) => {});

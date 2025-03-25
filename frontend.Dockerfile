@@ -17,6 +17,7 @@ RUN pnpm install
 COPY frontend/next.config.mjs frontend/tailwind.config.ts frontend/postcss.config.mjs frontend/tsconfig.json ./
 COPY frontend/public ./public
 COPY frontend/src ./src
+COPY config/.env ./.env
 
 # Build the application
 RUN pnpm build
@@ -33,10 +34,11 @@ RUN npm install -g pnpm
 # Copy only the necessary files from the builder stage
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/src ./src
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/.env ./.env
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/src ./src
 
 # Install only production dependencies
 RUN pnpm install --prod
