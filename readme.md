@@ -6,7 +6,6 @@
 2. Open the project and clone https://github.com/OpenBuilders/transaction-lookup repository in the root of the current project.
 3. Make sure to copy and fill the templates for the following files:
 - `core/config/.env.template` to `core/config/.env`
-- `bot_ui/config/.env.template` to `bot_ui/config/.env`
 - `indexer/config/.env.template` to `indexer/config/.env`
 
 ## Installation
@@ -86,7 +85,7 @@ To install and run the project, follow these steps:
   make setup
   ```
 
-- **setup-venv**: Installs the required Python packages for the project using pip. Requirements are defined in multiple `requirements.txt` files located in the `core`, `bot_ui`, and `indexer` directories.
+- **setup-venv**: Installs the required Python packages for the project using pip. Requirements are defined in multiple `requirements.txt` files located in the `core`, and `indexer` directories.
 
   ```bash
   make setup-venv

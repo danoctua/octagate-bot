@@ -32,7 +32,7 @@ class AuthenticationService:
                 algorithms=[api_settings.jwt_algorithm],
             )
         except jwt.exceptions.PyJWTError as e:
-            logger.error(f"Can't validate token: {e}")
+            logger.warning(f"Can't validate token: {e}")
             raise UnauthorizedError("Could not validate credentials")
 
         user_id: str | None = payload.get("sub")

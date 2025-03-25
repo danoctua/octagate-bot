@@ -9,8 +9,8 @@ USER=$(whoami)
 # shellcheck disable=SC2046
 export $(grep -v '^#' config/.env | xargs)
 
-# Check if NEXT_ENV is set to development
-if [ "$NEXT_ENV" = "development" ]; then
+# Check if NODE_ENV is set to development
+if [ "$NODE_ENV" = "development" ]; then
   echo "Running in development mode"
   # Set the UID and GID to the current user
   export DOCKER_UID=$DOCKER_UID

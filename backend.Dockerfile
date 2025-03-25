@@ -44,6 +44,6 @@ RUN pip install -r requirements-api.txt
 COPY api ./api
 
 # Stage 5: Scheduler image
-FROM community-manager as scheduler
+FROM community-manager AS scheduler
 
 COPY scheduler ./scheduler

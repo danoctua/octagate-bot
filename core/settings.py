@@ -55,5 +55,7 @@ class CoreSettings(BaseSettings):
 
     beat_schedule_filename: str = "/tmp/celerybeat-schedule"
 
+    env: str = "development"
+
 
 core_settings = CoreSettings()

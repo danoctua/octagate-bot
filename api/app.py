@@ -1,3 +1,4 @@
+import sentry_sdk
 from fastapi import FastAPI, APIRouter, Depends
 from starlette.middleware.cors import CORSMiddleware
 
@@ -8,6 +9,15 @@ from api.routes.auth import auth_router
 from api.routes.chat import chat_router
 from api.routes.system import system_router, system_non_authenticated_router
 from api.routes.user import user_router
+from api.settings import api_settings
+
+sentry_sdk.init(
+    dsn=api_settings.sentry_dns,
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    environment=api_settings.env,
+)
 
 
 def include_authenticated_routes(_app: FastAPI) -> None:

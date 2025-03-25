@@ -38,11 +38,11 @@ class WalletAction(BaseAction):
                 wallet_address=wallet_details.wallet_address,
             )
         except UserWalletExistError as exc:
-            logger.error(str(exc))
+            logger.warning(str(exc))
             raise exc
 
         except UserWalletConnectedError as exc:
-            logger.error(str(exc))
+            logger.warning(str(exc))
             raise exc
 
         # Run initial wallet data loading

@@ -11,3 +11,4 @@ pydantic-settings==2.7.1
 pytonapi==0.4.3
 python-slugify==8.0.4
 gql[httpx]==3.6.0b4
+sentry-sdk[fastapi]==2.24.1

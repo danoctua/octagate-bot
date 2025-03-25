@@ -8,13 +8,15 @@ on:
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
+    env:
+      CI: true
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
 
@@ -40,9 +42,6 @@ jobs:
     needs: build-frontend
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.9.1
       with:
