@@ -54,11 +54,13 @@ class TelegramChatAction(BaseAction):
         try:
             chat = await self.telethon_service.get_chat(chat_identifier)
         except (ValueError, BadRequestError) as e:
-            logger.error(f"Chat {chat_identifier!r} not found", exc_info=e)
+            logger.exception(f"Chat {chat_identifier!r} not found", exc_info=e)
             raise TelegramChatNotExists(f"Chat {chat_identifier!r} not found")
 
         if not chat.admin_rights or not all([chat.admin_rights.invite_users]):
-            logger.error(f"Bot user has no rights to invite users: {chat_identifier!r}")
+            logger.exception(
+                f"Bot user has no rights to invite users: {chat_identifier!r}"
+            )
             raise TelegramChatNotSufficientPrivileges(
                 f"Bot user has no rights to change chat info: {chat_identifier!r}"
             )
@@ -75,7 +77,7 @@ class TelegramChatAction(BaseAction):
                 logo_path=logo_path,
             )
         except sqlalchemy.exc.IntegrityError:
-            logger.error(f"Chat {chat_identifier!r} already exists")
+            logger.exception(f"Chat {chat_identifier!r} already exists")
             raise TelegramChatAlreadyExists(f"Chat {chat_identifier!r} already exists")
 
         if not telegram_chat.invite_link:

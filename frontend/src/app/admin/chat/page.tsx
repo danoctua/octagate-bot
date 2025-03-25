@@ -2,13 +2,13 @@
 
 import useChatsData from "@/hooks/data/useChatsData";
 import {useMemo} from "react";
-import {ButtonCell, Cell, List, Section, Skeleton, Title} from "@telegram-apps/telegram-ui";
-import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
+import {Avatar, ButtonCell, Cell, Section, Skeleton, Title} from "@telegram-apps/telegram-ui";
 import {CirclePlus} from "lucide-react";
 import {useRouter} from "next/navigation";
 import Header from "@/components/ui/Header/Header";
 import Image from "next/image";
 import {Page} from "@/components/layout/Page";
+import {getAcronymFromName} from "@/utils/text";
 
 
 const ChatsPage = () => {
@@ -23,12 +23,10 @@ const ChatsPage = () => {
                         chats?.map((chat) => (
                             <Cell
                                 before={
-                                    <ImageWithFallback
+                                    <Avatar
                                         src={`/dynamic/chats/${chat.logoPath}`}
-                                        fallbackSrc={"/welcome.gif"}
-                                        width={40}
-                                        height={40}
-                                        rounded
+                                        acronym={getAcronymFromName(chat.title)}
+                                        size={40}
                                     />
                                 }
                                 onClick={() => router.push(`/admin/chat/${chat.slug}`)}

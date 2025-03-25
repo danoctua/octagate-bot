@@ -1,9 +1,9 @@
-import {Info, Skeleton, Title} from "@telegram-apps/telegram-ui";
+import {Avatar, Info, Skeleton, Title} from "@telegram-apps/telegram-ui";
 import React, {FC, PropsWithChildren, ReactNode} from "react";
 import {IChat} from "@/interfaces";
 
-import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
 import Header from "@/components/ui/Header/Header";
+import {getAcronymFromName} from "@/utils/text";
 
 
 const ChatHeader: FC<PropsWithChildren<{
@@ -18,12 +18,10 @@ const ChatHeader: FC<PropsWithChildren<{
             <Skeleton visible={isChatDataLoading}>
                 {chat &&
                     <div className={"w-full flex items-center justify-center flex-col gap-2"}>
-                        <ImageWithFallback
+                        <Avatar
                             src={`/dynamic/chats/${chat?.logoPath}`}
-                            fallbackSrc={"/welcome.gif"}
-                            rounded
-                            width={96}
-                            height={96}
+                            acronym={getAcronymFromName(chat?.title)}
+                            size={96}
                         />
                         <Title level={"2"} weight={"2"} plain className={"flex items-center gap-2"}>
                             {chat?.title}
