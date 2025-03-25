@@ -38,10 +38,12 @@ class TelegramChat(Base):
     whitelist_external_sources = relationship(
         "TelegramChatWhitelistExternalSource",
         backref="chat",
+        cascade="all, delete-orphan",
     )
     whitelist_sources = relationship(
         "TelegramChatWhitelist",
         backref="chat",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self):
