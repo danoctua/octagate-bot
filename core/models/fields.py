@@ -45,9 +45,9 @@ class ListPydanticType(TypeDecorator):
         super().__init__(*args, **kwargs)
 
     def process_bind_param(
-        self, value: list[BaseModel], *args, **kwargs
+        self, value: list[BaseModel] | list[dict], *args, **kwargs
     ) -> list[dict[str, Any]] | None:
-        if value is not None:
+        if isinstance(value, list) and isinstance(value[0], BaseModel):
             return [item.model_dump() for item in value]
         return value
 
