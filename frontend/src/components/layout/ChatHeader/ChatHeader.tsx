@@ -1,4 +1,4 @@
-import {Avatar, Info, Skeleton, Title} from "@telegram-apps/telegram-ui";
+import {Avatar, Skeleton, Title} from "@telegram-apps/telegram-ui";
 import React, {FC, PropsWithChildren, ReactNode} from "react";
 import {IChat} from "@/interfaces";
 
@@ -26,9 +26,6 @@ const ChatHeader: FC<PropsWithChildren<{
                         <Title level={"2"} weight={"2"} plain className={"flex items-center gap-2"}>
                             {chat?.title}
                         </Title>
-                        {chat?.description &&
-                            <Info type={"avatarStack"}>{chat.description}</Info>
-                        }
                     </div>
                 }
             </Skeleton>

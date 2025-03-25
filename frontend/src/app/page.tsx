@@ -2,6 +2,7 @@
 
 import {
     Cell,
+    Info,
     Placeholder,
     Section,
     Spinner,
@@ -182,7 +183,11 @@ export default function Home() {
                 </FixedBottomSection>
             }
         >
-            <ChatHeader chat={chat.chat}/>
+            <ChatHeader chat={chat.chat}>
+                {chat.chat.description &&
+                    <Info type={"avatarStack"}>{chat.chat.description}</Info>
+                }
+            </ChatHeader>
             <Section>
                 {blockchainRules}
             </Section>

@@ -130,7 +130,6 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                     <div>
                         <div className={"w-full py-2 px-4 flex flex-col gap-2"}>
                             <Button
-                                // disabled
                                 readOnly
                                 mode={"gray"}
                                 after={<Copy/>}
@@ -147,7 +146,6 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                             <div className={"flex flex-1 justify-between gap-2"}>
                                 <Button
                                     stretched
-                                    mode={"bezeled"}
                                     before={<Share/>}
                                     onClick={() => {
                                         // Without an explicit call to init, the SDK will not be able to share the URL
@@ -161,7 +159,6 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                                 </Button>
                                 <Button
                                     stretched
-                                    mode={"bezeled"}
                                     before={<MessageCircle/>}
                                     onClick={() => {
                                         chat?.chat.joinUrl && openTelegramLink(chat?.chat.joinUrl)
