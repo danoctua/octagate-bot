@@ -36,6 +36,7 @@ const ConnectedWalletCell: FC<PropsWithChildren<{
     return useMemo(
         () => (
             <Cell
+                className={"cell-thin"}
                 multiline={false}
                 readOnly
                 onClick={popupCallback}

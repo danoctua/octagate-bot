@@ -17,7 +17,7 @@ const HttpUrlRegex = new RegExp(
 );
 
 type FieldType = {
-    header: string,
+    header?: string,
     value: string,
     onChange: (e: ChangeEvent<HTMLInputElement>) => void,
     error?: string | null,
@@ -69,25 +69,22 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
 
     const fields: Record<string, FieldType> = useMemo(() => ({
         name: {
-            header: "Name",
             value: name,
             onChange: handleUpdateName,
             error: errors.name,
-            placeholder: "Diamond NOT holders"
+            placeholder: "Title"
         },
         description: {
-            header: "Description",
             value: description,
             onChange: handleUpdateDescription,
             error: errors.description,
-            placeholder: "Whitelist for Diamond NOT holders"
+            placeholder: "Description"
         },
         url: {
-            header: "API endpoint",
             value: url,
             onChange: handleUpdateUrl,
             error: errors.url,
-            placeholder: "https://notco.in"
+            placeholder: "API endpoint"
         }
     }), [description, errors.description, errors.name, errors.url, name, url])
 
@@ -170,7 +167,7 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
                         ([_, error]) => error !== null
                     ).map(
                         ([name, error], index) => (
-                            <div key={index}>{fields[name].header}: {error}</div>
+                            <div key={index}>{fields[name].placeholder}: {error}</div>
                         )
                     )
                 }

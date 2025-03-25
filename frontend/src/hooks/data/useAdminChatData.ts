@@ -1,5 +1,5 @@
 import {useCallback, useState} from "react";
-import {deleteChat, fetchAdminChatData, updateChat} from "@/services";
+import {deleteChat, fetchAdminChatData, refreshChat, updateChat} from "@/services";
 import {IChat, IChatConfiguration} from "@/interfaces";
 
 
@@ -32,6 +32,22 @@ const useAdminChatData = (slug: string | undefined,) => {
         }).finally(() => {setIsChatDataLoading(false)});
     }, [slug, chat])
 
+        const refreshChatData = useCallback(async () => {
+        if (!slug || !chat) {
+            return;
+        }
+        setIsChatDataLoading(true);
+        return await refreshChat(slug).then(
+            (chatData: IChat) => {
+                console.debug("Refreshing chat data", chatData);
+                setChat({...chat, chat: chatData});
+                return chatData;
+            }
+        ).finally(() => {
+            setIsChatDataLoading(false);
+        });
+    }, [chat, slug])
+
     const removeChat = useCallback(async () => {
         if (!slug) {
             return;
@@ -50,6 +66,7 @@ const useAdminChatData = (slug: string | undefined,) => {
         chat,
         fetchChatData,
         updateChatData,
+        refreshChatData,
         removeChat,
         isChatDataLoading,
         setIsChatDataLoading

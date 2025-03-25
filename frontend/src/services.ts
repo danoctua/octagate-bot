@@ -53,6 +53,10 @@ export const updateChat = async (slug: string, description: string): Promise<ICh
     return await apiClient.put(`/admin/chats/${slug}`, {description}).then(response => response.data);
 }
 
+export const refreshChat = async (slug: string): Promise<IChat> => {
+    return await apiClient.post(`/admin/chats/${slug}/refresh`).then(response => response.data);
+}
+
 export const deleteChat = async (slug: string): Promise<undefined> => {
     return await apiClient.delete(`/admin/chats/${slug}`);
 }

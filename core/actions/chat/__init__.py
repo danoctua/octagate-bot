@@ -30,7 +30,7 @@ from core.dtos.user import TelegramUserDTO
 from core.models.user import User
 from core.services.chat import TelegramChatService
 from core.services.chat.user import TelegramChatUserService
-from core.services.supertelethon import TelethonService
+from core.services.supertelethon import TelethonService, ChatPeerType
 from core.services.user import UserService
 from core.settings import core_settings
 
@@ -46,7 +46,9 @@ class TelegramChatAction(BaseAction):
         self.authorization_action = AuthorizationAction(db_session)
         self.telethon_service = TelethonService()
 
-    async def create(self, chat_identifier: str | int) -> BaseTelegramChatDTO:
+    async def _get_chat_data(
+        self, chat_identifier: str | int
+    ) -> tuple[ChatPeerType, str]:
         logger.info(f"Loading chat {chat_identifier!r}...")
         await self.telethon_service.start()
         try:
@@ -62,6 +64,10 @@ class TelegramChatAction(BaseAction):
             )
 
         logo_path = await self.telethon_service.download_profile_photo(chat)
+        return chat, logo_path
+
+    async def create(self, chat_identifier: str | int) -> BaseTelegramChatDTO:
+        chat, logo_path = await self._get_chat_data(chat_identifier)
         try:
             telegram_chat = self.telegram_chat_service.create(
                 chat_id=get_peer_id(chat, add_mark=True),
@@ -122,6 +128,30 @@ class TelegramChatAction(BaseAction):
             slug=telegram_chat.slug,
             is_forum=telegram_chat.is_forum,
             logo_path=telegram_chat.logo_path,
+        )
+
+    async def refresh(self, slug: str) -> BaseTelegramChatDTO:
+        try:
+            chat = self.telegram_chat_service.get_by_slug(slug)
+        except NoResultFound:
+            logger.error(f"Chat with slug {slug!r} not found")
+            raise TelegramChatNotExists(f"Chat with slug {slug!r} not found")
+
+        chat_entity, logo_path = await self._get_chat_data(chat.id)
+        self.telegram_chat_service.update(
+            chat=chat,
+            entity=chat_entity,
+            logo_path=logo_path,
+        )
+
+        return BaseTelegramChatDTO(
+            id=chat.id,
+            username=chat.username,
+            title=chat.title,
+            description=chat.description,
+            slug=chat.slug,
+            is_forum=chat.is_forum,
+            logo_path=chat.logo_path,
         )
 
     async def update(self, slug: str, description: str | None) -> BaseTelegramChatDTO:

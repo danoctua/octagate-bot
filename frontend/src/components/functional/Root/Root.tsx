@@ -44,6 +44,7 @@ function RootInner({children}: PropsWithChildren) {
             appearance={isDark ? 'dark' : 'light'}
             platform={['macos', 'ios'].includes(lp.platform) ? 'ios' : 'base'}
             // platform={'ios'}
+            className={"root-block"}
         >
             {children}
 

@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import AsyncGenerator
 
@@ -88,7 +89,8 @@ class TelethonService:
             )
             return DEFAULT_CHAT_LOGO_PATH
 
-        logo_path = f"{entity.id}.jpg"
+        # Adding timestamp allows to bypass the cache of the image to reflect the change
+        logo_path = f"{entity.id}-{datetime.datetime.now().timestamp()}.jpg"
 
         with open(CHAT_LOGO_PATH / logo_path, "wb") as f:
             await self.client.download_profile_photo(entity, f)

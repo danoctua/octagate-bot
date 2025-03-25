@@ -25,7 +25,12 @@ const ChatHeader: FC<PropsWithChildren<{
                             width={96}
                             height={96}
                         />
-                        <Title level={"2"} weight={"2"} plain>{chat?.title}</Title>
+                        <Title level={"2"} weight={"2"} plain className={"flex items-center gap-2"}>
+                            {chat?.title}
+                        </Title>
+                        {chat?.description &&
+                            <Info type={"avatarStack"}>{chat.description}</Info>
+                        }
                     </div>
                 }
             </Skeleton>

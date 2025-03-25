@@ -96,6 +96,22 @@ async def create_chat(
         )
 
 
+@admin_chat_router.post("/{slug}/refresh")
+async def refresh_chat(
+    slug: str,
+    db_session: Session = Depends(get_db_session),
+) -> BaseTelegramChatFDO:
+    telegram_chat_action = TelegramChatAction(db_session)
+    try:
+        result = await telegram_chat_action.refresh(slug=slug)
+        return BaseTelegramChatFDO.model_validate(result.model_dump())
+    except TelegramChatNotExists:
+        raise HTTPException(
+            detail={"error": {"message": "Chat not found"}},
+            status_code=404,
+        )
+
+
 @admin_chat_router.put("/{slug}")
 async def update_chat(
     slug: str,
