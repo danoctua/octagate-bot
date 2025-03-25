@@ -8,16 +8,17 @@ from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from starlette.requests import Request
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
 from api.pos.auth import InitDataPO
 from api.pos.user import UserInitDataPO
 from api.services.authentication import AuthenticationService, UnauthorizedError
 from api.settings import api_settings
-from core.models import User
+from core.models.user import User
 from core.services.db import DBService
 from core.services.user import UserService
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 def get_db_session():
@@ -63,9 +64,11 @@ def validate_user_init_data(init_data_po: InitDataPO) -> UserInitDataPO:
 
 def validate_access_token(
     request: Request,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
     db_session: Session = Depends(get_db_session),
 ) -> User:
+    if not credentials:
+        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Unauthorized")
     access_token = credentials.credentials
     try:
         user_id = AuthenticationService.verify_token(access_token)
@@ -74,7 +77,9 @@ def validate_access_token(
         request.state.user = user
         return request.state.user
     except UnauthorizedError:
-        raise HTTPException(status_code=401, detail="Invalid access token")
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED, detail="Invalid access token"
+        )
 
 
 def validate_admin_access(
@@ -82,5 +87,6 @@ def validate_admin_access(
 ) -> None:
     if not user.is_admin:
         raise HTTPException(
-            status_code=403, detail="You are not allowed to access this resource"
+            status_code=HTTP_403_FORBIDDEN,
+            detail="You are not allowed to access this resource",
         )
