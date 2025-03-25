@@ -19,13 +19,13 @@ stop:
 	./docker.sh stop
 
 generate-migration:
-	./docker.sh run --rm telegram-bot alembic revision --autogenerate -m "$(m)"
+	./docker.sh run --rm api alembic revision --autogenerate -m "$(m)"
 
 create-empty-migration:
-	./docker.sh run --rm telegram-bot alembic revision -m "$(m)"
+	./docker.sh run --rm api alembic revision -m "$(m)"
 
 migrate:
-	./docker.sh run --rm telegram-bot alembic upgrade head
+	./docker.sh run --rm api alembic upgrade head
 
 setup-venv:
 	pip3 install -r core/requirements.txt
