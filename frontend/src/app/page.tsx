@@ -54,6 +54,9 @@ export default function Home() {
                 setUser(data.user);
                 setAsyncTaskId(data.taskId);
             }).catch((error) => {
+                if (hapticFeedback.notificationOccurred.isAvailable()){
+                    hapticFeedback.notificationOccurred('error');
+                }
                 tonConnectUI.disconnect();
                 throw error;
             })

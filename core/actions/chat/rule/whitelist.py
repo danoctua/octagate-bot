@@ -119,12 +119,12 @@ class TelegramChatWhitelistExternalSourceAction(BaseAction):
                 raise
             return
         except TelegramChatInvalidExternalSourceError as e:
-            logger.error(f"Invalid external source {source.url!r}: {e}")
+            logger.exception(f"Invalid external source {source.url!r}: {e}")
             if raise_for_error:
                 raise
             return
         except Exception as e:
-            logger.error(f"Failed to fetch external source {source.url!r}: {e}")
+            logger.exception(f"Failed to fetch external source {source.url!r}: {e}")
             if raise_for_error:
                 raise
             return

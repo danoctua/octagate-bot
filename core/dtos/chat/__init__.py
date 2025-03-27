@@ -11,6 +11,7 @@ class BaseTelegramChatDTO(BaseModel):
     slug: str
     is_forum: bool
     logo_path: str | None
+    insufficient_privileges: bool = False
 
     @classmethod
     def from_orm(cls, obj: Any) -> Self:

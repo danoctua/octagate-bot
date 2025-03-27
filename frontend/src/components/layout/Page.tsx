@@ -37,7 +37,7 @@ export function Page({children, back = true, fixedBottom = null, increasedBottom
 
     let classNames = ["flex", "flex-1", "flex-col", "gap-6"]
 
-    return <div className={"flex flex-col min-h-screen"}>
+    return <div className={"flex flex-col min-h-screen pb-16"}>
         <List className={classNames.join(' ')}>
             {children}
         </List>

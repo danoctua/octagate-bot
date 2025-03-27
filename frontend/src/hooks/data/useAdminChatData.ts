@@ -24,12 +24,9 @@ const useAdminChatData = (slug: string | undefined,) => {
         if (!slug || !chat) {
             return;
         }
-        setIsChatDataLoading(true);
         return await updateChat(slug, description).then((chatData: IChat) => {
-            console.debug("Updating chat data", chatData);
-            setChat({...chat, chat: chatData});
             return chatData;
-        }).finally(() => {setIsChatDataLoading(false)});
+        })
     }, [slug, chat])
 
         const refreshChatData = useCallback(async () => {

@@ -1,17 +1,16 @@
 'use client';
 
 import {Page} from '@/components/layout/Page';
-import {Skeleton, Input, Section, ButtonCell, Button} from "@telegram-apps/telegram-ui";
+import {Skeleton, Input, Section, ButtonCell, Button, Banner} from "@telegram-apps/telegram-ui";
 
 import ChatHeader from "@/components/layout/ChatHeader/ChatHeader";
 import {useClientOnce} from "@/hooks/useClientOnce";
 import {notFound, useRouter} from "next/navigation";
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import DisplayRuleItem from "@/components/layout/Rule/DisplayRuleItem/DisplayRuleItem";
-import {CirclePlus, Copy, MessageCircle, RefreshCw, Share, Trash2} from "lucide-react";
-import FixedBottomSection, {FixedBottomButton} from "@/components/ui/FixedBottomSection/FixedBottomSection";
+import {AlertTriangle, CirclePlus, Copy, MessageCircle, RefreshCw, Share, Trash2} from "lucide-react";
 import {generateBotJoinLink} from "@/utils/bot";
-import {shareURL, init, openTelegramLink, popup} from "@telegram-apps/sdk-react";
+import {shareURL, init, openTelegramLink, popup, themeParams} from "@telegram-apps/sdk-react";
 import {copyTextToClipboard} from "@telegram-apps/sdk"
 import useAdminChatData from "@/hooks/data/useAdminChatData";
 import useFlashMessages from "@/hooks/useFlashMessages";
@@ -38,7 +37,14 @@ const RULE_CATEGORY_MAPPING: { [key: string]: string } = {
 
 const ChatPage = ({params}: { params: { slug: string } }) => {
 
-    const {chat, isChatDataLoading, fetchChatData, updateChatData, removeChat, refreshChatData} = useAdminChatData(params.slug);
+    const {
+        chat,
+        isChatDataLoading,
+        fetchChatData,
+        updateChatData,
+        removeChat,
+        refreshChatData
+    } = useAdminChatData(params.slug);
     const {pushMessage} = useFlashMessages();
     const [description, setDescription] = useState<string>("");
     const router = useRouter();
@@ -59,8 +65,7 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
     const onSave = useCallback(
         async () => {
             await updateChatData(description);
-            router.push("/admin/chat");
-        }, [description, router, updateChatData]
+        }, [description, updateChatData]
     )
 
     if (!params.slug) {
@@ -73,7 +78,7 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                 ...(
                     chat?.rules.map((rule) => (
                         <DisplayRuleItem
-                            key={rule.title}
+                            key={`rule-${rule.category}-${rule.id}`}
                             rule={rule}
                             readOnly={false}
                             onClick={() => router.push(`/admin/chat/${chat?.chat.slug}/rule/${RULE_CATEGORY_MAPPING[rule.category]}/${rule.id}`)}
@@ -115,66 +120,73 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
     return (
         <Page
             back={true}
-            fixedBottom={
-                <FixedBottomSection button={<FixedBottomButton text={"Save"} onClick={onSave} loading={isChatDataLoading}/>}/>
-            }
         >
             <ChatHeader chat={chat?.chat} isChatDataLoading={isChatDataLoading}/>
 
             <Skeleton visible={isChatDataLoading} className={"flex flex-col gap-6"}>
                 {chat &&
                     <>
+                        {
+                            chat.chat.insufficientPrivileges && (
+                                <Banner
+                                    before={<AlertTriangle size={32} color={themeParams.destructiveTextColor()}/>}
+                                    header={"Insufficient privileges"}
+                                    subheader={"Bot does not have enough privileges to manage this chat. Please, check chat admin rights."}
+                                />
+                            )
+                        }
                         <Section
-                    header={"Invite link"}
-                >
-                    <div>
-                        <div className={"w-full py-2 px-4 flex flex-col gap-2"}>
-                            <Button
-                                readOnly
-                                mode={"gray"}
-                                after={<Copy/>}
-                                onClick={
-                                    () => {
-                                        copyTextToClipboard(generateBotJoinLink(chat?.chat.slug || "")).then(
-                                            () => pushMessage("Copied", "Link copied to clipboard", "info")
-                                        )
-                                    }
-                                }
-                            >
-                                {generateBotJoinLink(chat?.chat.slug || "")}
-                            </Button>
-                            <div className={"flex flex-1 justify-between gap-2"}>
-                                <Button
-                                    stretched
-                                    before={<Share/>}
-                                    onClick={() => {
-                                        // Without an explicit call to init, the SDK will not be able to share the URL
-                                        init();
-                                        if (shareURL.isAvailable()) {
-                                            shareURL(generateBotJoinLink(chat?.chat.slug || ""), `Join ${chat?.chat.title}`);
+                            header={"Invite link"}
+                        >
+                            <div>
+                                <div className={"w-full py-2 px-4 flex flex-col gap-2"}>
+                                    <Button
+                                        readOnly
+                                        mode={"gray"}
+                                        after={<Copy/>}
+                                        onClick={
+                                            () => {
+                                                copyTextToClipboard(generateBotJoinLink(chat?.chat.slug || "")).then(
+                                                    () => pushMessage("Copied", "Link copied to clipboard", "info")
+                                                )
+                                            }
                                         }
-                                    }}
-                                >
-                                    Share
-                                </Button>
-                                <Button
-                                    stretched
-                                    before={<MessageCircle/>}
-                                    onClick={() => {
-                                        chat?.chat.joinUrl && openTelegramLink(chat?.chat.joinUrl)
-                                    }}
-                                >
-                                    Open chat
-                                </Button>
+                                    >
+                                        {generateBotJoinLink(chat?.chat.slug || "")}
+                                    </Button>
+                                    <div className={"flex flex-1 justify-between gap-2"}>
+                                        <Button
+                                            stretched
+                                            before={<Share/>}
+                                            onClick={() => {
+                                                // Without an explicit call to init, the SDK will not be able to share the URL
+                                                init();
+                                                if (shareURL.isAvailable()) {
+                                                    shareURL(generateBotJoinLink(chat?.chat.slug || ""), `Join ${chat?.chat.title}`);
+                                                }
+                                            }}
+                                        >
+                                            Share
+                                        </Button>
+                                        <Button
+                                            stretched
+                                            before={<MessageCircle/>}
+                                            onClick={() => {
+                                                chat?.chat.joinUrl && openTelegramLink(chat?.chat.joinUrl)
+                                            }}
+                                        >
+                                            Open chat
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </Section>
+                        </Section>
                         <div className={"w-full"}>
                             <Input
                                 placeholder={"Short description"}
                                 header={"Description"}
                                 value={description}
+                                onBlur={onSave}
                                 onChange={(event) => setDescription(event.target.value)}
                             />
                         </div>

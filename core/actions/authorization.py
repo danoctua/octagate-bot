@@ -392,6 +392,8 @@ class AuthorizationAction(BaseAction):
             logger.debug(f"Chat {chat_id!r} does not exist in the database.")
             return
 
+        logger.info(f"New join request: {telegram_user_id=!r} {chat_id=!r}")
+
         await self.telethon_service.start()
         telegram_user = await self.telethon_service.get_user(telegram_user_id)
         local_user = self.user_service.get_or_create(

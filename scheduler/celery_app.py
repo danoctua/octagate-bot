@@ -27,6 +27,10 @@ def create_app() -> Celery:
                     "task": "load-noticed-wallets",
                     "schedule": 15,  # Every 15 seconds
                 },
+                "refresh-chats": {
+                    "task": "refresh-chats",
+                    "schedule": crontab(hour="0"),  # Every day at midnight
+                },
             },
             "beat_schedule_filename": core_settings.beat_schedule_filename,
         }

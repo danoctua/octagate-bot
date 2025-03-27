@@ -105,6 +105,7 @@ services:
     volumes:
       - ./community_manager:/app/community_manager
       - ./core:/app/core
+#      - community-manager-session:/app/community_manager/data
 
   scheduler:
     <<: *x-python-service
@@ -143,10 +144,9 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./api:/app/api
-      - ./core:/app/core
+      - ./core/static:/app/core/static
       - volume-public:/app/core/static:rw
-    command: ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--reload"]
+    command: ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
 
   redis:
     image: "redis:7.2.4-alpine"
@@ -209,6 +209,8 @@ volumes:
       type: none
       o: bind
       device: ./core/static
+  community-manager-session:
+
 
 networks:
   internal:

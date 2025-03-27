@@ -12,6 +12,8 @@ DEFAULT_WALLET_TRACK_EXPIRATION = 60 * 60 * 24 * 365 * 10  # 10 years
 
 ASYNC_TASK_REDIS_PREFIX = "atask"
 
+REQUIRED_BOT_PRIVILEGES = ["invite_users", "ban_users"]
+
 # ------------------ Redis --------------------
 UPDATED_WALLETS_SET_NAME = "updated_wallets"
 DISCONNECTED_WALLETS_SET_NAME = "disconnected_wallets"

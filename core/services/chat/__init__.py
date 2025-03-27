@@ -20,6 +20,7 @@ class TelegramChatService(BaseService):
             title=entity.title,
             is_forum=entity.forum,
             logo_path=logo_path,
+            insufficient_privileges=False,
             # TODO: handle cases with the same slug
             slug=slugify(entity.title),
         )
@@ -36,8 +37,21 @@ class TelegramChatService(BaseService):
         chat.slug = slugify(entity.title)
         chat.is_forum = entity.forum
         chat.logo_path = logo_path
+        # If the chat had insufficient permissions, we reset it
+        chat.insufficient_privileges = False
         self.db_session.commit()
         logger.debug(f"Telegram Chat {chat.title!r} updated.")
+        return chat
+
+    def set_insufficient_privileges(
+        self, chat_id: int, value: bool = True
+    ) -> TelegramChat:
+        chat = self.get(chat_id)
+        chat.insufficient_privileges = value
+        self.db_session.commit()
+        logger.debug(
+            f"Telegram Chat {chat.title!r} insufficient permissions set to {value=}."
+        )
         return chat
 
     def update_description(self, chat: TelegramChat, description: str) -> TelegramChat:

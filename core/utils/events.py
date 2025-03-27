@@ -2,10 +2,10 @@ from typing import Any, Optional
 
 from telethon.events.common import EventBuilder, EventCommon
 from telethon.tl import TLObject
-from telethon.tl.types import UpdateBotChatInviteRequester
+from telethon.tl.types import UpdateBotChatInviteRequester, UpdateChannelParticipant
 
 
-class ChatJoinRequestEvent(EventBuilder):
+class ChatJoinRequestEventBuilder(EventBuilder):
     @classmethod
     def build(
         cls, update: TLObject, others: Any = None, self_id: int | None = None
@@ -22,3 +22,19 @@ class ChatJoinRequestEvent(EventBuilder):
         @property
         def user(self):
             return self._entities.get(self.user_id)
+
+
+class ChatAdminChangeEventBuilder(EventBuilder):
+    @classmethod
+    def build(
+        cls, update: TLObject, others: Any = None, self_id: int | None = None
+    ) -> Optional["Event"]:
+        if isinstance(update, UpdateChannelParticipant):
+            return cls.Event(update=update)
+
+    class Event(EventCommon):
+        def __init__(self, *, update: UpdateChannelParticipant) -> None:
+            super().__init__()
+            self.original_update = update
+            self.prev_participant = update.prev_participant
+            self.new_participant = update.new_participant

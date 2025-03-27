@@ -1,4 +1,36 @@
+x-python-service:
+  &x-python-service
+  user: "1000:1000"
+  depends_on:
+    redis:
+      condition: service_healthy
+    mysql:
+      condition: service_healthy
+  networks:
+    - internal
+
+
 services:
+  api:
+    <<: *x-python-service
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+      target: api
+    image: octagate-api
+    env_file:
+      - ./api/config/.env
+      - ./core/config/.env
+      - ./config/.env
+    container_name: "octagate-api"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app/api
+      - ./core:/app/core
+      - volume-public:/app/core/static:rw
+    command: [ "uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--reload" ]
+
   nginx:
     image: "nginx:stable"
     ports:

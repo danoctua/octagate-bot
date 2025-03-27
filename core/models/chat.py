@@ -33,6 +33,12 @@ class TelegramChat(Base):
         nullable=True,
         doc="Invite link to the chat. If empty, the chat will not be accessible.",
     )
+    insufficient_privileges = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        doc="Whether the chat has insufficient privileges to be managed by Octagate.",
+    )
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     whitelist_external_sources = relationship(

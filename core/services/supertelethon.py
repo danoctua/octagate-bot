@@ -32,7 +32,6 @@ UserPeerType = TelethonUser | InputPeerUser | InputUser
 class TelethonService:
     def __init__(self, client: TelegramClient | None = None) -> None:
         """
-
         :param client: Allows drilling down the TelegramClient instance from the update event.
         """
         if not client:

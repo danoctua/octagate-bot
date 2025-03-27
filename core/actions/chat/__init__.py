@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from telethon.errors import BadRequestError
 from telethon.utils import get_peer_id
 
+from core.constants import REQUIRED_BOT_PRIVILEGES
 from core.dtos.chat import (
     BaseTelegramChatDTO,
     TelegramChatDTO,
@@ -27,6 +28,7 @@ from core.exceptions.chat import (
     TelegramChatNotExists,
 )
 from core.dtos.user import TelegramUserDTO
+from core.models import TelegramChat
 from core.models.user import User
 from core.services.chat import TelegramChatService
 from core.services.chat.user import TelegramChatUserService
@@ -47,7 +49,8 @@ class TelegramChatAction(BaseAction):
         self.telethon_service = TelethonService()
 
     async def _get_chat_data(
-        self, chat_identifier: str | int
+        self,
+        chat_identifier: str | int,
     ) -> tuple[ChatPeerType, str]:
         logger.info(f"Loading chat {chat_identifier!r}...")
         await self.telethon_service.start()
@@ -57,7 +60,9 @@ class TelegramChatAction(BaseAction):
             logger.exception(f"Chat {chat_identifier!r} not found", exc_info=e)
             raise TelegramChatNotExists(f"Chat {chat_identifier!r} not found")
 
-        if not chat.admin_rights or not all([chat.admin_rights.invite_users]):
+        if not chat.admin_rights or not all(
+            [getattr(chat.admin_rights, right) for right in REQUIRED_BOT_PRIVILEGES]
+        ):
             logger.exception(
                 f"Bot user has no rights to invite users: {chat_identifier!r}"
             )
@@ -132,6 +137,38 @@ class TelegramChatAction(BaseAction):
             logo_path=telegram_chat.logo_path,
         )
 
+    async def refresh_all(self) -> None:
+        for chat in self.telegram_chat_service.get_all():
+            try:
+                await self._refresh(chat)
+            except (
+                TelegramChatNotExists,  # happens when chat is deleted or bot is removed from the chat
+                TelegramChatNotSufficientPrivileges,  # happens when bot has no rights to function in the chat
+            ):
+                continue
+
+    async def _refresh(self, chat: TelegramChat) -> TelegramChat:
+        try:
+            chat_entity, logo_path = await self._get_chat_data(chat.id)
+
+        except (
+            TelegramChatNotExists,  # happens when chat is deleted or bot is removed from the chat
+            TelegramChatNotSufficientPrivileges,  # happens when bot has no rights to function in the chat
+        ):
+            logger.warning(
+                f"Chat {chat.id!r} has insufficient permissions set. Disabling it..."
+            )
+            self.telegram_chat_service.set_insufficient_privileges(chat_id=chat.id)
+            raise
+
+        chat = self.telegram_chat_service.update(
+            chat=chat,
+            entity=chat_entity,
+            logo_path=logo_path,
+        )
+        logger.info(f"Chat {chat.id!r} refreshed successfully")
+        return chat
+
     async def refresh(self, slug: str) -> BaseTelegramChatDTO:
         try:
             chat = self.telegram_chat_service.get_by_slug(slug)
@@ -139,13 +176,7 @@ class TelegramChatAction(BaseAction):
             logger.error(f"Chat with slug {slug!r} not found")
             raise TelegramChatNotExists(f"Chat with slug {slug!r} not found")
 
-        chat_entity, logo_path = await self._get_chat_data(chat.id)
-        self.telegram_chat_service.update(
-            chat=chat,
-            entity=chat_entity,
-            logo_path=logo_path,
-        )
-
+        chat = await self._refresh(chat)
         return BaseTelegramChatDTO(
             id=chat.id,
             username=chat.username,
@@ -219,6 +250,7 @@ class TelegramChatAction(BaseAction):
                 join_url=chat.invite_link if is_eligible else None,
                 is_member=is_chat_member,
                 is_eligible=is_eligible,
+                insufficient_privileges=chat.insufficient_privileges,
             ),
             rules=[
                 mapping.get(rule.category, RuleEligibilitySummaryDTO).from_internal_dto(
@@ -256,6 +288,7 @@ class TelegramChatAction(BaseAction):
                 join_url=chat.invite_link,
                 is_member=False,
                 is_eligible=False,
+                insufficient_privileges=chat.insufficient_privileges,
             ),
             rules=sorted(
                 [

@@ -11,6 +11,7 @@ export interface IBaseChat {
     slug: string,
     isForum: boolean,
     logoPath: string,
+    insufficientPrivileges: boolean,
 }
 
 
