@@ -93,11 +93,13 @@ const WhitelistRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: number }
                 }
             >
                 <Input
+                    header={"Title"}
                     value={name}
                     placeholder={"Title"}
                     onChange={e => setName(e.target.value)}
                 />
                 <Input
+                    header={"Description"}
                     value={description}
                     placeholder={"Description"}
                     onChange={e => setDescription(e.target.value)}

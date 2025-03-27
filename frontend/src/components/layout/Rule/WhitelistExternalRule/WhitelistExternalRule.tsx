@@ -69,18 +69,21 @@ const WhitelistExternalRule = ({chatSlug, ruleId}: { chatSlug: string, ruleId?: 
 
     const fields: Record<string, FieldType> = useMemo(() => ({
         name: {
+            header: "Title",
             value: name,
             onChange: handleUpdateName,
             error: errors.name,
             placeholder: "Title"
         },
         description: {
+            header: "Description",
             value: description,
             onChange: handleUpdateDescription,
             error: errors.description,
             placeholder: "Description"
         },
         url: {
+            header: "API endpoint",
             value: url,
             onChange: handleUpdateUrl,
             error: errors.url,
