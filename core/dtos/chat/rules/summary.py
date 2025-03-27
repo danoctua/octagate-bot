@@ -1,65 +1,30 @@
-from pydantic import BaseModel, computed_field
-from pytonapi.utils import raw_to_userfriendly
+from typing import Self
 
-from core.dtos.base import NftItemAttributeDTO
+from pydantic import BaseModel
+
 from core.dtos.chat import TelegramChatDTO
-from core.dtos.chat.rules import EligibilityCheckType, ChatEligibilityRuleDTO
+from core.dtos.chat.rules import ChatEligibilityRuleDTO
+from core.dtos.chat.rules.internal import EligibilitySummaryInternalDTO
 from core.dtos.chat.rules.nft import NftRuleEligibilitySummaryDTO
-
-
-class EligibilitySummaryInternalDTO(BaseModel):
-    """
-    Used for internal purposes to check if chat is eligible for promotion
-    """
-
-    id: int
-    category: EligibilityCheckType
-    title: str
-    address_raw: str | None = None  # required for blockchain rules only
-    actual: float | int = 0.0
-    expected: float | int
-    is_enabled: bool
-    required_attributes: list[NftItemAttributeDTO] | None = None
-
-    @property
-    def address(self):
-        if not self.address_raw:
-            return None
-        return raw_to_userfriendly(self.address_raw)
-
-    @computed_field(return_type=bool)
-    def is_eligible(self):
-        return self.actual >= self.expected
-
-    def __repr__(self):
-        return (
-            f"<{self.__class__.__name__} "
-            f"{self.category=} "
-            f"{self.title=} "
-            f"{self.address=} "
-            f"{self.actual=} "
-            f"{self.expected=}>"
-        )
-
-
-class RulesEligibilitySummaryInternalDTO(BaseModel):
-    """
-    Used for internal purposes to check if chat is eligible for promotion
-    """
-
-    items: list[EligibilitySummaryInternalDTO]
-    is_admin: bool
-
-    def __bool__(self):
-        return any(item.is_eligible for item in self.items)
-
-    def __repr__(self):
-        return f"<{self.__class__.__name__} ({self.items=}) {self.is_admin=}>"
 
 
 class RuleEligibilitySummaryDTO(ChatEligibilityRuleDTO):
     actual: float | None = None
     is_eligible: bool = False
+
+    @classmethod
+    def from_internal_dto(cls, internal_dto: EligibilitySummaryInternalDTO) -> Self:
+        return cls(
+            id=internal_dto.id,
+            category=internal_dto.category,
+            title=internal_dto.title,
+            expected=internal_dto.expected,
+            photo_url=None,
+            blockchain_address=internal_dto.address,
+            is_enabled=internal_dto.is_enabled,
+            actual=internal_dto.actual,
+            is_eligible=internal_dto.is_eligible,  # type: ignore
+        )
 
 
 class TelegramChatWithEligibilitySummaryDTO(BaseModel):

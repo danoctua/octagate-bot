@@ -2,10 +2,9 @@ from fastapi import APIRouter, Depends
 
 from api.deps import validate_user_init_data
 from api.pos.auth import TokenFDO
-from api.pos.user import UserInitDataPO
 from api.services.authentication import AuthenticationService
 from api.settings import api_settings
-from core.dtos.user import TelegramUserDTO
+from core.dtos.user import TelegramUserDTO, UserInitDataPO
 from core.services.db import DBService
 from core.services.user import UserService
 

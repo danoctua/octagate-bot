@@ -23,6 +23,7 @@ class User(Base):
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    allows_write_to_pm = mapped_column(Boolean, nullable=False, default=True)
 
     wallet = relationship(
         "UserWallet",

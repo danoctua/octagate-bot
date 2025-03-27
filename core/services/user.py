@@ -62,6 +62,7 @@ class UserService(BaseService):
             username=telegram_user.username,
             is_premium=telegram_user.is_premium,
             language=telegram_user.language_code,
+            allows_write_to_pm=telegram_user.allow_write_to_pm,
         )
         self.db_session.add(new_user)
         self.db_session.commit()
@@ -73,6 +74,7 @@ class UserService(BaseService):
         user.last_name = telegram_user.last_name
         user.username = telegram_user.username
         user.is_premium = bool(telegram_user.is_premium)
+        user.allows_write_to_pm = telegram_user.allow_write_to_pm
         # TODO add photo_url
         self.db_session.add(user)
         self.db_session.commit()

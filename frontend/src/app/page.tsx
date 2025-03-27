@@ -13,7 +13,7 @@ import {Page} from '@/components/layout/Page';
 
 import useAuthAndFetchUser from "@/hooks/data/useAuthAndFetchUser";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {mainButton, secondaryButton, useLaunchParams} from '@telegram-apps/sdk-react';
+import {mainButton, openLink, secondaryButton, useLaunchParams} from '@telegram-apps/sdk-react';
 import {Check} from "lucide-react";
 import useTonConnect from '@/hooks/useTonConnect';
 import {Address} from "@ton/core";
@@ -29,6 +29,7 @@ import FixedBottomSection, {
 import useMainButtonState from "@/hooks/useMainButtonState";
 import {useClientOnce} from "@/hooks/useClientOnce";
 import DisplayRuleItem from "@/components/layout/Rule/DisplayRuleItem/DisplayRuleItem";
+import {hapticFeedback} from "@telegram-apps/sdk";
 
 export default function Home() {
     const {user, setUser, isUserDataLoading} = useAuthAndFetchUser();
@@ -105,7 +106,13 @@ export default function Home() {
         }
         fetchTaskStatus(asyncTaskId).then(() => {
             setAsyncTaskId(null);
-            fetchChatData().then();
+            fetchChatData().then(
+                () => {
+                    if (hapticFeedback.notificationOccurred.isAvailable()) {
+                        hapticFeedback.notificationOccurred('success');
+                    }
+                }
+            );
         });
     }, [asyncTaskId, fetchChatData]);
 
@@ -162,6 +169,7 @@ export default function Home() {
                 key={`blockchain-rule-${index}`}
                 rule={rule}
                 readOnly
+                onClick={() => {rule.promoteUrl && openLink(rule.promoteUrl)}}
             />
         ))
     ];

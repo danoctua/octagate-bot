@@ -60,7 +60,7 @@ async def handle_chat_action(event: events.ChatAction.Event):
         elif event.user_left or event.user_kicked:
             if event.kicked_by and event.kicked_by.is_self:
                 # Do not handle actions made by the bot
-                logger.debug(f"Action made by the bot {event.added_by.id!r}.")
+                logger.debug(f"Action made by the bot {event.kicked_by.id!r}.")
                 return
 
             logger.info(
@@ -82,12 +82,6 @@ async def handle_join_request(event: ChatJoinRequestEvent.Event):
         extra={"event": event},
     )
     with DBService().db_session() as session:
-        telegram_chat_service = TelegramChatService(session)
-        if not telegram_chat_service.check_exists(event.chat_id):
-            # Do not handle chats that are not in the database
-            logger.debug(f"Chat {event.chat_id!r} does not exist in the database.")
-            return
-
         authorization_action = AuthorizationAction(
             session, telethon_client=event.client
         )

@@ -198,7 +198,6 @@ const NftCollectionRule: FC<PropsWithChildren<{
                 key={"add-attribute"}
                 before={<CirclePlus/>}
                 onClick={onAddRequiredAttribute}
-                // disabled={selectedNftCollection?.blockchainMetadata?.attributes?.length === requiredAttributes.length}
             >
                 Add attribute rule
             </ButtonCell>
@@ -229,7 +228,8 @@ const NftCollectionRule: FC<PropsWithChildren<{
             >
                 <Caption
                     Component={"div"}
-                    style={{color: "var(--tg-theme-subtitle-text-color)", padding: "8px 22px"}}
+                    className={"py-2 px-5"}
+                    style={{color: "var(--tg-theme-subtitle-text-color)"}}
                 >
                     It will add <b>AND</b> constraint for that condition, meaning that all of the attributes selected
                     below should present in the NFT item to pass the rule.

@@ -1,15 +1,16 @@
 import logging
 from collections import defaultdict
 
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
-from telethon import TelegramClient
+from telethon import TelegramClient, Button
 
 from core.actions.base import BaseAction
 from core.dtos.chat.rules import (
     EligibilityCheckType,
     TelegramChatEligibilityRulesDTO,
 )
-from core.dtos.chat.rules.summary import (
+from core.dtos.chat.rules.internal import (
     EligibilitySummaryInternalDTO,
     RulesEligibilitySummaryInternalDTO,
 )
@@ -22,6 +23,7 @@ from core.models.chat import (
     TelegramChatWhitelistExternalSource,
     TelegramChatWhitelist,
 )
+from core.services.chat import TelegramChatService
 from core.services.chat.rule.whitelist import (
     TelegramChatExternalSourceService,
     TelegramChatWhitelistService,
@@ -307,6 +309,11 @@ class AuthorizationAction(BaseAction):
             await self.telethon_service.kick_chat_member(
                 chat_id=member.chat_id, telegram_user_id=member.user.telegram_id
             )
+            if member.user.allows_write_to_pm:
+                await self.telethon_service.send_message(
+                    chat_id=member.user.telegram_id,
+                    message=f"You were kicked out of the **{member.chat.title}**.",
+                )
             self.telegram_chat_user_service.delete(
                 chat_id=member.chat_id, user_id=member.user.id
             )
@@ -378,6 +385,13 @@ class AuthorizationAction(BaseAction):
         telegram_user_id: int,
         chat_id: int,
     ) -> None:
+        telegram_chat_service = TelegramChatService(self.db_session)
+        try:
+            chat = telegram_chat_service.get(chat_id)
+        except NoResultFound:
+            logger.debug(f"Chat {chat_id!r} does not exist in the database.")
+            return
+
         await self.telethon_service.start()
         telegram_user = await self.telethon_service.get_user(telegram_user_id)
         local_user = self.user_service.get_or_create(
@@ -389,6 +403,12 @@ class AuthorizationAction(BaseAction):
             await self.telethon_service.approve_chat_join_request(
                 chat_id=chat_id, telegram_user_id=local_user.telegram_id
             )
+            if local_user.allows_write_to_pm:
+                await self.telethon_service.send_message(
+                    chat_id=telegram_user_id,
+                    message=f"You join request for **{chat.title}** was successfully approved! 🎉\n\nWelcome aboard! 🚀",
+                    buttons=[[Button.url("Open Chat", chat.invite_link)]],
+                )
             self.telegram_chat_user_service.create_or_update(
                 chat_id=chat_id,
                 user_id=local_user.id,

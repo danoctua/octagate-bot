@@ -1,6 +1,6 @@
 import {ButtonStateProps} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {useEffect, useMemo, useState} from "react";
-import {openTelegramLink} from "@telegram-apps/sdk-react";
+import {miniApp, openTelegramLink} from "@telegram-apps/sdk-react";
 import {IChat, IChatConfiguration, IUser} from "@/interfaces";
 
 
@@ -28,68 +28,76 @@ const useMainButtonState = (
     }, [timeLeft]);
 
     return useMemo(() => {
-        if (!startParam) {
-            return;
-        }
-
-        const loading = isUserDataLoading || isChatDataLoading;
-
-        const baseAttributes = {loading}
-
-        if (!user || !chat) {
-            return {
-                text: "Loading...",
-                loading: loading,
-                disabled: true,
-                mode: "filled"
+            if (!startParam) {
+                return;
             }
-        } else if (chat && chat.joinUrl) {
-            return {
-                ...baseAttributes,
-                text: "Join",
-                onClick: () => chat.joinUrl && openTelegramLink(chat.joinUrl),
-            }
-        } else if (chat && !user.walletAddress) {
-            return {
-                ...baseAttributes,
-                text: "Connect wallet to join",
-                mode: "filled",
-                onClick: () => connectWallet().then()
-            }
-        } else if (chat && user.walletAddress && !chat.isEligible) {
-            return {
-                ...baseAttributes,
-                text: timeLeft ? `Refresh again in ${timeLeft}...` : "Refresh",
-                mode: "bezeled",
-                disabled: isUserDataLoading || isChatDataLoading || isButtonDisabled,
-                onClick: () => {
-                    if (isButtonDisabled) {
-                        return
+
+            const loading = isUserDataLoading || isChatDataLoading;
+
+            const baseAttributes = {loading}
+
+            if (!user || !chat) {
+                return {
+                    text: "Loading...",
+                    loading: loading,
+                    disabled: true,
+                    mode: "filled"
+                }
+            } else if (chat && chat.joinUrl) {
+                return {
+                    ...baseAttributes,
+                    text: "Join",
+                    onClick: () => {
+                        if (chat.joinUrl) {
+                            openTelegramLink(chat.joinUrl)
+                            if (miniApp.close.isAvailable()) {
+                                miniApp.close();
+                            }
+                        }
                     }
-                    setIsButtonDisabled(true);
-                    setTimeLeft(10);
-                    fetchChatData().then();
+                }
+            } else if (chat && !user.walletAddress) {
+                return {
+                    ...baseAttributes,
+                    text: "Connect wallet to join",
+                    mode: "filled",
+                    onClick: () => connectWallet().then()
+                }
+            } else if (chat && user.walletAddress && !chat.isEligible) {
+                return {
+                    ...baseAttributes,
+                    text: timeLeft ? `Refresh again in ${timeLeft}...` : "Refresh",
+                    mode: "bezeled",
+                    disabled: isUserDataLoading || isChatDataLoading || isButtonDisabled,
+                    onClick: () => {
+                        if (isButtonDisabled) {
+                            return
+                        }
+                        setIsButtonDisabled(true);
+                        setTimeLeft(10);
+                        fetchChatData().then();
+                    }
+                }
+            } else if (chat && chat.isEligible && !chat.joinUrl) {
+                return {
+                    ...baseAttributes,
+                    text: "No chat link",
+                    disabled: true,
+                    mode: "gray"
                 }
             }
-        } else if (chat && chat.isEligible && !chat.joinUrl) {
-            return {
-                ...baseAttributes,
-                text: "No chat link",
-                disabled: true,
-                mode: "gray"
-            }
-        }
-    }, [
-        chat,
-        connectWallet,
-        fetchChatData,
-        isButtonDisabled,
-        isChatDataLoading,
-        isUserDataLoading,
-        startParam,
-        timeLeft,
-        user
-    ])
+        }, [
+            chat,
+            connectWallet,
+            fetchChatData,
+            isButtonDisabled,
+            isChatDataLoading,
+            isUserDataLoading,
+            startParam,
+            timeLeft,
+            user
+        ]
+    )
 }
 
 export default useMainButtonState;

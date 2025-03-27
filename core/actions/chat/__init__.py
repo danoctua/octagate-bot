@@ -221,8 +221,8 @@ class TelegramChatAction(BaseAction):
                 is_eligible=is_eligible,
             ),
             rules=[
-                mapping.get(rule.category, RuleEligibilitySummaryDTO).model_validate(
-                    rule.model_dump()
+                mapping.get(rule.category, RuleEligibilitySummaryDTO).from_internal_dto(
+                    rule
                 )
                 for rule in eligibility_summary.items
             ],

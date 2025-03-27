@@ -1,21 +1,6 @@
 from typing import Any, Self
 
-from pydantic import BaseModel
-
 from api.pos.base import BaseFDO
-
-
-class UserInitDataPO(BaseModel):
-    id: int
-    username: str | None = None
-    photo_url: str | None = None
-    last_name: str | None = None
-    first_name: str
-    language_code: str
-    is_premium: bool = False
-
-    class Config:
-        extra = "ignore"
 
 
 class UserFDO(BaseFDO):

@@ -36,6 +36,9 @@ class ChatEligibilityRuleDTO(BaseModel):
 
     @computed_field
     def promote_url(self) -> str | None:
+        if not self.blockchain_address:
+            return None
+
         if self.category == EligibilityCheckType.JETTON:
             return PROMOTE_JETTON_TEMPLATE.format(
                 jetton_master_address=self.blockchain_address

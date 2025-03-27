@@ -11,7 +11,7 @@ from starlette.requests import Request
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
 from api.pos.auth import InitDataPO
-from api.pos.user import UserInitDataPO
+from core.dtos.user import UserInitDataPO
 from api.services.authentication import AuthenticationService, UnauthorizedError
 from api.settings import api_settings
 from core.models.user import User
@@ -57,7 +57,6 @@ def validate_user_init_data(init_data_po: InitDataPO) -> UserInitDataPO:
         raise HTTPException(status_code=400, detail="Invalid user data: wrong hash")
 
     user_data = json.loads(init_data.get("user", "{}"))
-    user_data.pop("allows_write_to_pm", None)
 
     return UserInitDataPO(**user_data)
 

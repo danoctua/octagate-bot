@@ -60,7 +60,6 @@ const DisplayRuleItem = (
             readOnly={readOnly}
             multiline={false}
             disabled={false}
-            // before={before}
             after={after}
             onClick={onClick}
             style={rule.isEnabled ? undefined: {...defaultBeforeAfterStyle, textDecoration: "line-through"}}

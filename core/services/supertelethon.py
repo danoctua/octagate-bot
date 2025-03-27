@@ -2,7 +2,7 @@ import datetime
 import logging
 from typing import AsyncGenerator
 
-from telethon import TelegramClient
+from telethon import TelegramClient, Button
 from telethon.sessions import MemorySession
 from telethon.tl.functions.messages import (
     ExportChatInviteRequest,
@@ -147,3 +147,10 @@ class TelethonService:
             HideChatJoinRequestRequest(peer=chat, user_id=user, approved=False)
         )
         logger.debug(f"User {user.id!r} was declined to join the chat {chat.id!r}.")
+
+    async def send_message(
+        self, chat_id: int, message: str, buttons: list[list[Button]] | None = None
+    ) -> None:
+        chat = await self.get_chat(chat_id)
+        await self.client.send_message(chat, message, buttons=buttons)
+        logger.debug(f"Message {message!r} was sent to the chat {chat_id!r}.")

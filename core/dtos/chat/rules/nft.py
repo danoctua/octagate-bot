@@ -3,6 +3,7 @@ from pytonapi.utils import raw_to_userfriendly
 
 from core.dtos.chat.rules import EligibilityCheckType, ChatEligibilityRuleDTO
 from core.dtos.base import NftItemAttributeDTO
+from core.dtos.chat.rules.internal import EligibilitySummaryInternalDTO
 from core.models.chat import TelegramChatNFTCollection
 
 
@@ -51,3 +52,18 @@ class NftEligibilityRuleDTO(ChatEligibilityRuleDTO):
 class NftRuleEligibilitySummaryDTO(NftEligibilityRuleDTO):
     actual: float | None = None
     is_eligible: bool = False
+
+    @classmethod
+    def from_internal_dto(cls, internal_dto: EligibilitySummaryInternalDTO):
+        return cls(
+            id=internal_dto.id,
+            category=internal_dto.category,
+            title=internal_dto.title,
+            expected=internal_dto.expected,
+            photo_url=None,
+            blockchain_address=internal_dto.address,
+            is_enabled=internal_dto.is_enabled,
+            required_attributes=internal_dto.required_attributes,
+            actual=internal_dto.actual,
+            is_eligible=internal_dto.is_eligible,  # type: ignore
+        )
