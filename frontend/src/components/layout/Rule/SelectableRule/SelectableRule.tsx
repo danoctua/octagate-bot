@@ -1,4 +1,4 @@
-import {ButtonCell, Cell, Info, Input, List, Section, Selectable, Switch} from "@telegram-apps/telegram-ui";
+import {ButtonCell, Cell, Info, Input, Section, Selectable, Switch} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
 import {IJettonWithTitle, INftCollectionWithTitle} from "@/interfaces";
 import React, {useMemo, useState} from "react";
@@ -101,14 +101,16 @@ const SelectableRule = (
 
     return (
         <>
-            <Input
-                className={"text-end"}
-                before={<Info type={"text"} className={"whitespace-nowrap"}>Required amount</Info>}
-                after={<Info type={"text"} className={"whitespace-nowrap"}>{category}</Info>}
-                type={"number"}
-                value={expected}
-                onChange={(event) => onExpectedChange(parseInt(event.target.value))}
-            />
+            <Section header={<Section.Header large>Hold to get access</Section.Header>}>
+                <Input
+                    className={"text-end"}
+                    before={<Info type={"text"} className={"whitespace-nowrap"}>Required amount</Info>}
+                    after={<Info type={"text"} className={"whitespace-nowrap"}>{category}</Info>}
+                    type={"number"}
+                    value={expected}
+                    onChange={(event) => onExpectedChange(parseInt(event.target.value))}
+                />
+            </Section>
             <Section
                 header={title}
             >
@@ -134,7 +136,8 @@ const SelectableRule = (
                 }
                 <Cell
                     Component={"label"}
-                    after={<Switch checked onChange={() => {}}/>}
+                    after={<Switch checked onChange={() => {
+                    }}/>}
                     disabled
                     multiline
                     description={"Whether that rule grants write access to the chat"}

@@ -19,6 +19,7 @@
     "@tonconnect/ui-react": "^2.0.5",
     "axios": "^1.7.9",
     "eruda": "^3.0.1",
+    "framer-motion": "^12.6.2",
     "lucide-react": "^0.475.0",
     "next": "14.2.4",
     "normalize.css": "^8.0.1",

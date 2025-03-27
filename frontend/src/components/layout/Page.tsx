@@ -5,6 +5,7 @@ import {PropsWithChildren, ReactNode, useEffect} from 'react';
 import {useRouter} from 'next/navigation';
 import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {List} from "@telegram-apps/telegram-ui";
+import PageWrapper from "@/components/ui/PageWrapper/PageWrapper";
 
 export function Page({children, back = true, fixedBottom = null, increasedBottomSpace = false}: PropsWithChildren<{
     /**
@@ -37,10 +38,13 @@ export function Page({children, back = true, fixedBottom = null, increasedBottom
 
     let classNames = ["flex", "flex-1", "flex-col", "gap-6"]
 
-    return <div className={"flex flex-col min-h-screen pb-16"}>
-        <List className={classNames.join(' ')}>
-            {children}
-        </List>
-        {fixedBottom}
-    </div>;
+    return (<PageWrapper>
+            <div className={"flex flex-col min-h-screen pb-16"}>
+                <List className={classNames.join(' ')}>
+                    {children}
+                </List>
+                {fixedBottom}
+            </div>
+        </PageWrapper>
+    );
 }

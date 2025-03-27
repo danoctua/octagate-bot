@@ -137,6 +137,7 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                         }
                         <Section
                             header={"Invite link"}
+                            footer={"Share this link with your users to join the chat through the gateway."}
                         >
                             <div>
                                 <div className={"w-full py-2 px-4 flex flex-col gap-2"}>

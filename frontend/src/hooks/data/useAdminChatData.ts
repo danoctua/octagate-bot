@@ -13,7 +13,7 @@ const useAdminChatData = (slug: string | undefined,) => {
         }
         setIsChatDataLoading(true);
         return await fetchAdminChatData(slug).then((chatData: IChatConfiguration) => {
-            console.debug("Refreshing chat data", chatData);
+            console.debug("Fetching chat data", chatData);
             setChat(chatData);
             setIsChatDataLoading(false);
             return chatData;
