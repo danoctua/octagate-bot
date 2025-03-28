@@ -2,10 +2,8 @@ import logging
 
 from sqlalchemy.exc import NoResultFound
 from telethon import events
-from telethon.tl.types import ChannelParticipantAdmin, ChannelParticipantCreator
 
 from core.actions.authorization import AuthorizationAction
-from core.constants import REQUIRED_BOT_PRIVILEGES
 from core.dtos.user import TelegramUserDTO
 from core.services.chat import TelegramChatService
 from core.services.chat.user import TelegramChatUserService
@@ -35,7 +33,7 @@ async def handle_chat_action(event: events.ChatAction.Event):
             logger.debug(f"Chat {event.chat_id} does not exist in the database.")
             return
 
-        logger.info(
+        logger.debug(
             f"Chat action: {event.chat_id=!r} {event.user_id=!r} {event.action_message=!r}",
             extra={"event": event},
         )
@@ -52,6 +50,10 @@ async def handle_chat_action(event: events.ChatAction.Event):
             logger.debug(f"Chat action message {event!r} is not handled.")
             return
 
+        elif event.user.bot and not event.user.is_self:
+            logger.debug(f"Other bot user {event.user.id!r} is not handled.")
+            return
+
         authorization_action = AuthorizationAction(
             session, telethon_client=event.client
         )
@@ -62,21 +64,35 @@ async def handle_chat_action(event: events.ChatAction.Event):
                 logger.debug(f"Action made by the bot {event.added_by.id!r}.")
                 return
 
+            elif event.user.is_self:
+                logger.info(
+                    "Bot joined chat: %d",
+                    event.chat_id,
+                    extra={"event": event},
+                )
+                return
+
             logger.info(
                 f"New chat members: {event.chat_id=!r} {event.user_ids=!r}",
                 extra={"event": event},
             )
             await authorization_action.on_chat_members_in(
                 chat_id=event.chat_id,
-                users=[
-                    TelegramUserDTO.from_telethon_user(user) for user in event.users
-                ],
+                users=[TelegramUserDTO.from_telethon_user(event.user)],
             )
 
         elif event.user_left or event.user_kicked:
             if event.kicked_by and event.kicked_by.is_self:
                 # Do not handle actions made by the bot
                 logger.debug(f"Action made by the bot {event.kicked_by.id!r}.")
+                return
+
+            if event.user.is_self:
+                logger.warning(
+                    f"Bot was kicked from chat: {event.chat_id=!r}",
+                    extra={"event": event},
+                )
+                await authorization_action.on_bot_kicked(chat_id=event.chat_id)
                 return
 
             logger.info(
@@ -89,6 +105,9 @@ async def handle_chat_action(event: events.ChatAction.Event):
                     TelegramUserDTO.from_telethon_user(user) for user in event.users
                 ],
             )
+
+        else:
+            logger.debug(f"Unhandled chat action: {event!r}")
 
 
 async def handle_join_request(event: ChatJoinRequestEventBuilder.Event):
@@ -126,19 +145,14 @@ async def handle_chat_participant_update(
 
         logger.info("Handling chat participant update %s", event)
 
-        if event.prev_participant.is_self:
+        if event.is_self:
             logger.info(
-                "Bot user is managed: %d: %s",
-                event.prev_participant.user_id,
+                "Bot user %d is managed in the chat %d: %s",
+                event.user.id,
+                chat_id,
                 event.new_participant,
             )
-            sufficient_privileges = all(
-                [
-                    getattr(event.new_participant.admin_rights, right)
-                    for right in REQUIRED_BOT_PRIVILEGES
-                ]
-            )
-            if not sufficient_privileges:
+            if not event.sufficient_bot_privileges:
                 if not chat.insufficient_privileges:
                     logger.warning(
                         "Insufficient permissions for the bot in chat %d", chat_id
@@ -154,43 +168,35 @@ async def handle_chat_participant_update(
                     )
             return
 
+        elif (target_user_entity := event.user) and target_user_entity.bot:
+            logger.debug(f"Bot user {target_user_entity.id!r} is not handled.")
+            return
+
         telegram_chat_user_service = TelegramChatUserService(db_session=session)
         try:
-            target_user = telegram_chat_user_service.get(
-                chat_id, event.new_participant.user_id
-            )
+            target_user = telegram_chat_user_service.get(chat_id, target_user_entity.id)
         except NoResultFound:
             logger.warning(
-                "User %d participation in the chat %d is not reflected in the database",
-                event.new_participant.user_id,
+                "User %d participation in the chat %d is not reflected in the database. Skipping",
+                target_user_entity.id,
                 chat_id,
             )
             return
 
-        if isinstance(
-            event.prev_participant, ChannelParticipantAdmin
-        ) and not isinstance(
-            event.new_participant, (ChannelParticipantAdmin, ChannelParticipantCreator)
-        ):
-            logger.info(
-                "Admin %d demoted in chat %d", event.prev_participant.user_id, chat_id
-            )
+        if event.is_demoted:
+            logger.info("Admin %d demoted in chat %d", target_user_entity.id, chat_id)
             if target_user.is_admin:
                 telegram_chat_user_service.demote_admin(
-                    chat_id=chat_id, user_id=event.prev_participant.user_id
+                    chat_id=chat_id, user_id=target_user.user_id
                 )
             return
 
-        elif not isinstance(
-            event.prev_participant, ChannelParticipantAdmin
-        ) and isinstance(event.new_participant, ChannelParticipantAdmin):
-            logger.info(
-                "Admin %d promoted in chat %d", event.new_participant.user_id, chat_id
-            )
+        elif event.is_promoted:
+            logger.info("Admin %d promoted in chat %d", target_user_entity.id, chat_id)
             if not target_user.is_admin:
                 telegram_chat_user_service.promote_admin(
-                    chat_id=chat_id, user_id=event.new_participant.user_id
+                    chat_id=chat_id, user_id=target_user.user_id
                 )
             return
 
-        logger.debug("Participant update: %s", event.original_update)
+        logger.debug("Unhandled participant update: %s", event.original_update)

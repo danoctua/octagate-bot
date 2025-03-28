@@ -351,7 +351,7 @@ class AuthorizationAction(BaseAction):
                 )
             else:
                 await self.telethon_service.kick_chat_member(
-                    chat_id=chat_id, telegram_user_id=user.telegram_id
+                    chat_id=chat_id, telegram_user_id=local_user.telegram_id
                 )
                 logger.warning(
                     f"User {local_user.telegram_id!r} is not eligible to join chat {chat_id!r} even though was added. Kicking the user",
@@ -359,6 +359,15 @@ class AuthorizationAction(BaseAction):
                         "eligibility_summary": eligibility_summary,
                     },
                 )
+
+    async def on_bot_kicked(self, chat_id: int) -> None:
+        """
+        Handle the event when the bot is kicked from the chat
+        :param chat_id: Chat ID
+        """
+        telegram_chat_service = TelegramChatService(self.db_session)
+        telegram_chat_service.set_insufficient_privileges(chat_id=chat_id, value=True)
+        logger.info(f"Bot was marked as kicked from chat {chat_id!r}")
 
     async def on_chat_members_out(
         self,

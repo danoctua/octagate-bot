@@ -47,11 +47,16 @@ class TelegramChatService(BaseService):
         self, chat_id: int, value: bool = True
     ) -> TelegramChat:
         chat = self.get(chat_id)
-        chat.insufficient_privileges = value
-        self.db_session.commit()
-        logger.debug(
-            f"Telegram Chat {chat.title!r} insufficient permissions set to {value=}."
-        )
+        if chat.insufficient_privileges != value:
+            chat.insufficient_privileges = value
+            self.db_session.commit()
+            logger.debug(
+                f"Telegram Chat {chat.title!r} insufficient permissions set to {value=}."
+            )
+        else:
+            logger.debug(
+                f"Telegram Chat {chat.title!r} insufficient permissions already set to {value=}."
+            )
         return chat
 
     def update_description(self, chat: TelegramChat, description: str) -> TelegramChat:
