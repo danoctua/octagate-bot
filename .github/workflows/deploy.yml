@@ -8,7 +8,8 @@ on:
 jobs:
   build-and-push-frontend:
     permissions:
-      packages: write
+      contents: read  # Required for checkout
+      packages: write  # Required for pushing to GHCR
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -42,6 +43,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build-and-push-frontend
+    permissions:
+      packages: read  # Allows pulling images from GHCR
 
     steps:
     - name: SSH into server and deploy
