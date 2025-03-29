@@ -143,7 +143,6 @@ services:
       - "8000:8000"
     volumes:
       - ./core/static:/app/core/static
-      - volume-public:/app/core/static:rw
     command: ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
 
   redis:
@@ -189,19 +188,13 @@ services:
     command: ["pnpm", "start"]
     volumes:
       - ./config/.env:/app/.env
-      - volume-public:/app/public/dynamic:ro
+      - ./core/static/public/dynamic:/app/public/dynamic:ro
     networks:
       - internal
 
 volumes:
   volume-data:
   volume-queue:
-  volume-public:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./core/static
   community-manager-session:
   community-manager-tasks-session:
 

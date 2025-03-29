@@ -28,7 +28,6 @@ services:
     volumes:
       - ./api:/app/api
       - ./core:/app/core
-      - volume-public:/app/core/static:rw
     command: [ "uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--reload" ]
 
   nginx:
@@ -47,20 +46,22 @@ services:
 
   frontend:
     image: "octagate-frontend"
+    pull_policy: never
     build:
       context: .
       dockerfile: frontend.Dockerfile
-      target: development
+      target: builder
     container_name: "octagate-frontend"
     env_file:
       - ./config/.env
     ports:
       - "3000:3000"
+    command: ["pnpm", "run", "dev"]
     volumes:
       - ./frontend/src:/app/src
+      - ./core/static/public/dynamic:/app/public/dynamic:ro
       - ./frontend/public:/app/public
-      - ./frontend/package.json:/app/package.json
-      - ./config/.env:/app/.env.local
+      - ./config/.env:/app/.env
       - ./certs:/tmp/certs
     networks:
       - internal

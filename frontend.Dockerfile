@@ -45,3 +45,4 @@ RUN pnpm install --prod
 
 # Expose the port the app runs on
 EXPOSE 3000
+
