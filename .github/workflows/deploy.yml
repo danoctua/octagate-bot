@@ -34,7 +34,7 @@ jobs:
         echo "Creating settings.json from environment variables"
         echo '{
           "botUrl": "${{ vars.NEXT_PUBLIC_BOT_URL }}",
-          "sentryDns": "${{ vars.NEXT_PUBLIC_SENTRY_DNS }}",
+          "sentryDns": "${{ vars.NEXT_PUBLIC_SENTRY_DNS }}"
         }' > frontend/public/settings.json
 
     - name: Set up Docker Buildx
