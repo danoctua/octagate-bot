@@ -14,10 +14,6 @@ jobs:
     environment: staging
     env:
       CI: true
-      NEXT_PUBLIC_BOT_URL: ${{ vars.NEXT_PUBLIC_BOT_URL }}
-      NEXT_PUBLIC_SENTRY_DNS: ${{ vars.NEXT_PUBLIC_SENTRY_DNS }}
-      NODE_ENV: ${{ vars.NODE_ENV }}
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
     steps:
     - name: Checkout code
@@ -41,12 +37,16 @@ jobs:
       with:
         context: .
         file: frontend.Dockerfile
+        secret-envs:
+          - NEXT_PUBLIC_BOT_URL: ${{ vars.NEXT_PUBLIC_BOT_URL }}
+          - NEXT_PUBLIC_SENTRY_DNS: ${{ vars.NEXT_PUBLIC_SENTRY_DNS }}
         push: true
         tags: |
           ghcr.io/${{ github.repository_owner }}/octagate-frontend:latest
           ghcr.io/${{ github.repository_owner }}/octagate-frontend:${{ env.GIT_SHA }}
   deploy:
     runs-on: ubuntu-latest
+    environment: staging
     needs: build-and-push-frontend
     permissions:
       packages: read  # Allows pulling images from GHCR
