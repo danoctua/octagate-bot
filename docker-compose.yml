@@ -177,20 +177,13 @@ services:
       - internal
 
   frontend:
-    image: "octagate-frontend"
-    build:
-      context: .
-      dockerfile: frontend.Dockerfile
-      target: production
+    image: ghcr.io/danoctua/octagate-frontend:latest
     container_name: "octagate-frontend"
     env_file:
       - ./config/.env
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
-      - ./frontend/package.json:/app/package.json
       - ./config/.env:/app/.env
       - volume-public:/app/public/dynamic:ro
     networks:
