@@ -3,6 +3,7 @@ import asyncio
 from celery.utils.log import get_task_logger
 
 from community_manager.celery_app import app
+from community_manager.entrypoint import init_client
 from community_manager.settings import community_manager_settings
 from core.actions.authorization import AuthorizationAction
 from core.actions.chat import TelegramChatAction
@@ -41,7 +42,10 @@ async def sanity_chat_checks(
 
         telegram_chat_user_service = TelegramChatUserService(db_session)
         chat_members = telegram_chat_user_service.get_all(user_ids=list(user_ids))
-        authorization_action = AuthorizationAction(db_session)
+        telethon_service = init_client()
+        authorization_action = AuthorizationAction(
+            db_session, telethon_client=telethon_service.client
+        )
         await authorization_action.kick_ineligible_chat_members(
             chat_members=chat_members
         )

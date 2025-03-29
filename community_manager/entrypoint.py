@@ -18,10 +18,13 @@ logger = logging.getLogger(__name__)
 
 def init_client():
     # Make session persistent for community manager
-    session_path = Path(__file__).parent / "data"
+    session_path = Path(__file__).parent.parent / "data"
     if not session_path.exists():
-        session_path.mkdir(parents=True)
+        raise FileNotFoundError(
+            f"Session path {session_path} does not exist. Please create it."
+        )
 
+    # This session is not thread-safe, and cannot be used by multiple clients at the same time.
     session = SQLiteSession(str(session_path / "octagate.session"))
     client = TelegramClient(
         session,
@@ -29,6 +32,10 @@ def init_client():
         community_manager_settings.telegram_app_hash,
     )
     service = TelethonService(client=client)
+    return service
+
+
+def add_event_handlers(service: TelethonService):
     service.client.add_event_handler(handle_join_request, ChatJoinRequestEventBuilder())
     service.client.add_event_handler(handle_chat_action, events.ChatAction())
     service.client.add_event_handler(
@@ -40,6 +47,7 @@ def init_client():
 def main():
     logger.info("Community Manager started.")
     telethon_service = init_client()
+    telethon_service = add_event_handlers(telethon_service)
     telethon_service.start_sync()
     telethon_service.client.run_until_disconnected()
 

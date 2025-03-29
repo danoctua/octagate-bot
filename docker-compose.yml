@@ -1,6 +1,5 @@
 x-python-service:
   &x-python-service
-  user: "1000:1000"
   depends_on:
     redis:
       condition: service_healthy
@@ -93,7 +92,6 @@ services:
     ]
     volumes:
       - ./community_manager:/app/community_manager
-      - ./core:/app/core
 
   community-manager:
     <<: *x-python-service
@@ -104,8 +102,6 @@ services:
     command: ["python3", "community_manager/entrypoint.py"]
     volumes:
       - ./community_manager:/app/community_manager
-      - ./core:/app/core
-#      - community-manager-session:/app/community_manager/data
 
   scheduler:
     <<: *x-python-service
@@ -210,6 +206,7 @@ volumes:
       o: bind
       device: ./core/static
   community-manager-session:
+  community-manager-tasks-session:
 
 
 networks:
