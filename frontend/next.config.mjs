@@ -1,12 +1,7 @@
 import {withSentryConfig} from '@sentry/nextjs';
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-    env: {
-        NEXT_PUBLIC_BOT_URL: process.env.NEXT_PUBLIC_BOT_URL,
-        NEXT_PUBLIC_SENTRY_DNS: process.env.NEXT_PUBLIC_SENTRY_DNS,
-    }
-}
+const nextConfig = {}
 
 export default withSentryConfig(nextConfig, {
 // For all available options, see:

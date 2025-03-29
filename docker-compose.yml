@@ -180,6 +180,7 @@ services:
 
   frontend:
     image: ghcr.io/danoctua/octagate-frontend:latest
+    pull_policy: always
     container_name: "octagate-frontend"
     env_file:
       - ./config/.env

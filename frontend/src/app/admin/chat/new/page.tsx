@@ -149,7 +149,7 @@ const NewChatPage = () => {
                 />
             </BannerPage>
         )
-    }, [chatIdentifier, isDisabled, isChatDataLoading, isPermissionError, newChatSlug, onAddChatButtonClick, router, setChatIdOnChange])
+    }, [isPermissionError, newChatSlug, isDisabled, isChatDataLoading, onAddChatButtonClick, chatIdentifier, config, router, setChatIdOnChange])
 }
 
 

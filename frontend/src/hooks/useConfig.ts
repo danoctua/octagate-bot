@@ -1,4 +1,5 @@
-import {useEffect, useState} from "react";
+import {useState} from "react";
+import {useClientOnce} from "@/hooks/useClientOnce";
 
 export default function useConfig() {
   const [config, setConfig] = useState<{
@@ -6,11 +7,11 @@ export default function useConfig() {
       sentryDns: string,
   } | null>(null);
 
-  useEffect(() => {
+  useClientOnce(() => {
     fetch("/settings.json")
       .then((res) => res.json())
       .then((data) => setConfig(data));
-  }, []);
+  });
 
   return config;
 }
