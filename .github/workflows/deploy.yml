@@ -11,8 +11,13 @@ jobs:
       contents: read  # Required for checkout
       packages: write  # Required for pushing to GHCR
     runs-on: ubuntu-latest
+    environment: staging
     env:
       CI: true
+      NEXT_PUBLIC_BOT_URL: ${{ vars.NEXT_PUBLIC_BOT_URL }}
+      NEXT_PUBLIC_SENTRY_DNS: ${{ vars.NEXT_PUBLIC_SENTRY_DNS }}
+      NODE_ENV: ${{ vars.NODE_ENV }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
     steps:
     - name: Checkout code
