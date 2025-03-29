@@ -167,3 +167,6 @@ core/static/nfts/*
 core/static/chats/*
 core/static/avatars/*
 *.session
+
+
+frontend/public/settings.json

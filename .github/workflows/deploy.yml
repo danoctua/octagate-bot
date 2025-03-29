@@ -29,6 +29,14 @@ jobs:
         username: ${{ github.actor }}  # Uses the GitHub username
         password: ${{ secrets.GITHUB_TOKEN }}  # Can use PAT if needed
 
+    - name: Create settings.json from environment variables
+      run: |
+        echo "Creating settings.json from environment variables"
+        echo '{
+          "botUrl": "${{ vars.NEXT_PUBLIC_BOT_URL }}",
+          "sentryDns": "${{ vars.NEXT_PUBLIC_SENTRY_DNS }}",
+        }' > frontend/public/settings.json
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
@@ -37,9 +45,6 @@ jobs:
       with:
         context: .
         file: frontend.Dockerfile
-        secret-envs:
-          - NEXT_PUBLIC_BOT_URL: ${{ vars.NEXT_PUBLIC_BOT_URL }}
-          - NEXT_PUBLIC_SENTRY_DNS: ${{ vars.NEXT_PUBLIC_SENTRY_DNS }}
         push: true
         tags: |
           ghcr.io/${{ github.repository_owner }}/octagate-frontend:latest

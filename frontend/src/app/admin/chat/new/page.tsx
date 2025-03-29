@@ -11,6 +11,7 @@ import {IChat} from "@/interfaces";
 import {AxiosError} from "axios";
 import {openTelegramLink} from "@telegram-apps/sdk-react";
 import {generateBotAddToChatLink} from "@/utils/bot";
+import useConfig from "@/hooks/useConfig";
 
 
 const regex = /^(-?\d+(\.\d+)?)$|^(https:\/\/t\.me\/[a-zA-Z0-9_]{4,32})$/
@@ -22,6 +23,7 @@ const NewChatPage = () => {
     const [isPermissionError, setIsPermissionError] = useState<boolean>(false);
     const [newChatSlug, setNewChatSlug] = useState<string | null>(null);
     const router = useRouter();
+    const config = useConfig();
 
     const {addChat, isChatDataLoading} = useChatData();
 
@@ -80,10 +82,11 @@ const NewChatPage = () => {
                         <FixedBottomSection
                             button={
                                 <FixedBottomButton
+                                    disabled={!config}
                                     text={"Add Bot"}
                                     onClick={
                                         () => {
-                                            openTelegramLink(generateBotAddToChatLink())
+                                            config && openTelegramLink(generateBotAddToChatLink(config.botUrl))
                                             setIsPermissionError(false)
                                         }
                                     }

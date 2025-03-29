@@ -15,6 +15,7 @@ import {copyTextToClipboard} from "@telegram-apps/sdk"
 import useAdminChatData from "@/hooks/data/useAdminChatData";
 import useFlashMessages from "@/hooks/useFlashMessages";
 import {IChat} from "@/interfaces";
+import useConfig from "@/hooks/useConfig";
 
 
 const removeChatPopupButtons: {
@@ -48,6 +49,7 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
     const {pushMessage} = useFlashMessages();
     const [description, setDescription] = useState<string>("");
     const router = useRouter();
+    const config = useConfig();
 
     useClientOnce(() => {
         fetchChatData().then().catch((e) => {
@@ -117,6 +119,13 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
         }, [removeChat, router]
     )
 
+    const chatJoinLink = useMemo(() => {
+        if (!chat || !config) {
+            return "";
+        }
+        return generateBotJoinLink(config.botUrl, chat.chat.slug);
+    }, [config, chat]);
+
     return (
         <Page
             back={true}
@@ -147,13 +156,13 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                                         after={<Copy/>}
                                         onClick={
                                             () => {
-                                                copyTextToClipboard(generateBotJoinLink(chat?.chat.slug || "")).then(
+                                                copyTextToClipboard(chatJoinLink).then(
                                                     () => pushMessage("Copied", "Link copied to clipboard", "info")
                                                 )
                                             }
                                         }
                                     >
-                                        {generateBotJoinLink(chat?.chat.slug || "")}
+                                        {chatJoinLink}
                                     </Button>
                                     <div className={"flex flex-1 justify-between gap-2"}>
                                         <Button
@@ -163,7 +172,7 @@ const ChatPage = ({params}: { params: { slug: string } }) => {
                                                 // Without an explicit call to init, the SDK will not be able to share the URL
                                                 init();
                                                 if (shareURL.isAvailable()) {
-                                                    shareURL(generateBotJoinLink(chat?.chat.slug || ""), `Join ${chat?.chat.title}`);
+                                                    shareURL(chatJoinLink, `Join ${chat?.chat.title}`);
                                                 }
                                             }}
                                         >
