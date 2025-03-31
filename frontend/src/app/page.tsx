@@ -54,7 +54,7 @@ export default function Home() {
                 setUser(data.user);
                 setAsyncTaskId(data.taskId);
             }).catch((error) => {
-                if (hapticFeedback.notificationOccurred.isAvailable()){
+                if (hapticFeedback.notificationOccurred.isAvailable()) {
                     hapticFeedback.notificationOccurred('error');
                 }
                 tonConnectUI.disconnect();
@@ -132,19 +132,21 @@ export default function Home() {
     ), [user?.walletAddress]);
 
     if (!launchParams.startParam) {
-        return <div>
-            <Placeholder
-                description="Please, try again, we don't have chats gallery yet"
-                header="You got lost"
-            >
-                <Image
-                    alt="Lost bananas"
-                    src="/telegram.gif"
-                    width={150}
-                    height={150}
-                />
-            </Placeholder>
-        </div>;
+        return <Page>
+            <div className={"flex flex-1 justify-center items-center"}>
+                <Placeholder
+                    description="Please, try again, we don't have chats gallery yet"
+                    header="You got lost"
+                >
+                    <Image
+                        alt="Lost bananas"
+                        src="/telegram.gif"
+                        width={150}
+                        height={150}
+                    />
+                </Placeholder>
+            </div>
+        </Page>;
     }
 
     if (!user || !chat) {
@@ -172,7 +174,9 @@ export default function Home() {
                 key={`blockchain-rule-${index}`}
                 rule={rule}
                 readOnly
-                onClick={() => {rule.promoteUrl && openLink(rule.promoteUrl)}}
+                onClick={() => {
+                    rule.promoteUrl && openLink(rule.promoteUrl)
+                }}
             />
         ))
     ];

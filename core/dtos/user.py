@@ -15,6 +15,7 @@ class UserInitDataPO(BaseModel):
     language_code: str
     is_premium: bool = False
     allow_write_to_pm: bool = True
+    check_admin: bool = False
 
     class Config:
         extra = "ignore"

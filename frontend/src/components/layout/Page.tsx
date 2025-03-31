@@ -7,7 +7,7 @@ import FixedBottomSection from "@/components/ui/FixedBottomSection/FixedBottomSe
 import {List} from "@telegram-apps/telegram-ui";
 import PageWrapper from "@/components/ui/PageWrapper/PageWrapper";
 
-export function Page({children, back = true, fixedBottom = null, increasedBottomSpace = false}: PropsWithChildren<{
+export function Page({children, back = true, fixedBottom = null}: PropsWithChildren<{
     /**
      * True if it is allowed to go back from this page.
      * @default true
@@ -38,7 +38,8 @@ export function Page({children, back = true, fixedBottom = null, increasedBottom
 
     let classNames = ["flex", "flex-1", "flex-col", "gap-6"]
 
-    return (<PageWrapper>
+    return (
+        <PageWrapper>
             <div className={"flex flex-col min-h-screen pb-16"}>
                 <List className={classNames.join(' ')}>
                     {children}

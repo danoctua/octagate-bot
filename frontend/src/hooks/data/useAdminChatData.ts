@@ -1,4 +1,4 @@
-import {useCallback, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {deleteChat, fetchAdminChatData, refreshChat, updateChat} from "@/services";
 import {IChat, IChatConfiguration} from "@/interfaces";
 
@@ -6,6 +6,7 @@ import {IChat, IChatConfiguration} from "@/interfaces";
 const useAdminChatData = (slug: string | undefined,) => {
     const [chat, setChat] = useState<IChatConfiguration | null>(null);
     const [isChatDataLoading, setIsChatDataLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
 
     const fetchChatData = useCallback(async () => {
         if (!slug) {
@@ -15,8 +16,11 @@ const useAdminChatData = (slug: string | undefined,) => {
         return await fetchAdminChatData(slug).then((chatData: IChatConfiguration) => {
             console.debug("Fetching chat data", chatData);
             setChat(chatData);
-            setIsChatDataLoading(false);
             return chatData;
+        }).catch((error) => {
+            setError(error);
+        }).finally(() => {
+            setIsChatDataLoading(false);
         });
     }, [slug])
 
@@ -58,6 +62,13 @@ const useAdminChatData = (slug: string | undefined,) => {
             setIsChatDataLoading(false);
         });
     }, [slug])
+
+    useEffect(() => {
+        if (error) {
+            console.error("Error fetching chats:", error);
+            throw error;
+        }
+    }, [error]);
 
     return {
         chat,

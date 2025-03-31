@@ -110,6 +110,15 @@ async def refresh_chat(
             detail={"error": {"message": "Chat not found"}},
             status_code=404,
         )
+    except TelegramChatNotSufficientPrivileges:
+        raise HTTPException(
+            detail={
+                "error": {
+                    "message": "You have to add bot to chat with admin rights to invite users first"
+                }
+            },
+            status_code=400,
+        )
 
 
 @admin_chat_router.put("/{slug}")

@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, type PropsWithChildren} from 'react';
+import {PropsWithChildren} from 'react';
 import {
     miniApp,
     useLaunchParams,
@@ -71,5 +71,9 @@ export function Root(props: PropsWithChildren) {
                     <RootInner {...props}/>
             }
         </ErrorBoundary>
-    ) : <div className="root__loading">Loading...</div>;
+    ) : (
+        <div className={"flex flex-1 justify-center items-center"}>
+            <div>Loading...</div>
+        </div>
+    );
 }
