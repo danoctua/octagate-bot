@@ -59,7 +59,7 @@ services:
     command: ["pnpm", "run", "dev"]
     volumes:
       - ./frontend/src:/app/src
-      - ./core/static/public/dynamic:/app/public/dynamic:ro
+      - ./core/static:/app/public/dynamic:ro
       - ./frontend/public:/app/public
       - ./config/.env:/app/.env
       - ./certs:/tmp/certs

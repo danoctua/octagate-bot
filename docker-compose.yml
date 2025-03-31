@@ -188,7 +188,7 @@ services:
     command: ["pnpm", "start"]
     volumes:
       - ./config/.env:/app/.env
-      - ./core/static/public/dynamic:/app/public/dynamic:ro
+      - ./core/static:/app/public/dynamic:ro
     networks:
       - internal
 
