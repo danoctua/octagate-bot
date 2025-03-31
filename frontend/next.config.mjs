@@ -4,8 +4,8 @@ import {withSentryConfig} from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        loader: 'custom',
-        loaderFile: './src/cdnImageLoader.ts',
+        // loader: 'custom',
+        // loaderFile: './src/cdnImageLoader.ts',
         domains: [process.env.NEXT_PUBLIC_CDN_URL]
     },
 }
