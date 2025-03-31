@@ -17,7 +17,6 @@ RUN pnpm install
 COPY frontend/next.config.mjs frontend/tailwind.config.ts frontend/postcss.config.mjs frontend/tsconfig.json ./
 COPY frontend/public ./public
 COPY frontend/src ./src
-COPY config/.env ./.env
 
 # Stage 2: Development stage
 FROM base AS development
