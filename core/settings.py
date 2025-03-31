@@ -33,8 +33,6 @@ class CoreSettings(BaseSettings):
 
     default_language: str = "en"
 
-    tc_manifest_url: str
-
     model_config = SettingsConfigDict(
         case_sensitive=False,
         validate_default=True,
@@ -56,6 +54,12 @@ class CoreSettings(BaseSettings):
     beat_schedule_filename: str = "/tmp/celerybeat-schedule"
 
     env: str = "development"
+
+    cdn_access_key: str
+    cdn_secret_key: str
+    cdn_endpoint: str
+    cdn_region: str = "auto"
+    cdn_bucket_name: str
 
 
 core_settings = CoreSettings()

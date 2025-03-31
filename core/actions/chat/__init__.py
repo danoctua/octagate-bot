@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import sqlalchemy
 from sqlalchemy.exc import NoResultFound
@@ -28,8 +29,9 @@ from core.exceptions.chat import (
     TelegramChatNotExists,
 )
 from core.dtos.user import TelegramUserDTO
-from core.models import TelegramChat
+from core.models.chat import TelegramChat
 from core.models.user import User
+from core.services.cdn import CDNService
 from core.services.chat import TelegramChatService
 from core.services.chat.user import TelegramChatUserService
 from core.services.supertelethon import TelethonService, ChatPeerType
@@ -47,11 +49,12 @@ class TelegramChatAction(BaseAction):
         self.telegram_chat_user_service = TelegramChatUserService(db_session)
         self.authorization_action = AuthorizationAction(db_session)
         self.telethon_service = TelethonService()
+        self.cdn_service = CDNService()
 
     async def _get_chat_data(
         self,
         chat_identifier: str | int,
-    ) -> tuple[ChatPeerType, str]:
+    ) -> tuple[ChatPeerType, Path]:
         logger.info(f"Loading chat {chat_identifier!r}...")
         await self.telethon_service.start()
         try:
@@ -71,6 +74,10 @@ class TelegramChatAction(BaseAction):
             )
 
         logo_path = await self.telethon_service.download_profile_photo(chat)
+        await self.cdn_service.upload_file(
+            file_path=logo_path,
+            object_name=logo_path.name,
+        )
         return chat, logo_path
 
     async def create(self, chat_identifier: str | int) -> BaseTelegramChatDTO:
@@ -79,7 +86,7 @@ class TelegramChatAction(BaseAction):
             telegram_chat = self.telegram_chat_service.create(
                 chat_id=get_peer_id(chat, add_mark=True),
                 entity=chat,
-                logo_path=logo_path,
+                logo_path=logo_path.name,
             )
         except sqlalchemy.exc.IntegrityError:
             logger.exception(f"Chat {chat_identifier!r} already exists")
@@ -164,7 +171,7 @@ class TelegramChatAction(BaseAction):
         chat = self.telegram_chat_service.update(
             chat=chat,
             entity=chat_entity,
-            logo_path=logo_path,
+            logo_path=logo_path.name,
         )
         logger.info(f"Chat {chat.id!r} refreshed successfully")
         return chat

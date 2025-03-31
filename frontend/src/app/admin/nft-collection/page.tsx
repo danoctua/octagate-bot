@@ -3,12 +3,14 @@
 import useNftCollectionsData from "@/hooks/data/useNftCollectionsData";
 import {useRouter} from "next/navigation";
 import {useMemo} from "react";
-import {ButtonCell, Cell, Section, Skeleton, Title} from "@telegram-apps/telegram-ui";
+import {Avatar, ButtonCell, Cell, Section, Skeleton, Title} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
 import {CirclePlus} from "lucide-react";
 import {Page} from "@/components/layout/Page";
 import Header from "@/components/ui/Header/Header";
 import Image from "next/image";
+import {getImageUrl} from "@/utils/image";
+import {getAcronymFromName} from "@/utils/text";
 
 const NftCollectionsPage = () => {
     const {nftCollections, isLoading: isNftCollectionsLoading} = useNftCollectionsData({whitelistedOnly: false});
@@ -22,12 +24,10 @@ const NftCollectionsPage = () => {
                         nftCollections?.map((nftCollection) => (
                             <Cell
                                 before={
-                                    <ImageWithFallback
-                                        src={`/dynamic/nfts/${nftCollection.logoPath}`}
-                                        fallbackSrc={"/welcome.gif"}
-                                        width={40}
-                                        height={40}
-                                        rounded
+                                    <Avatar
+                                        src={getImageUrl(nftCollection.logoPath)}
+                                        acronym={getAcronymFromName(nftCollection.name)}
+                                        size={40}
                                     />
                                 }
                                 subtitle={nftCollection.description}

@@ -93,7 +93,7 @@ export interface IJetton {
     name: string,
     description?: string,
     symbol: string,
-    logoPath?: string,
+    logoPath: string,
     isEnabled: boolean,
     blockchainMetadata?: undefined
 }
@@ -113,7 +113,7 @@ export interface INftCollection {
     address: string,
     name: string,
     description?: string,
-    logoPath?: string,
+    logoPath: string,
     isEnabled: boolean,
     blockchainMetadata?: INFTCollectionMetadata
 }

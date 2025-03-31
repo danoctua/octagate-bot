@@ -9,6 +9,7 @@ import Header from "@/components/ui/Header/Header";
 import Image from "next/image";
 import {Page} from "@/components/layout/Page";
 import {getAcronymFromName} from "@/utils/text";
+import {getImageUrl} from "@/utils/image";
 
 
 const ChatsPage = () => {
@@ -24,7 +25,7 @@ const ChatsPage = () => {
                             <Cell
                                 before={
                                     <Avatar
-                                        src={`/dynamic/chats/${chat.logoPath}`}
+                                        src={getImageUrl(chat.logoPath)}
                                         acronym={getAcronymFromName(chat.title)}
                                         size={40}
                                     />

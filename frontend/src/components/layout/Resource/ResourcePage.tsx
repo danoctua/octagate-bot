@@ -3,19 +3,19 @@
 import React, {FC, PropsWithChildren, ReactNode, useCallback, useEffect, useMemo, useState} from "react";
 import {Page} from "@/components/layout/Page";
 import Header from "@/components/ui/Header/Header";
-import {Cell, Info, Section, Skeleton, Subheadline, Switch, Title} from "@telegram-apps/telegram-ui";
-import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
+import {Avatar, Cell, Info, Section, Skeleton, Subheadline, Switch, Title} from "@telegram-apps/telegram-ui";
 import FixedBottomSection, {FixedBottomButton} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {Link} from "@/components/functional/Link/Link";
 import {ExternalLink} from "lucide-react";
 import {IJetton, INftCollection} from "@/interfaces";
+import {getImageUrl} from "@/utils/image";
+import {getAcronymFromName} from "@/utils/text";
 
 
 const ResourcePage: FC<PropsWithChildren<{
     resource?: INftCollection | IJetton,
     isLoading: boolean,
     toggleResource: (address: string, isEnabled: boolean) => Promise<INftCollection | IJetton>
-    resourceStaticPath: string
     resourceType: "NFT collection" | "jetton",
     onSave: (address: string) => void,
     children?: ReactNode,
@@ -23,7 +23,6 @@ const ResourcePage: FC<PropsWithChildren<{
            resource,
            isLoading,
            toggleResource,
-           resourceStaticPath,
            resourceType,
            onSave,
            children
@@ -48,18 +47,16 @@ const ResourcePage: FC<PropsWithChildren<{
                 <Header>
                     {resource &&
                         <>
-                            <ImageWithFallback
-                                src={`${resourceStaticPath}/${resource?.logoPath}`}
-                                fallbackSrc={"/welcome.gif"}
-                                rounded
-                                width={96}
-                                height={96}
+                            <Avatar
+                                src={getImageUrl(resource.logoPath)}
+                                acronym={getAcronymFromName(resource.name)}
+                                size={96}
                             />
                             <div className={"flex flex-col items-center justify-center text-center gap-1"}>
                                 <Title level={"1"} weight={"1"} plain>
                                     {resource?.name || `Add new ${resourceType}`}
                                 </Title>
-                                {resource?.address &&
+                                {resource.address &&
                                     <Subheadline>
                                         <Link
                                             href={`https://tonviewer.com/${resource?.address}`}
@@ -85,7 +82,7 @@ const ResourcePage: FC<PropsWithChildren<{
                     }
                 </Header>
             )
-        }, [resource, resourceStaticPath, resourceType]
+        }, [resource, resourceType]
     )
 
     const renderForm = useMemo(

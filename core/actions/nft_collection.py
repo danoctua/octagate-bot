@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from core.dtos.resource import NftCollectionDTO
 from core.actions.base import BaseAction
 from core.constants import NFT_LOGO_SUB_PATH, DEFAULT_NFT_LOGO_PATH
+from core.services.cdn import CDNService
 from core.services.nft import NftCollectionService
 from core.services.superredis import RedisService
 from core.utils.file import pick_best_preview, download_media
@@ -19,6 +20,7 @@ class NftCollectionAction(BaseAction):
     def __init__(self, db_session: Session) -> None:
         super().__init__(db_session)
         self.nft_collection_service = NftCollectionService(db_session)
+        self.cdn_service = CDNService()
 
     def get_all(self, whitelisted_only: bool) -> list[NftCollectionDTO]:
         nft_collections = self.nft_collection_service.get_all(
@@ -46,6 +48,10 @@ class NftCollectionAction(BaseAction):
             )
         else:
             logo_path = DEFAULT_NFT_LOGO_PATH
+
+        await self.cdn_service.upload_file(
+            file_path=logo_path, object_name=logo_path.name
+        )
 
         blockchain_metadata = await blockchain_service.parse_nft_collection_metadata(
             address_raw

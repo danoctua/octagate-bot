@@ -50,7 +50,7 @@ services:
     build:
       context: .
       dockerfile: frontend.Dockerfile
-      target: builder
+      target: development
     container_name: "octagate-frontend"
     env_file:
       - ./config/.env
@@ -60,7 +60,6 @@ services:
     volumes:
       - ./frontend/src:/app/src
       - ./core/static:/app/public/dynamic:ro
-      - ./frontend/public:/app/public
       - ./config/.env:/app/.env
       - ./certs:/tmp/certs
     networks:

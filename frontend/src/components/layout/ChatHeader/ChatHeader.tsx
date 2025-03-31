@@ -4,6 +4,7 @@ import {IChat} from "@/interfaces";
 
 import Header from "@/components/ui/Header/Header";
 import {getAcronymFromName} from "@/utils/text";
+import {getImageUrl} from "@/utils/image";
 
 
 const ChatHeader: FC<PropsWithChildren<{
@@ -19,7 +20,7 @@ const ChatHeader: FC<PropsWithChildren<{
                 {chat &&
                     <div className={"w-full flex items-center justify-center flex-col gap-2"}>
                         <Avatar
-                            src={`/dynamic/chats/${chat?.logoPath}`}
+                            src={getImageUrl(chat?.logoPath)}
                             acronym={getAcronymFromName(chat?.title)}
                             size={96}
                         />

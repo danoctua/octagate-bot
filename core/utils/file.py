@@ -45,7 +45,7 @@ def download_media(
     name: str,
     subdirectory: str | None = None,
     default_extension: str = ".webp",
-) -> str:
+) -> Path:
     """
     Download media from URL.
 
@@ -54,16 +54,17 @@ def download_media(
     :param subdirectory: Subdirectory to save the file in.
     :param default_extension: Default extension to use if the extension cannot be guessed.
 
-    :return: Name of the downloaded file.
+    :return: Path to the downloaded file.
     """
     root_path = STATIC_PATH / (subdirectory or "")
 
     response = client.get(url)
     file_name = f"{name}.{guess_file_extension(response) or default_extension}"
-    with open(root_path / file_name, "wb") as file:
+    full_path = root_path / file_name
+    with open(full_path, "wb") as file:
         file.write(response.content)
 
-    return file_name
+    return full_path
 
 
 def pick_best_preview(previews: list[ImagePreview]) -> ImagePreview:

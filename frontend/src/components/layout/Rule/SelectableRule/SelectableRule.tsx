@@ -1,8 +1,10 @@
-import {ButtonCell, Cell, Info, Input, Section, Selectable, Switch} from "@telegram-apps/telegram-ui";
+import {Avatar, ButtonCell, Cell, Info, Input, Section, Selectable, Switch} from "@telegram-apps/telegram-ui";
 import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
 import {IJettonWithTitle, INftCollectionWithTitle} from "@/interfaces";
 import React, {useMemo, useState} from "react";
 import {ChevronDown, ChevronUp} from "lucide-react";
+import {getImageUrl} from "@/utils/image";
+import {getAcronymFromName} from "@/utils/text";
 
 
 const DEFAULT_MAX_ITEMS = 3;
@@ -65,12 +67,10 @@ const SelectableRule = (
                 key={item.address}
                 Component={"label"}
                 before={
-                    <ImageWithFallback
-                        src={`/dynamic/${category}/${item.logoPath}`}
-                        fallbackSrc={"/welcome.gif"}
-                        rounded
-                        width={40}
-                        height={40}
+                    <Avatar
+                        src={getImageUrl(item.logoPath)}
+                        acronym={getAcronymFromName(item.name)}
+                        size={40}
                     />
                 }
                 after={

@@ -1,5 +1,6 @@
 import datetime
 import logging
+from pathlib import Path
 from typing import AsyncGenerator
 
 from telethon import TelegramClient, Button
@@ -81,7 +82,7 @@ class TelethonService:
         )
         return invite_link
 
-    async def download_profile_photo(self, entity: Channel) -> str:
+    async def download_profile_photo(self, entity: Channel) -> Path:
         if not entity.photo:
             logger.info(
                 f"Chat {entity.id!r} does not have a logo. Using the default one."
@@ -99,7 +100,7 @@ class TelethonService:
             path=CHAT_LOGO_PATH, prefix=f"{entity.id}-", current_file=logo_path
         )
 
-        return logo_path
+        return CHAT_LOGO_PATH / logo_path
 
     async def promote_user(
         self, chat_id: int, telegram_user_id: int, custom_title: str

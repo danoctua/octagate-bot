@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from core.dtos.resource import JettonDTO
 from core.actions.base import BaseAction
 from core.constants import JETTON_LOGO_SUB_PATH, DEFAULT_JETTON_LOGO_PATH
+from core.services.cdn import CDNService
 from core.services.jetton import JettonService
 from core.services.wallet import WalletService
 from core.utils.file import download_media
@@ -20,6 +21,7 @@ class JettonAction(BaseAction):
     def __init__(self, db_session: Session) -> None:
         super().__init__(db_session)
         self.jetton_service = JettonService(db_session)
+        self.cdn_service = CDNService()
 
     async def create(self, address_raw: str) -> JettonDTO:
         blockchain_service = TonApiService()
@@ -28,13 +30,19 @@ class JettonAction(BaseAction):
         jetton_logo = jetton_info.metadata.image
 
         if jetton_logo:
-            logo_name = download_media(
+            logo_path = download_media(
                 jetton_logo, subdirectory=JETTON_LOGO_SUB_PATH, name=address_raw
             )
         else:
-            logo_name = DEFAULT_JETTON_LOGO_PATH
+            logo_path = DEFAULT_JETTON_LOGO_PATH
 
-        jetton = self.jetton_service.create_or_update(jetton_info, logo_path=logo_name)
+        await self.cdn_service.upload_file(
+            file_path=logo_path, object_name=logo_path.name
+        )
+
+        jetton = self.jetton_service.create_or_update(
+            jetton_info, logo_path=logo_path.name
+        )
         logger.info("Jetton %s created", jetton.name)
 
         wallet_service = WalletService(self.db_session)

@@ -2,13 +2,14 @@
 
 import useJettonsData from "@/hooks/data/useJettonsData";
 import {useMemo} from "react";
-import {ButtonCell, Cell, Section, Skeleton, Title} from "@telegram-apps/telegram-ui";
-import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
+import {Avatar, ButtonCell, Cell, Section, Skeleton, Title} from "@telegram-apps/telegram-ui";
 import {CirclePlus} from "lucide-react";
 import {useRouter} from "next/navigation";
 import {Page} from "@/components/layout/Page";
 import Image from "next/image";
 import Header from "@/components/ui/Header/Header";
+import {getImageUrl} from "@/utils/image";
+import {getAcronymFromName} from "@/utils/text";
 
 
 const JettonsPage = () => {
@@ -23,12 +24,10 @@ const JettonsPage = () => {
                         jettons?.map((jetton) => (
                             <Cell
                                 before={
-                                    <ImageWithFallback
-                                        src={`/dynamic/jettons/${jetton.logoPath}`}
-                                        fallbackSrc={"/welcome.gif"}
-                                        width={40}
-                                        height={40}
-                                        rounded
+                                    <Avatar
+                                        src={getImageUrl(jetton.logoPath)}
+                                        acronym={getAcronymFromName(jetton.name)}
+                                        size={40}
                                     />
                                 }
                                 subtitle={jetton.name}

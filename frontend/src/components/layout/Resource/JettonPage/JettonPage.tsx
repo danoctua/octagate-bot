@@ -23,7 +23,6 @@ const JettonPage: FC<PropsWithChildren<{ address?: string }>> = ({address, child
             resource={jetton}
             isLoading={isLoading}
             toggleResource={toggleJetton}
-            resourceStaticPath={"/dynamic/jettons"}
             resourceType={"jetton"}
             onSave={onSave}
         />

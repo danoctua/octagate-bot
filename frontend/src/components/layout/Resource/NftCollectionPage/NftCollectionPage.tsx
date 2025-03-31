@@ -109,7 +109,6 @@ const NftCollectionPage: FC<PropsWithChildren<{ address?: string }>> = ({address
             resource={nftCollection}
             isLoading={isLoading}
             toggleResource={toggleNftCollection}
-            resourceStaticPath={"/dynamic/nfts"}
             resourceType={"NFT collection"}
             onSave={onSave}
         >
