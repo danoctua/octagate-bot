@@ -1,7 +1,16 @@
 import {withSentryConfig} from '@sentry/nextjs';
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {}
+const nextConfig = {
+    async rewrites() {
+        return [
+            {
+                source: "/dynamic/:path*",
+                destination: "/public/dynamic/:path*",
+            }
+        ]
+    }
+}
 
 export default withSentryConfig(nextConfig, {
 // For all available options, see:
