@@ -1,5 +1,6 @@
 import logging
 import re
+from pathlib import Path
 
 from httpx import Client, Response
 from pytonapi.schema.nft import ImagePreview
@@ -78,3 +79,20 @@ def pick_best_preview(previews: list[ImagePreview]) -> ImagePreview:
     except (TypeError, ValueError):
         logger.warning("Could not pick the best preview. Returning the last one")
         return previews[-1]
+
+
+def clean_old_versions(
+    path: Path,
+    prefix: str,
+    current_file: str,
+) -> None:
+    """
+    Clean old versions of files in a path
+
+    :param path: Path to the directory containing the files.
+    :param prefix: Prefix of the files to clean.
+    :param current_file: Current file name.
+    """
+    for file in path.glob(f"{prefix}*"):
+        if file.name != current_file:
+            file.unlink()

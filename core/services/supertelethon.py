@@ -20,7 +20,7 @@ from telethon.tl.types import (
 
 from core.constants import CHAT_LOGO_PATH, DEFAULT_CHAT_LOGO_PATH
 from core.settings import core_settings
-
+from core.utils.file import clean_old_versions
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +93,11 @@ class TelethonService:
 
         with open(CHAT_LOGO_PATH / logo_path, "wb") as f:
             await self.client.download_profile_photo(entity, f)
+
+        # To avoid redundant files, we clean the old versions of the logo
+        clean_old_versions(
+            path=CHAT_LOGO_PATH, prefix=f"{entity.id}-", current_file=logo_path
+        )
 
         return logo_path
 
