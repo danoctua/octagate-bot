@@ -4,7 +4,6 @@ import useNftCollectionsData from "@/hooks/data/useNftCollectionsData";
 import {useRouter} from "next/navigation";
 import {useMemo} from "react";
 import {Avatar, ButtonCell, Cell, Section, Skeleton, Title} from "@telegram-apps/telegram-ui";
-import ImageWithFallback from "@/components/ui/ImageWithFallback/ImageWithFallback";
 import {CirclePlus} from "lucide-react";
 import {Page} from "@/components/layout/Page";
 import Header from "@/components/ui/Header/Header";
