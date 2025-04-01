@@ -52,6 +52,7 @@ class NftCollectionAction(BaseAction):
         await self.cdn_service.upload_file(
             file_path=logo_path, object_name=logo_path.name
         )
+        # TODO: remove from the filesystem after upload to CDN
 
         blockchain_metadata = await blockchain_service.parse_nft_collection_metadata(
             address_raw

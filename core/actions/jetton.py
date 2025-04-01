@@ -39,6 +39,7 @@ class JettonAction(BaseAction):
         await self.cdn_service.upload_file(
             file_path=logo_path, object_name=logo_path.name
         )
+        # TODO: remove from the filesystem after upload to CDN
 
         jetton = self.jetton_service.create_or_update(
             jetton_info, logo_path=logo_path.name

@@ -78,6 +78,7 @@ class TelegramChatAction(BaseAction):
             file_path=logo_path,
             object_name=logo_path.name,
         )
+        # TODO: remove from the filesystem after upload to CDN
         return chat, logo_path
 
     async def create(self, chat_identifier: str | int) -> BaseTelegramChatDTO:
