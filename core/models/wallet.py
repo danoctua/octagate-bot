@@ -1,4 +1,3 @@
-from pytonapi.utils import to_amount
 from sqlalchemy import ForeignKey, DateTime, Integer, Boolean, func
 from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.orm import mapped_column
@@ -6,7 +5,6 @@ from sqlalchemy.orm import mapped_column
 from core.constants import DEFAULT_WALLET_BALANCE
 from core.db import Base
 from core.models.fields import BlockchainAddressRawField
-from core.utils.number import human_friendly_number
 
 
 class UserWallet(Base):
@@ -49,11 +47,6 @@ class JettonWallet(Base):
     updated_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-
-    @property
-    def balance_friendly(self) -> str:
-        amount = to_amount(self.balance, precision=0)
-        return human_friendly_number(amount)
 
     def __repr__(self):
         return f"<JettonWallet(address={self.address}, jetton_master_address={self.jetton_master_address})>"
