@@ -19,7 +19,6 @@ lets-go (current root)
 │   │   ├── ton/         # TON blockchain interactions
 │   │   ├── chat/        # Chat functionality
 │   │   ├── user/        # User management
-│   │   ├── storage/     # Storage operations
 │   │   └── mtproto/     # MTProto client operations
 │   ├── actions/         # Business actions/use cases
 │   │   ├── auth/       # Authorization actions
@@ -166,6 +165,7 @@ lets-go (current root)
   - Active community
   - Type safety
   - Note: Combining Python's `core/db.py` and `core/services/db.py` into a single Go package for better cohesion and idiomatic Go structure
+  - Ensure case sensitivity for the table and column names during migration
 - **Caching**: Redis
   - Fast in-memory storage
   - Pub/sub capabilities

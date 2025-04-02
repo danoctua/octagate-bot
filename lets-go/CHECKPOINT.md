@@ -7,24 +7,24 @@ This document tracks the progress of migrating Python codebase to Go. The migrat
 ### Phase 1: Core Infrastructure
 
 #### Core Exceptions & Utils
-| Python Module | Python Class/Function | Go Module | Go Class/Function | Status |
-|--------------|----------------------|-----------|-------------------|---------|
-| core/exceptions/* | Custom exceptions | internal/errors/* | Custom error types | |
-| core/utils/* | Utility functions | internal/validator/* | Validation utilities | |
-| core/constants.py | Constants | internal/constants/constants.go | Constants | |
+| Python Module | Python Class/Function | Go Module                       | Go Class/Function | Status |
+|--------------|----------------------|---------------------------------|-------------------|--------|
+| core/exceptions/* | Custom exceptions | internal/errors/*               | Custom error types |    ✓    |
+| core/utils/* | Utility functions | internal/utils/*                | Validation utilities |    ✓    |
+| core/constants.py | Constants | internal/constants/constants.go | Constants |        |
 
 #### Core Config
 | Python Module | Python Class/Function | Go Module | Go Class/Function | Status |
-|--------------|----------------------|-----------|-------------------|---------|
-| core/config/* | Configuration | internal/config/* | Configuration structs | |
-| core/settings.py | Settings | internal/config/settings.go | Settings | |
+|--------------|----------------------|-----------|-------------------|--------|
+| core/config/* | Configuration | internal/config/* | Configuration structs |  ✓       |
+| core/settings.py | Settings | internal/config/settings.go | Settings |    ✓     |
 
 #### Core Database & Cache
 | Python Module | Python Class/Function | Go Module | Go Class/Function | Status |
-|--------------|----------------------|-----------|-------------------|---------|
-| core/db.py | Database setup | internal/repository/db/database.go | DatabaseRepository | |
-| core/services/db.py | DatabaseService | internal/repository/db/service.go | DatabaseService | |
-| core/services/superredis.py | RedisService | internal/repository/cache/redis.go | RedisRepository | |
+|--------------|----------------------|-----------|-------------------|--------|
+| core/db.py | Database setup | internal/repository/db/database.go | DatabaseRepository | ✓       |
+| core/services/db.py | DatabaseService | internal/repository/db/service.go | DatabaseService |  ✓       |
+| core/services/superredis.py | RedisService | internal/repository/cache/redis.go | RedisRepository |   ✓      |
 
 #### Core Models & DTOs
 | Python Module | Python Class/Function | Go Module | Go Class/Function | Status |
@@ -37,7 +37,6 @@ This document tracks the progress of migrating Python codebase to Go. The migrat
 |--------------|----------------------|-----------|-------------------|---------|
 | core/services/base.py | BaseService | internal/services/base.go | BaseService | |
 | core/services/ton.py | TonService | internal/services/ton/ton.go | TonService | |
-| core/services/storage.py | StorageService | internal/services/storage/storage.go | StorageService | |
 
 ### Phase 2: Core Business Logic
 
