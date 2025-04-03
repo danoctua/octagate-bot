@@ -15,7 +15,6 @@ class UserInitDataPO(BaseModel):
     language_code: str
     is_premium: bool = False
     allow_write_to_pm: bool = True
-    check_admin: bool = False
 
     class Config:
         extra = "ignore"
@@ -46,6 +45,8 @@ class TelegramUserDTO(BaseModel):
 
     @classmethod
     def from_telethon_user(cls, user: TelethonUser) -> Self:
+        if user.bot:
+            raise ValueError(f"Serialized user is a bot: {user.stringify()}")
         return cls(
             id=user.id,
             first_name=user.first_name or "",

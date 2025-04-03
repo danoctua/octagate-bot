@@ -103,6 +103,7 @@ services:
     command: ["python3", "community_manager/entrypoint.py"]
     volumes:
       - ./community_manager:/app/community_manager
+      - ./core:/app/core
       - community-manager-session:/app/data
 
   scheduler:

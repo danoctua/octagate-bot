@@ -39,6 +39,15 @@ class TelegramChat(Base):
         default=False,
         doc="Whether the chat has insufficient privileges to be managed by Octagate.",
     )
+    is_full_control = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        doc=(
+            "Whether the bot should fully control the chat,"
+            " e.g. joined outside of the current invite link, previously joined."
+        ),
+    )
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     whitelist_external_sources = relationship(
@@ -175,6 +184,12 @@ class TelegramChatUser(Base):
         nullable=False,
         default=False,
         doc="Whether the user is an admin in the chat",
+    )
+    is_managed = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        doc="If user is managed by bot, meaning that join request was approved by bot and should be if eligibility status changed, etc.",
     )
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

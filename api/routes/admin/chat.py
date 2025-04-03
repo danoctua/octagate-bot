@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
-from api.deps import get_db_session
+from api.deps import get_db_session, validate_access_token
 from api.pos.chat import (
     TelegramChatJettonRuleCPO,
     AddChatCPO,
@@ -34,23 +34,28 @@ from core.actions.chat.rule.blockchain import (
     TelegramChatJettonAction,
 )
 from core.actions.chat import TelegramChatAction
+from core.models.user import User
 from core.services.chat import TelegramChatService
 
 admin_chat_router = APIRouter(prefix="/chats")
 logger = logging.getLogger(__name__)
 
 
-@admin_chat_router.get("")
+@admin_chat_router.get(
+    "",
+    description="Get all chats managed by the current user - all chats where user is admin",
+)
 async def get_chats(
     db_session: Session = Depends(get_db_session),
+    user: User = Depends(validate_access_token),
 ) -> list[BaseTelegramChatFDO]:
     chat_service = TelegramChatService(db_session)
-    chats = chat_service.get_all()
+    chats = chat_service.get_all_managed(user_id=user.id)
 
     return [BaseTelegramChatFDO.from_orm(chat) for chat in chats]
 
 
-@admin_chat_router.get("/{slug}")
+@admin_chat_router.get("/{slug}", description="Get specific chat details")
 async def get_chat(
     slug: str,
     db_session: Session = Depends(get_db_session),
@@ -66,7 +71,7 @@ async def get_chat(
         )
 
 
-@admin_chat_router.post("")
+@admin_chat_router.post("", deprecated=True)
 async def create_chat(
     chat: AddChatCPO,
     db_session: Session = Depends(get_db_session),
@@ -96,7 +101,9 @@ async def create_chat(
         )
 
 
-@admin_chat_router.post("/{slug}/refresh")
+@admin_chat_router.post(
+    "/{slug}/refresh", description="Refreshes chat details, like logo"
+)
 async def refresh_chat(
     slug: str,
     db_session: Session = Depends(get_db_session),
@@ -140,7 +147,10 @@ async def update_chat(
         )
 
 
-@admin_chat_router.delete("/{slug}")
+@admin_chat_router.delete(
+    "/{slug}",
+    deprecated=True,
+)
 async def delete_chat(
     slug: str,
     db_session: Session = Depends(get_db_session),
@@ -250,7 +260,7 @@ async def update_chat_nft_collection_rule(
 
 
 @admin_chat_router.post("/{slug}/rules/whitelist")
-async def add_chat_whitelist(
+async def add_chat_whitelist_rule(
     slug: str,
     rule: CreateWhitelistRuleCPO,
     db_session: Session = Depends(get_db_session),
@@ -266,7 +276,7 @@ async def add_chat_whitelist(
 
 
 @admin_chat_router.put("/{slug}/rules/whitelist/{rule_id}")
-async def update_chat_whitelist(
+async def update_chat_whitelist_rule(
     slug: str,
     rule_id: int,
     rule: UpdateWhitelistRuleCPO,
@@ -284,7 +294,7 @@ async def update_chat_whitelist(
 
 
 @admin_chat_router.get("/{slug}/rules/whitelist/{rule_id}")
-async def get_chat_whitelist(
+async def get_chat_whitelist_rule(
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
@@ -295,7 +305,7 @@ async def get_chat_whitelist(
 
 
 @admin_chat_router.post("/{slug}/rules/whitelist-external")
-async def add_chat_whitelist_external(
+async def add_chat_whitelist_external_source_rule(
     slug: str,
     rule: CreateWhitelistRuleExternalCPO,
     db_session: Session = Depends(get_db_session),
@@ -318,7 +328,7 @@ async def add_chat_whitelist_external(
 
 
 @admin_chat_router.get("/{slug}/rules/whitelist-external/{rule_id}")
-async def get_chat_whitelist_external(
+async def get_chat_whitelist_external_source_rule(
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
@@ -329,7 +339,7 @@ async def get_chat_whitelist_external(
 
 
 @admin_chat_router.put("/{slug}/rules/whitelist-external/{rule_id}")
-async def update_chat_whitelist_external(
+async def update_chat_whitelist_external_source_rule(
     slug: str,
     rule_id: int,
     rule: UpdateWhitelistRuleExternalCPO,

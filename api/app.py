@@ -2,7 +2,7 @@ import sentry_sdk
 from fastapi import FastAPI, APIRouter, Depends
 from starlette.middleware.cors import CORSMiddleware
 
-from api.deps import validate_access_token, validate_admin_access
+from api.deps import validate_access_token
 from api.routes.admin.chat import admin_chat_router
 from api.routes.admin.resource import admin_resource_router
 from api.routes.auth import auth_router
@@ -37,7 +37,7 @@ def include_non_authenticated_routes(_app: FastAPI) -> None:
 
 def include_admin_routes(_app: FastAPI) -> None:
     admin_router = APIRouter(
-        prefix="/admin", dependencies=[Depends(validate_admin_access)]
+        prefix="/admin", dependencies=[Depends(validate_access_token)]
     )
     admin_router.include_router(admin_chat_router)
     admin_router.include_router(admin_resource_router)

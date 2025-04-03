@@ -59,7 +59,6 @@ def validate_user_init_data(init_data_po: InitDataPO) -> UserInitDataPO:
     user_data = json.loads(init_data.get("user", "{}"))
 
     user_data_init_po = UserInitDataPO(**user_data)
-    user_data_init_po.check_admin = init_data_po.check_admin
 
     return user_data_init_po
 

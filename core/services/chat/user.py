@@ -31,6 +31,14 @@ class TelegramChatUserService(BaseService):
             .one()
         )
 
+    def get_or_create(
+        self, chat_id: int, user_id: int, is_admin: bool
+    ) -> TelegramChatUser:
+        try:
+            return self.get(chat_id, user_id)
+        except NoResultFound:
+            return self.create(chat_id, user_id, is_admin=is_admin)
+
     def get_members_count(self, chat_id: int) -> int:
         return (
             self.db_session.query(TelegramChatUser)

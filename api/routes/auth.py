@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from api.deps import validate_user_init_data
 from api.pos.auth import TokenFDO
@@ -11,7 +11,7 @@ from core.services.user import UserService
 auth_router = APIRouter(prefix="/auth")
 
 
-@auth_router.post("/telegram")
+@auth_router.post("/telegram", description="Default authentication method")
 async def telegram_auth(
     user_data: UserInitDataPO = Depends(validate_user_init_data),
 ) -> TokenFDO:
@@ -28,12 +28,6 @@ async def telegram_auth(
                 photo_url=user_data.photo_url,
             )
         )
-        if user_data.check_admin:
-            if not user.is_admin:
-                raise HTTPException(
-                    detail={"error": {"message": "User is not admin"}},
-                    status_code=403,
-                )
 
         authentication_service = AuthenticationService()
         jwt_token = authentication_service.create_access_token(

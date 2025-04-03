@@ -4,6 +4,7 @@ from slugify import slugify
 from sqlalchemy.exc import NoResultFound
 from telethon.tl.types import Channel
 
+from core.models import TelegramChatUser
 from core.models.chat import (
     TelegramChat,
 )
@@ -90,6 +91,17 @@ class TelegramChatService(BaseService):
         query = query.order_by(TelegramChat.id)
         return query.all()
 
+    def get_all_managed(self, user_id: int) -> list[TelegramChat]:
+        query = self.db_session.query(TelegramChat)
+        query = query.join(
+            TelegramChatUser, TelegramChat.id == TelegramChatUser.chat_id
+        )
+        query = query.filter(
+            TelegramChatUser.user_id == user_id, TelegramChatUser.is_admin.is_(True)
+        )
+        query = query.order_by(TelegramChat.id)
+        return query.all()
+
     def refresh_invite_link(self, chat_id: int, invite_link: str) -> TelegramChat:
         chat = self.get(chat_id)
         chat.invite_link = invite_link
@@ -115,3 +127,9 @@ class TelegramChatService(BaseService):
             .count()
             > 0
         )
+
+    def clear_logo(self, chat_id: int) -> None:
+        chat = self.get(chat_id)
+        chat.logo_path = None
+        self.db_session.commit()
+        logger.debug(f"Telegram Chat {chat.title!r} logo cleared.")

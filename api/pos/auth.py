@@ -10,4 +10,3 @@ class TokenFDO(BaseModel):
 
 class InitDataPO(BaseModel):
     init_data: Annotated[str, Field(..., alias="initDataRaw")]
-    check_admin: bool = Field(False, alias="checkAdmin")

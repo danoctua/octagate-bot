@@ -10,6 +10,7 @@ from telethon.tl.types import (
     ChannelParticipantSelf,
     User as TelethonUser,
     ChannelParticipantCreator,
+    ChannelParticipantBanned,
 )
 
 from core.constants import REQUIRED_BOT_PRIVILEGES
@@ -36,13 +37,20 @@ class ChatJoinRequestEventBuilder(EventBuilder):
         def user(self):
             return self._entities.get(self.user_id)
 
+        @property
+        def invited_by_current_user(self) -> bool:
+            return (
+                self.original_update.invite
+                and self.original_update.invite.admin_id == self.client._self_id
+            )
+
 
 class ChatAdminChangeEventBuilder(EventBuilder):
     @classmethod
     def build(
         cls, update: TLObject, others: Any = None, self_id: int | None = None
     ) -> Optional["Event"]:
-        #
+        print("ChatAdminChangeEvent", update)
         if (
             # Handle only channel participant updates
             isinstance(update, UpdateChannelParticipant)
@@ -51,8 +59,9 @@ class ChatAdminChangeEventBuilder(EventBuilder):
                 isinstance(update.new_participant, ChannelParticipantAdmin)
                 or isinstance(update.prev_participant, ChannelParticipantAdmin)
             )
-            # Don't handle kicks
+            # Don't handle kicks as they are handled by another event
             and (update.new_participant is not None)
+            and not isinstance(update.new_participant, ChannelParticipantBanned)
         ):
             return cls.Event(update=update)
 
@@ -74,6 +83,7 @@ class ChatAdminChangeEventBuilder(EventBuilder):
                     isinstance(self.prev_participant, ChannelParticipantAdmin)
                     and self.prev_participant.is_self
                 )
+                # Became an admin
                 or (
                     isinstance(self.new_participant, ChannelParticipantAdmin)
                     and self.new_participant.is_self
@@ -82,7 +92,10 @@ class ChatAdminChangeEventBuilder(EventBuilder):
 
         @property
         def user(self) -> TelethonUser | None:
-            return self._entities.get(self.new_participant.user_id)
+            if isinstance(self.new_participant, ChannelParticipantAdmin):
+                return self._entities.get(self.new_participant.user_id)
+
+            return self._entities.get(self.prev_participant.user_id)
 
         @property
         def is_demoted(self) -> bool:

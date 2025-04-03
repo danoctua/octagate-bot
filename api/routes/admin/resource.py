@@ -25,7 +25,7 @@ from core.services.jetton import JettonService
 
 logger = logging.getLogger(__name__)
 
-admin_resource_router = APIRouter(prefix="/resources")
+admin_resource_router = APIRouter(prefix="/resources", deprecated=True)
 
 
 @admin_resource_router.get("/jettons")

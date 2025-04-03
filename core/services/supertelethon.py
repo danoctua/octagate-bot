@@ -17,9 +17,10 @@ from telethon.tl.types import (
     InputPeerChannel,
     InputPeerUser,
     InputUser,
+    ChatPhotoEmpty,
 )
 
-from core.constants import CHAT_LOGO_PATH, DEFAULT_CHAT_LOGO_PATH
+from core.constants import CHAT_LOGO_PATH
 from core.settings import core_settings
 from core.utils.file import clean_old_versions
 
@@ -82,12 +83,10 @@ class TelethonService:
         )
         return invite_link
 
-    async def download_profile_photo(self, entity: Channel) -> Path:
-        if not entity.photo:
-            logger.info(
-                f"Chat {entity.id!r} does not have a logo. Using the default one."
-            )
-            return DEFAULT_CHAT_LOGO_PATH
+    async def download_profile_photo(self, entity: Channel) -> Path | None:
+        if not entity.photo or isinstance(entity.photo, ChatPhotoEmpty):
+            logger.debug(f"Chat {entity.id!r} does not have a logo. Skipping")
+            return None
 
         # Adding timestamp allows to bypass the cache of the image to reflect the change
         logo_path = f"{entity.id}-{int(datetime.datetime.now().timestamp())}.jpg"
