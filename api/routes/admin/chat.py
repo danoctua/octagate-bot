@@ -50,7 +50,10 @@ async def get_chats(
     user: User = Depends(validate_access_token),
 ) -> list[BaseTelegramChatFDO]:
     chat_service = TelegramChatService(db_session)
-    chats = chat_service.get_all_managed(user_id=user.id)
+    if user.is_admin:
+        chats = chat_service.get_all()
+    else:
+        chats = chat_service.get_all_managed(user_id=user.id)
 
     return [BaseTelegramChatFDO.from_orm(chat) for chat in chats]
 
