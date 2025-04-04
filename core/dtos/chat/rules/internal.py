@@ -1,5 +1,4 @@
 from pydantic import BaseModel, computed_field
-from pytonapi.utils import raw_to_userfriendly
 
 from core.dtos.base import NftItemAttributeDTO
 from core.dtos.chat.rules import EligibilityCheckType
@@ -23,7 +22,7 @@ class EligibilitySummaryInternalDTO(BaseModel):
     def address(self):
         if not self.address_raw:
             return None
-        return raw_to_userfriendly(self.address_raw)
+        return self.address_raw
 
     @computed_field(return_type=bool)
     def is_eligible(self):

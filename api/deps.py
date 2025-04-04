@@ -6,6 +6,7 @@ from urllib.parse import unquote_plus
 
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pytonapi.utils import userfriendly_to_raw
 from sqlalchemy.orm import Session
 from starlette.requests import Request
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
@@ -91,3 +92,17 @@ def validate_admin_access(
             status_code=HTTP_403_FORBIDDEN,
             detail="You are not allowed to access this resource",
         )
+
+
+def get_address_raw(address: str) -> str:
+    if not address:
+        raise ValueError("Address is required")
+
+    if address.startswith(("UQ", "EQ")):
+        return userfriendly_to_raw(address)
+
+    elif address.startswith("0:"):
+        return address
+
+    else:
+        raise ValueError(f"Invalid blockchain address: {address}")

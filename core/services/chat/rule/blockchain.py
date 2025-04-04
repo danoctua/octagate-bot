@@ -42,10 +42,9 @@ class TelegramChatBlockchainRuleBaseService(BaseService, ABC):
 
     def update(
         self,
-        rule_id: int,
+        rule: TelegramChatRuleType,
         dto: UpdateTelegramChatRuleDTOType,
     ) -> TelegramChatRuleType:
-        rule = self.get(rule_id)
         for key, value in dto.model_dump().items():
             setattr(rule, key, value)
         self.db_session.commit()

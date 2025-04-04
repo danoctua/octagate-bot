@@ -1,11 +1,15 @@
 import logging
 
-from pytonapi.schema.nft import NftCollection, NftItem as TONNftItem, NftItems
+from pytonapi.schema.nft import NftItem as TONNftItem, NftItems
 from sqlalchemy import desc
 from sqlalchemy.exc import NoResultFound
 
 from core.models.blockchain import NFTCollection, NftItem
-from core.dtos.resource import NftItemMetadataDTO, NftCollectionMetadataDTO
+from core.dtos.resource import (
+    NftItemMetadataDTO,
+    NftCollectionMetadataDTO,
+    NftCollectionDTO,
+)
 from core.services.base import BaseService
 
 
@@ -15,16 +19,15 @@ logger = logging.getLogger(__name__)
 class NftCollectionService(BaseService):
     def create(
         self,
-        nft_collection: NftCollection,
-        logo_path: str,
-        blockchain_metadata: NftCollectionMetadataDTO,
+        dto: NftCollectionDTO,
     ) -> NFTCollection:
         nft = NFTCollection(
-            address=nft_collection.address.to_raw(),
-            name=nft_collection.metadata["name"],
-            description=nft_collection.metadata["description"],
-            logo_path=logo_path,
-            blockchain_metadata=blockchain_metadata.model_dump(),
+            address=dto.address,
+            name=dto.name,
+            description=dto.description,
+            logo_path=dto.logo_path,
+            blockchain_metadata=dto.blockchain_metadata,
+            is_enabled=dto.is_enabled,
         )
         self.db_session.add(nft)
         self.db_session.commit()
@@ -33,18 +36,17 @@ class NftCollectionService(BaseService):
 
     def update(
         self,
-        nft_collection: NftCollection,
-        nft: NFTCollection,
-        logo_path: str,
-        blockchain_metadata: NftCollectionMetadataDTO,
+        nft_collection: NFTCollection,
+        dto: NftCollectionDTO,
     ) -> NFTCollection:
-        nft.name = nft_collection.metadata["name"]
-        nft.description = nft_collection.metadata["description"]
-        nft.logo_path = logo_path
-        nft.blockchain_metadata = blockchain_metadata.model_dump()
+        nft_collection.name = dto.name
+        nft_collection.description = dto.description
+        nft_collection.logo_path = dto.logo_path
+        nft_collection.blockchain_metadata = dto.blockchain_metadata
+        nft_collection.is_enabled = dto.is_enabled
         self.db_session.commit()
-        logger.info(f"NFT Collection {nft.name!r} updated.")
-        return nft
+        logger.info(f"NFT Collection {nft_collection.name!r} updated.")
+        return nft_collection
 
     def update_metadata(
         self, address: str, blockchain_metadata: NftCollectionMetadataDTO
@@ -61,30 +63,6 @@ class NftCollectionService(BaseService):
         self.db_session.commit()
         logger.info(f"NFT Collection {nft_collection.name!r} status updated.")
         return nft_collection
-
-    def create_or_update(
-        self,
-        nft_collection: NftCollection,
-        logo_path: str,
-        blockchain_metadata: NftCollectionMetadataDTO,
-    ) -> NFTCollection:
-        try:
-            nft = self.get(address=nft_collection.address.to_raw())
-            return self.update(
-                nft_collection,
-                nft,
-                logo_path=logo_path,
-                blockchain_metadata=blockchain_metadata,
-            )
-        except NoResultFound:
-            logger.info(
-                f"No NFT Collection for address {nft_collection.address!r} found. Creating new NFT Collection."
-            )
-            return self.create(
-                nft_collection,
-                logo_path=logo_path,
-                blockchain_metadata=blockchain_metadata,
-            )
 
     def get(self, address: str) -> NFTCollection:
         return (

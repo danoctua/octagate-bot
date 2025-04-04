@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from pytonapi.utils import raw_to_userfriendly
 
 from core.dtos.chat.rules import EligibilityCheckType, ChatEligibilityRuleDTO
 from core.dtos.base import NftItemAttributeDTO
@@ -33,9 +32,7 @@ class NftEligibilityRuleDTO(ChatEligibilityRuleDTO):
             title=nft_collection_rule.nft_collection.name,
             expected=nft_collection_rule.threshold,
             photo_url=nft_collection_rule.nft_collection.logo_path,
-            blockchain_address=raw_to_userfriendly(
-                nft_collection_rule.nft_collection.address
-            ),
+            blockchain_address=(nft_collection_rule.nft_collection.address),
             is_enabled=nft_collection_rule.is_enabled,
             required_attributes=[
                 NftItemAttributeDTO(

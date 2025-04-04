@@ -43,7 +43,7 @@ def guess_file_extension(response: Response) -> str | None:
 def download_media(
     url: str,
     name: str,
-    subdirectory: str | None = None,
+    subdirectory: str | Path | None = None,
     default_extension: str = ".webp",
 ) -> Path:
     """

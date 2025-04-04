@@ -2,7 +2,6 @@ import dataclasses
 import enum
 
 from pydantic import BaseModel, computed_field
-from pytonapi.utils import raw_to_userfriendly
 
 from core.constants import PROMOTE_JETTON_TEMPLATE, PROMOTE_NFT_COLLECTION_TEMPLATE
 from core.dtos.chat import TelegramChatDTO
@@ -57,7 +56,7 @@ class ChatEligibilityRuleDTO(BaseModel):
             title=jetton_rule.jetton.symbol,
             expected=jetton_rule.threshold,
             photo_url=jetton_rule.jetton.logo_path,
-            blockchain_address=raw_to_userfriendly(jetton_rule.jetton.address),
+            blockchain_address=jetton_rule.jetton.address,
             is_enabled=jetton_rule.is_enabled,
         )
 

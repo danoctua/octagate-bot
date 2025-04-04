@@ -1,3 +1,4 @@
+import logging
 import re
 from typing import Annotated, Self
 
@@ -9,7 +10,7 @@ from pydantic import (
     Field,
     AnyHttpUrl,
 )
-from pytonapi.utils import to_nano, userfriendly_to_raw, to_amount
+from pytonapi.utils import to_nano, to_amount, raw_to_userfriendly
 
 from api.pos.base import BaseFDO
 from core.dtos.chat import (
@@ -28,6 +29,9 @@ from core.dtos.chat.rules.summary import (
 from core.dtos.chat.rules.whitelist import WhitelistRuleDTO, WhitelistRuleExternalDTO
 from core.dtos.chat.rules.nft import NftEligibilityRuleDTO, NftRuleEligibilitySummaryDTO
 from core.dtos.base import NftItemAttributeDTO
+
+
+logger = logging.getLogger(__name__)
 
 CHAT_INPUT_REGEX = re.compile(
     r"^(?P<chat_id>-?\d+(\.\d+)?)|^(https:\/\/t\.me\/(?P<username>[a-zA-Z0-9_]{4,32}))$"
@@ -66,14 +70,23 @@ class EditChatCPO(BaseFDO):
 
 
 class BaseTelegramChatRuleCPO(BaseFDO):
-    address: str
-    expected: float | int
+    address: Annotated[
+        str, Field(..., description="Raw blockchain address of the item, e.g. 0:...")
+    ]
+    expected: Annotated[float | int, Field(..., gt=0, description="Expected value")]
     is_enabled: bool = True
 
     @field_validator("address")
     @classmethod
     def validate_address(cls, v: str) -> str:
-        return userfriendly_to_raw(v)
+        try:
+            # Only to test if the format is valid
+            raw_to_userfriendly(v)
+        except Exception as e:
+            logger.error(e)
+            raise ValueError("Invalid blockchain address")
+
+        return v
 
 
 class TelegramChatJettonRuleCPO(BaseTelegramChatRuleCPO):

@@ -105,7 +105,8 @@ async def create_chat(
 
 
 @admin_chat_router.post(
-    "/{slug}/refresh", description="Refreshes chat details, like logo"
+    "/{slug}/refresh",
+    description="Refreshes chat details, like logo. Normally not needed and is more like an emergency endpoint.",
 )
 async def refresh_chat(
     slug: str,
@@ -186,14 +187,13 @@ async def add_chat_jetton_rule(
     rule: TelegramChatJettonRuleCPO,
     db_session: Session = Depends(get_db_session),
 ) -> ChatEligibilityRuleFDO:
-    action = TelegramChatJettonAction(db_session)
-    return ChatEligibilityRuleFDO.model_validate(
-        action.create(
-            slug=slug,
-            address_raw=rule.address,
-            threshold=rule.expected,
-        ).model_dump()
+    telegram_chat_jetton_action = TelegramChatJettonAction(db_session)
+    chat_jetton_rule = await telegram_chat_jetton_action.create(
+        slug=slug,
+        address_raw=rule.address,
+        threshold=rule.expected,
     )
+    return ChatEligibilityRuleFDO.model_validate(chat_jetton_rule.model_dump())
 
 
 @admin_chat_router.put("/{slug}/rules/jettons/{rule_id}")
@@ -204,14 +204,13 @@ async def update_chat_jetton_rule(
     db_session: Session = Depends(get_db_session),
 ) -> ChatEligibilityRuleFDO:
     action = TelegramChatJettonAction(db_session)
-    return ChatEligibilityRuleFDO.model_validate(
-        action.update(
-            rule_id=rule_id,
-            address_raw=rule.address,
-            expected=rule.expected,
-            is_enabled=rule.is_enabled,
-        ).model_dump()
+    chat_jetton_rule = await action.update(
+        rule_id=rule_id,
+        address_raw=rule.address,
+        expected=rule.expected,
+        is_enabled=rule.is_enabled,
     )
+    return ChatEligibilityRuleFDO.model_validate(chat_jetton_rule.model_dump())
 
 
 @admin_chat_router.get("/{slug}/rules/nft-collections/{rule_id}")
@@ -233,14 +232,13 @@ async def add_chat_nft_collection_rule(
     db_session: Session = Depends(get_db_session),
 ) -> NftEligibilityRuleFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return NftEligibilityRuleFDO.model_validate(
-        action.create(
-            slug=slug,
-            address_raw=rule.address,
-            threshold=rule.expected,
-            required_attributes=rule.required_attributes,
-        ).model_dump()
+    chat_nft_collection_rule = await action.create(
+        slug=slug,
+        address_raw=rule.address,
+        threshold=rule.expected,
+        required_attributes=rule.required_attributes,
     )
+    return NftEligibilityRuleFDO.model_validate(chat_nft_collection_rule.model_dump())
 
 
 @admin_chat_router.put("/{slug}/rules/nft-collections/{rule_id}")
@@ -251,15 +249,14 @@ async def update_chat_nft_collection_rule(
     db_session: Session = Depends(get_db_session),
 ) -> NftEligibilityRuleFDO:
     action = TelegramChatNFTCollectionAction(db_session)
-    return NftEligibilityRuleFDO.model_validate(
-        action.update(
-            rule_id=rule_id,
-            address_raw=rule.address,
-            expected=rule.expected,
-            is_enabled=rule.is_enabled,
-            required_attributes=rule.required_attributes,
-        ).model_dump()
+    nft_collection_rule = await action.update(
+        rule_id=rule_id,
+        address_raw=rule.address,
+        expected=rule.expected,
+        is_enabled=rule.is_enabled,
+        required_attributes=rule.required_attributes,
     )
+    return NftEligibilityRuleFDO.model_validate(nft_collection_rule.model_dump())
 
 
 @admin_chat_router.post("/{slug}/rules/whitelist")
