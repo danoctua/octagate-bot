@@ -1,5 +1,3 @@
-from typing import Iterable
-
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import joinedload
 
@@ -13,7 +11,7 @@ class UserService(BaseService):
         return (
             self.db_session.query(User)
             .options(
-                joinedload(User.wallet),
+                joinedload(User.wallets),
             )
             .filter(
                 User.telegram_id == telegram_id,
@@ -25,34 +23,13 @@ class UserService(BaseService):
         return (
             self.db_session.query(User)
             .options(
-                joinedload(User.wallet),
+                joinedload(User.wallets),
             )
             .filter(
                 User.id == user_id,
             )
             .one()
         )
-
-    def get_all(self, telegram_ids: Iterable[int] | None = None) -> list[type[User]]:
-        query = self.db_session.query(User)
-        if telegram_ids:
-            query = query.filter(User.telegram_id.in_(telegram_ids))
-
-        return query.all()
-
-    def get_all_prefetched(
-        self,
-        telegram_ids: Iterable[int] | None = None,
-    ) -> list[User]:
-        query = self.db_session.query(User)
-        if telegram_ids:
-            query = query.filter(User.telegram_id.in_(telegram_ids))
-
-        query = query.options(
-            joinedload(User.wallet),
-        )
-
-        return query.all()
 
     def create(self, telegram_user: TelegramUserDTO) -> User:
         new_user = User(

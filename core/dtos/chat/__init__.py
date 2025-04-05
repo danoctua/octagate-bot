@@ -20,7 +20,7 @@ class BaseTelegramChatDTO(BaseModel):
             username=obj.username,
             title=obj.title,
             description=obj.description,
-            slug=obj.slug,
+            slug=obj.chat_slug,
             is_forum=obj.is_forum,
             logo_path=obj.logo_path,
         )

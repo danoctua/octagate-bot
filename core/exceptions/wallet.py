@@ -1,8 +1,8 @@
-class UserWalletExistError(Exception):
+class UserWalletConnectedError(Exception):
     pass
 
 
-class UserWalletConnectedError(Exception):
+class UserWalletConnectedAnotherUserError(Exception):
     pass
 
 

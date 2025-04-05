@@ -21,16 +21,19 @@ export const fetchUser = async (): Promise<IUser> => {
     )
 }
 
-export const updateUserWallet = async (walletAddress: string, tonProof: any, publicKey: string | undefined): Promise<any> => {
+export const updateUserWallet = async (slug: string, walletAddress: string, tonProof: any, publicKey: string | undefined): Promise<any> => {
     return await apiClient.post("/users/wallet", {
-        walletAddress: walletAddress,
-        tonProof: tonProof,
-        publicKey: publicKey,
+        walletDetails: {
+            walletAddress,
+            tonProof,
+            publicKey,
+        },
+        chatSlug: slug,
     }).then(response => response.data)
 }
 
-export const disconnectUserWallet = async (): Promise<IUser> => {
-    return await apiClient.delete("/users/wallet").then((response) => response.data);
+export const disconnectUserWallet = async (slug: string): Promise<IUser> => {
+    return await apiClient.delete(`/users/wallet?chatSlug=${slug}`).then((response) => response.data);
 }
 
 export const fetchChatData = async (slug: string): Promise<IChatConfiguration> => {

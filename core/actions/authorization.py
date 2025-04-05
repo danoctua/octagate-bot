@@ -35,7 +35,7 @@ from core.services.chat.rule.blockchain import (
 from core.services.chat.user import TelegramChatUserService
 from core.services.nft import NftItemService
 from core.services.supertelethon import TelethonService
-from core.services.wallet import JettonWalletService
+from core.services.wallet import JettonWalletService, TelegramChatUserWalletService
 from core.utils.nft import find_relevant_nft_items
 
 logger = logging.getLogger(__name__)
@@ -54,6 +54,9 @@ class AuthorizationAction(BaseAction):
         super().__init__(db_session)
         self.jetton_wallet_service = JettonWalletService(db_session)
         self.telegram_chat_user_service = TelegramChatUserService(db_session)
+        self.telegram_chat_user_wallet_service = TelegramChatUserWalletService(
+            db_session
+        )
         self.telegram_chat_jetton_service = TelegramChatJettonService(db_session)
         self.telegram_chat_nft_collection_service = TelegramChatNFTCollectionService(
             db_session
@@ -70,10 +73,17 @@ class AuthorizationAction(BaseAction):
         self, user_id: int, chat_id: int
     ) -> RulesEligibilitySummaryInternalDTO:
         """
-        Check if user is eligible to be a chat member
-        :param user_id:
-        :param chat_id:
-        :return:
+        Determines whether a user is eligible to be a chat member based on the eligibility
+        rules associated with the specified chat.
+
+        The function checks the eligibility of a user by verifying their associated NFT items,
+        jetton balances, and any specific eligibility rules tied to the chat.
+
+        :param user_id: The unique identifier of the user.
+        :param chat_id: The unique identifier of the chat where eligibility
+                        is being evaluated.
+        :return: An internal data object summarizing the user's eligibility based
+                 on the chat-specific rules.
         """
         user = self.user_service.get(user_id=user_id)
         telegram_chat_user = self.telegram_chat_user_service.find(
@@ -81,12 +91,17 @@ class AuthorizationAction(BaseAction):
         )
         eligibility_rules = self.get_eligibility_rules(chat_id=chat_id)
         nft_item_service = NftItemService(self.db_session)
-        if user.wallet:
-            user_nft_items = nft_item_service.get_all(owner_address=user.wallet.address)
-            user_jettons = self.jetton_wallet_service.get_all(
-                owner_address=user.wallet.address
+
+        try:
+            user_wallet = self.telegram_chat_user_wallet_service.get(
+                user_id=user.id, chat_id=chat_id
             )
-        else:
+            user_nft_items = nft_item_service.get_all(owner_address=user_wallet.address)
+            user_jettons = self.jetton_wallet_service.get_all(
+                owner_address=user_wallet.address
+            )
+        except NoResultFound:
+            user_wallet = None
             user_nft_items = []
             user_jettons = []
 
@@ -96,6 +111,7 @@ class AuthorizationAction(BaseAction):
             user_jettons=user_jettons,
             user_nft_items=user_nft_items,
             chat_member=telegram_chat_user,
+            wallet_address=user_wallet.address if user_wallet else None,
         )
         return eligibility_summary
 
@@ -151,20 +167,21 @@ class AuthorizationAction(BaseAction):
         nft_item_service = NftItemService(self.db_session)
         jetton_wallet_service = JettonWalletService(self.db_session)
 
-        unique_users = {chat_member.user for chat_member in chat_members}
+        unique_wallets = {chat_member.wallet_link for chat_member in chat_members}
 
-        nft_items_per_user = defaultdict(list)
-        jetton_wallets_per_user = defaultdict(list)
+        nft_items_per_wallet = defaultdict(list)
+        jetton_wallets_per_wallet = defaultdict(list)
 
-        for user in unique_users:
-            if not user.wallet:
+        # Prefetch wallet resources from the database
+        for wallet in unique_wallets:
+            if not wallet:
                 continue
 
-            nft_items_per_user[user] = nft_item_service.get_all(
-                owner_address=user.wallet.address
+            nft_items_per_wallet[wallet] = nft_item_service.get_all(
+                owner_address=wallet.address
             )
-            jetton_wallets_per_user[user] = jetton_wallet_service.get_all(
-                owner_address=user.wallet.address
+            jetton_wallets_per_wallet[wallet] = jetton_wallet_service.get_all(
+                owner_address=wallet.address
             )
 
         ineligible_members = []
@@ -174,8 +191,10 @@ class AuthorizationAction(BaseAction):
                     eligibility_summary := self.check_chat_member_eligibility(
                         eligibility_rules=eligibility_rules_per_chat[chat],
                         user=member.user,
-                        user_jettons=jetton_wallets_per_user.get(member.user, []),
-                        user_nft_items=nft_items_per_user.get(member.user, []),
+                        user_jettons=jetton_wallets_per_wallet.get(
+                            member.wallet_link, []
+                        ),
+                        user_nft_items=nft_items_per_wallet.get(member.wallet_link, []),
                         chat_member=member,
                     )
                 ):
@@ -195,16 +214,29 @@ class AuthorizationAction(BaseAction):
         user_jettons: list[JettonWallet],
         user_nft_items: list[NftItem],
         chat_member: TelegramChatUser | None = None,
+        wallet_address: str | None = None,
     ) -> RulesEligibilitySummaryInternalDTO:
         """
-        The rule is to have all required jetton balance OR all NFT items from the required collections
+        Analyzes a Telegram chat member's eligibility based on a set of predefined rules,
+        including jetton balances, owned NFTs, whitelist memberships, and external source
+        validations. This method aggregates the eligibility information and returns a
+        summary of the assessment.
 
-        :param eligibility_rules: Rules for eligibility to join the chat
-        :param user: User to check
-        :param user_jettons: Jetton balances of the user
-        :param user_nft_items: NFT items of the user
-        :param chat_member: Chat member record
-        :return: Summary of eligibility check
+        :param eligibility_rules: A data object containing the eligibility conditions,
+            including requirements for jetton balances, NFT collections, whitelist memberships,
+            and other external sources.
+        :param user: The Telegram chat user whose eligibility is being evaluated.
+        :param user_jettons: A list of user's jetton wallets containing balance and
+            related information.
+        :param user_nft_items: A list of user's NFT items collected, which are checked
+            against required NFT eligibility rules.
+        :param chat_member: Optional parameter representing the Telegram chat member.
+            Includes attributes such as admin status in the chat.
+        :param wallet_address: An optional wallet address associated with current user and chat.
+        :return: A detailed summary encapsulating the carried-out eligibility checks,
+            including specific details for each eligibility rule (jetton, NFT, whitelist,
+            external source). Also includes information about the user's admin status in
+            the chat if applicable.
         """
         items = []
         user_jettons_by_master_address = {
@@ -283,7 +315,9 @@ class AuthorizationAction(BaseAction):
             ]
         )
         return RulesEligibilitySummaryInternalDTO(
-            items=items, is_admin=bool(chat_member and chat_member.is_admin)
+            items=items,
+            is_admin=bool(chat_member and chat_member.is_admin),
+            wallet=wallet_address,
         )
 
     @staticmethod

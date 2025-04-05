@@ -75,6 +75,7 @@ export interface IRuleEligibility extends IRule {
 export interface IChatConfiguration {
     chat: IChat,
     rules: IRuleEligibility[],
+    wallet: string | undefined,
 }
 
 export interface IUser {
@@ -85,7 +86,7 @@ export interface IUser {
     isPremium: boolean,
     languageCode: string,
     photoUrl: string | null,
-    walletAddress: string | null,
+    wallets: string[]
 }
 
 export interface IJetton {

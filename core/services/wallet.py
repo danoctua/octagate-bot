@@ -4,9 +4,12 @@ from collections.abc import Generator
 from pytonapi.schema.jettons import JettonBalance, JettonsBalances
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
-from core.exceptions.wallet import UserWalletExistError, UserWalletConnectedError
+from core.exceptions.wallet import (
+    UserWalletConnectedError,
+    UserWalletConnectedAnotherUserError,
+)
 from core.models.blockchain import Jetton
-from core.models.wallet import UserWallet, JettonWallet
+from core.models.wallet import UserWallet, JettonWallet, TelegramChatUserWallet
 from core.services.base import BaseService
 
 
@@ -17,7 +20,7 @@ class WalletService(BaseService):
     def connect_user_wallet(self, user_id: int, wallet_address: str) -> None:
         existing_user_wallet = self.get_user_wallet(wallet_address)
         if existing_user_wallet:
-            raise UserWalletExistError(
+            raise UserWalletConnectedError(
                 f"User {user_id} is trying to connect already connected wallet {wallet_address}"
             )
 
@@ -27,7 +30,7 @@ class WalletService(BaseService):
             self.db_session.commit()
         except IntegrityError:
             self.db_session.rollback()
-            raise UserWalletConnectedError(
+            raise UserWalletConnectedAnotherUserError(
                 f"User {user_id} already has a connected wallet {wallet_address}"
             )
 
@@ -67,6 +70,32 @@ class WalletService(BaseService):
             UserWallet.user_id == user_id,
         ).update({"hide_wallet": True})
         self.db_session.commit()
+
+
+class TelegramChatUserWalletService(BaseService):
+    def connect(self, user_id: int, chat_id: int, wallet_address: str) -> None:
+        new_link = TelegramChatUserWallet(
+            user_id=user_id, chat_id=chat_id, address=wallet_address
+        )
+        self.db_session.add(new_link)
+        self.db_session.commit()
+
+    def disconnect(self, user_id: int, chat_id: int) -> None:
+        self.db_session.query(TelegramChatUserWallet).filter(
+            TelegramChatUserWallet.user_id == user_id,
+            TelegramChatUserWallet.chat_id == chat_id,
+        ).delete(synchronize_session=False)
+        self.db_session.commit()
+
+    def get(self, user_id: int, chat_id: int) -> TelegramChatUserWallet:
+        return (
+            self.db_session.query(TelegramChatUserWallet)
+            .filter(
+                TelegramChatUserWallet.user_id == user_id,
+                TelegramChatUserWallet.chat_id == chat_id,
+            )
+            .one()
+        )
 
 
 class JettonWalletService(BaseService):

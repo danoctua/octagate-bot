@@ -45,6 +45,7 @@ class RulesEligibilitySummaryInternalDTO(BaseModel):
     """
 
     items: list[EligibilitySummaryInternalDTO]
+    wallet: str | None = None
     is_admin: bool
 
     def __bool__(self):

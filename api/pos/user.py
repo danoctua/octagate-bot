@@ -1,4 +1,6 @@
-from typing import Any, Self
+from typing import Any, Self, Annotated
+
+from pydantic import Field
 
 from api.pos.base import BaseFDO
 
@@ -11,7 +13,7 @@ class UserFDO(BaseFDO):
     is_premium: bool = False
     language_code: str
     photo_url: str | None = None
-    wallet_address: str | None
+    wallets: list[str]
 
     @classmethod
     def from_orm(cls, obj: Any) -> Self:
@@ -23,10 +25,19 @@ class UserFDO(BaseFDO):
             is_premium=obj.is_premium,
             language_code=obj.language,
             photo_url=None,
-            wallet_address=(obj.wallet.address if obj.wallet else None),
+            wallets=[w.address for w in obj.wallets],
         )
 
 
 class UpdateUserWalletFDO(BaseFDO):
     user: UserFDO
-    task_id: str
+    task_id: Annotated[
+        str | None,
+        Field(
+            ...,
+            description=(
+                "ID of the wallet update task that has to be awaited, which means that wallet details are being refreshed. "
+                "If `null` returned - no need to wait for a task to be completed"
+            ),
+        ),
+    ]

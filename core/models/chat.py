@@ -195,8 +195,16 @@ class TelegramChatUser(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    user = relationship("User", lazy="joined")
+    user = relationship("User", lazy="joined", overlaps="wallet_link")
     chat = relationship("TelegramChat", lazy="joined")
+    wallet_link = relationship(
+        "TelegramChatUserWallet",
+        uselist=False,
+        back_populates="user_chat",
+        primaryjoin="and_(foreign(TelegramChatUser.user_id) == TelegramChatUserWallet.user_id, foreign(TelegramChatUser.chat_id) == TelegramChatUserWallet.chat_id)",
+        lazy="joined",
+        viewonly=True,
+    )
 
     def __repr__(self):
         return f"<TelegramChatUser(user_id={self.user_id}, chat_id={self.chat_id})>"

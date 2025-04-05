@@ -50,7 +50,6 @@ class ChatAdminChangeEventBuilder(EventBuilder):
     def build(
         cls, update: TLObject, others: Any = None, self_id: int | None = None
     ) -> Optional["Event"]:
-        print("ChatAdminChangeEvent", update)
         if (
             # Handle only channel participant updates
             isinstance(update, UpdateChannelParticipant)

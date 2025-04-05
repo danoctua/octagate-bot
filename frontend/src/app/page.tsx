@@ -40,19 +40,32 @@ export default function Home() {
     const onWalletConnectListenerAdded = useRef(false)
 
     const connectWalletAndRefresh = useCallback(async () => {
+        if (!chat) return;
+
         await connectWallet();
-        const handleConnectionCompleted = async () => {
+        const handleConnectionCompleted = async (): Promise<void> => {
             if (!tonConnectUI.wallet) {
                 return;
             }
 
             await updateUserWallet(
+                chat.chat.slug,
                 tonConnectUI.wallet.account.address,
                 (tonConnectUI.wallet.connectItems?.tonProof as any)?.proof,
                 tonConnectUI.wallet.account.publicKey
             ).then((data) => {
                 setUser(data.user);
-                setAsyncTaskId(data.taskId);
+                if (data.taskId) {
+                    setAsyncTaskId(data.taskId);
+                } else {
+                    fetchChatData().then(
+                        () => {
+                            if (hapticFeedback.notificationOccurred.isAvailable()) {
+                                hapticFeedback.notificationOccurred('success');
+                            }
+                        }
+                    )
+                }
             }).catch((error) => {
                 if (hapticFeedback.notificationOccurred.isAvailable()) {
                     hapticFeedback.notificationOccurred('error');
@@ -71,7 +84,7 @@ export default function Home() {
             window.removeEventListener("ton-connect-connection-completed", handleConnectionCompleted);
             onWalletConnectListenerAdded.current = false;
         };
-    }, [connectWallet, setUser, tonConnectUI]);
+    }, [chat, connectWallet, setUser, tonConnectUI]);
 
     useClientOnce(() => {
         mainButton.mount();
@@ -86,22 +99,21 @@ export default function Home() {
         isUserDataLoading,
         isChatDataLoading,
         launchParams.startParam,
-        user,
-        chat?.chat,
+        chat,
         connectWalletAndRefresh,
         fetchChatData
     )
 
     const disconnectWalletAndRefresh = useCallback(async () => {
         await disconnectWallet();
-        if (user?.walletAddress) {
-            await disconnectUserWallet().then((data) => {
+        if (chat) {
+            await disconnectUserWallet(chat.chat.slug).then((data) => {
                 console.debug("Setting user on wallet disconnect", data);
                 setUser(data);
             });
             await fetchChatData();
         }
-    }, [disconnectWallet, fetchChatData, setUser, user?.walletAddress]);
+    }, [chat, disconnectWallet, fetchChatData, setUser]);
 
     useEffect(() => {
         if (!asyncTaskId) {
@@ -127,9 +139,10 @@ export default function Home() {
         fetchChatData().then();
     }, [chat, fetchChatData, user]);
 
-    const parsedWalletAddress = useMemo(() => (
-        user?.walletAddress ? Address.parse(user?.walletAddress).toString({bounceable: false}) : null
-    ), [user?.walletAddress]);
+    const parsedWalletAddress = useMemo(() => {
+        if (!chat || !chat.wallet) return null;
+        return Address.parse(chat.wallet).toString({bounceable: false})
+    }, [chat]);
 
     if (!launchParams.startParam) {
         return <Page>

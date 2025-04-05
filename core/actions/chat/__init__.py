@@ -444,6 +444,7 @@ class TelegramChatAction(BaseAction):
                 )
                 for rule in eligibility_summary.items
             ],
+            wallet=eligibility_summary.wallet,
         )
 
     async def get_with_eligibility_rules(self, slug: str) -> TelegramChatWithRulesDTO:

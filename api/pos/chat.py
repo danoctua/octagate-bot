@@ -161,6 +161,7 @@ class TelegramChatWithEligibilitySummaryFDO(BaseFDO):
 
     chat: TelegramChatFDO
     rules: list[RuleEligibilitySummaryFDO | NftRuleEligibilitySummaryFDO]
+    wallet: str | None
 
     @classmethod
     def from_dto(cls, dto: TelegramChatWithEligibilitySummaryDTO) -> Self:
@@ -175,6 +176,7 @@ class TelegramChatWithEligibilitySummaryFDO(BaseFDO):
                 )
                 for rule in dto.rules
             ],
+            wallet=dto.wallet,
         )
 
 

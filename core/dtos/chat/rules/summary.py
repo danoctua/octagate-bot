@@ -30,3 +30,4 @@ class RuleEligibilitySummaryDTO(ChatEligibilityRuleDTO):
 class TelegramChatWithEligibilitySummaryDTO(BaseModel):
     chat: TelegramChatDTO
     rules: list[RuleEligibilitySummaryDTO | NftRuleEligibilitySummaryDTO]
+    wallet: str | None = None

@@ -92,6 +92,7 @@ services:
     ]
     volumes:
       - ./community_manager:/app/community_manager
+      - ./core:/app/core
       - community-manager-tasks-session:/app/data
 
   community-manager:

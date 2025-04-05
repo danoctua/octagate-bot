@@ -1,16 +1,15 @@
 import {ButtonStateProps} from "@/components/ui/FixedBottomSection/FixedBottomSection";
 import {useEffect, useMemo, useState} from "react";
 import {miniApp, openTelegramLink} from "@telegram-apps/sdk-react";
-import {IChat, IChatConfiguration, IUser} from "@/interfaces";
+import {IChatConfiguration} from "@/interfaces";
 
 
 const useMainButtonState = (
     isUserDataLoading: boolean,
     isChatDataLoading: boolean,
     startParam: string | undefined,
-    user: IUser | undefined,
-    chat: IChat | undefined,
-    connectWallet: () => Promise<() => void>,
+    chat: IChatConfiguration | null,
+    connectWallet: () => Promise<(() => void) | undefined>,
     fetchChatData: () => Promise<IChatConfiguration | void>,
 ): ButtonStateProps | undefined => {
     const [timeLeft, setTimeLeft] = useState<number>(0);
@@ -36,34 +35,34 @@ const useMainButtonState = (
 
             const baseAttributes = {loading}
 
-            if (!user || !chat) {
+            if (!chat) {
                 return {
                     text: "Loading...",
                     loading: loading,
                     disabled: true,
                     mode: "filled"
                 }
-            } else if (chat && chat.joinUrl) {
+            } else if (chat.chat.joinUrl) {
                 return {
                     ...baseAttributes,
                     text: "Join",
                     onClick: () => {
-                        if (chat.joinUrl) {
-                            openTelegramLink(chat.joinUrl)
+                        if (chat.chat.joinUrl) {
+                            openTelegramLink(chat.chat.joinUrl)
                             if (miniApp.close.isAvailable()) {
                                 miniApp.close();
                             }
                         }
                     }
                 }
-            } else if (chat && !user.walletAddress) {
+            } else if (!chat.wallet) {
                 return {
                     ...baseAttributes,
                     text: "Connect wallet to join",
                     mode: "filled",
                     onClick: () => connectWallet().then()
                 }
-            } else if (chat && user.walletAddress && !chat.isEligible) {
+            } else if (!chat.chat.isEligible) {
                 return {
                     ...baseAttributes,
                     text: timeLeft ? `Refresh again in ${timeLeft}...` : "Refresh",
@@ -78,7 +77,7 @@ const useMainButtonState = (
                         fetchChatData().then();
                     }
                 }
-            } else if (chat && chat.isEligible && !chat.joinUrl) {
+            } else if (!chat.chat.joinUrl) {
                 return {
                     ...baseAttributes,
                     text: "No chat link",
@@ -95,7 +94,6 @@ const useMainButtonState = (
             isUserDataLoading,
             startParam,
             timeLeft,
-            user
         ]
     )
 }
