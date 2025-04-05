@@ -45,7 +45,12 @@ def include_admin_routes(_app: FastAPI) -> None:
 
 
 def create_app() -> FastAPI:
-    _app = FastAPI(root_path="/api")
+    _app = FastAPI(
+        root_path="/api",
+        title="Octagate",
+        summary="Your gate to the web3 world",
+        version="0.1.0",
+    )
     include_authenticated_routes(_app)
     include_non_authenticated_routes(_app)
     include_admin_routes(_app)
@@ -53,7 +58,7 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=["*"],  # Adjust this to your needs
         allow_credentials=True,
-        allow_methods=["POST", "GET", "DELETE", "OPTIONS"],
+        allow_methods=["POST", "GET", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization"],
     )
     return _app
