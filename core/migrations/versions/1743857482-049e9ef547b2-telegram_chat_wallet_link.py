@@ -42,16 +42,25 @@ def migrate_data() -> None:
 
 
 def upgrade() -> None:
-    # op.create_table(
-    #     'telegram_chat_user_wallet',
-    # sa.Column('user_id', sa.Integer(), nullable=False),
-    #     sa.Column('chat_id', sa.BigInteger(), nullable=False),
-    #     sa.Column('address', sa.String(length=67), nullable=False),
-    #     sa.ForeignKeyConstraint(['address'], ['user_wallet.address'], ),
-    #     sa.ForeignKeyConstraint(['chat_id'], ['telegram_chat.id'], ),
-    #     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    #     sa.PrimaryKeyConstraint('chat_id', 'address')
-    # )
+    op.create_table(
+        "telegram_chat_user_wallet",
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("chat_id", sa.BigInteger(), nullable=False),
+        sa.Column("address", sa.String(length=67), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["address"],
+            ["user_wallet.address"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["chat_id"],
+            ["telegram_chat.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["user.id"],
+        ),
+        sa.PrimaryKeyConstraint("chat_id", "address"),
+    )
     migrate_data()
     # Remove unique constraint from user_id only and apply it to user_id, address pair
     op.drop_constraint("user_wallet_ibfk_1", "user_wallet", type_="foreignkey")
