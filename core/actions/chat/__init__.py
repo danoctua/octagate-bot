@@ -8,6 +8,7 @@ from telethon import TelegramClient
 from telethon.errors import BadRequestError
 from telethon.utils import get_peer_id
 
+from core.actions.chat.base import ManagedChatBaseAction
 from core.constants import REQUIRED_BOT_PRIVILEGES
 from core.dtos.chat import (
     BaseTelegramChatDTO,
@@ -47,6 +48,7 @@ class TelegramChatAction(BaseAction):
     def __init__(
         self, db_session: Session, telethon_client: TelegramClient | None = None
     ):
+        logger.info(f"Initializing TelegramChatAction {telethon_client=}")
         super().__init__(db_session)
         self.telegram_chat_service = TelegramChatService(db_session)
         self.telegram_chat_user_service = TelegramChatUserService(db_session)
@@ -215,24 +217,6 @@ class TelegramChatAction(BaseAction):
             logger.exception(f"Chat {chat.stringify()!r} already exists")
             raise TelegramChatAlreadyExists(f"Chat {chat.stringify()!r} already exists")
 
-    async def create_from_entity(
-        self, chat: ChatPeerType, sufficient_bot_privileges: bool = False
-    ) -> BaseTelegramChatDTO:
-        """
-        Asynchronously creates a BaseTelegramChatDTO object from a given ChatPeerType entity
-        and indexes the chat. This method serves to convert a ChatPeerType object into its
-        corresponding BaseTelegramChatDTO representation.
-
-        :param chat: The chat entity of type ChatPeerType that needs to be converted and indexed.
-        :param sufficient_bot_privileges: Indicates whether the bot has sufficient privileges within the chat. Defaults to False.
-        :return: A BaseTelegramChatDTO object representing the converted chat data.
-        """
-        telegram_chat_dto = await self._create(
-            chat, sufficient_bot_privileges=sufficient_bot_privileges
-        )
-        await self.index(chat)
-        return telegram_chat_dto
-
     async def create(
         self, chat_identifier: int, sufficient_bot_privileges: bool = False
     ) -> BaseTelegramChatDTO:
@@ -327,74 +311,6 @@ class TelegramChatAction(BaseAction):
         logger.info(f"Chat {chat.id!r} refreshed successfully")
         return chat
 
-    async def refresh(self, slug: str) -> BaseTelegramChatDTO:
-        """
-        Refreshes a Telegram chat by its slug, and updates the related information.
-
-        This method retrieves a Telegram chat using the provided slug, updates its
-        details by performing a refresh operation, and constructs a new data transfer
-        object (DTO) with the updated chat properties. If the chat is not found, an
-        exception is raised to indicate that the specified Telegram chat does not
-        exist.
-
-        :param slug: Slug used to identify the target Telegram chat.
-        :return: A data transfer object containing the updated chat properties.
-        :raises TelegramChatNotExists: If no chat is found for the given slug.
-        """
-        try:
-            chat = self.telegram_chat_service.get_by_slug(slug)
-        except NoResultFound:
-            logger.error(f"Chat with slug {slug!r} not found")
-            raise TelegramChatNotExists(f"Chat with slug {slug!r} not found")
-
-        chat = await self._refresh(chat)
-        return BaseTelegramChatDTO(
-            id=chat.id,
-            username=chat.username,
-            title=chat.title,
-            description=chat.description,
-            slug=chat.slug,
-            is_forum=chat.is_forum,
-            logo_path=chat.logo_path,
-        )
-
-    async def update(self, slug: str, description: str | None) -> BaseTelegramChatDTO:
-        """
-        Updates the description of a Telegram chat with the specified slug.
-
-        This method retrieves a Telegram chat by its slug, updates its description
-        if the chat exists, and returns a DTO containing the updated chat information.
-        If the chat does not exist, an exception is raised.
-
-        :param slug: The unique slug of the Telegram chat that needs to be updated.
-        :param description: The new description for the Telegram chat. If None, the
-            description will be cleared.
-        :return: A Data Transfer Object (DTO) representing the updated Telegram chat,
-            containing its unique id, username, title, description, slug, forum flag,
-            and logo path.
-        :raises TelegramChatNotExists: If no chat is found with the given slug.
-        """
-        try:
-            chat = self.telegram_chat_service.get_by_slug(slug)
-        except NoResultFound:
-            logger.error(f"Chat with slug {slug!r} not found")
-            raise TelegramChatNotExists(f"Chat with slug {slug!r} not found")
-
-        self.telegram_chat_service.update_description(
-            chat=chat,
-            description=description,
-        )
-
-        return BaseTelegramChatDTO(
-            id=chat.id,
-            username=chat.username,
-            title=chat.title,
-            description=chat.description,
-            slug=chat.slug,
-            is_forum=chat.is_forum,
-            logo_path=chat.logo_path,
-        )
-
     async def get_with_eligibility_summary(
         self, slug: str, user: User
     ) -> TelegramChatWithEligibilitySummaryDTO:
@@ -425,18 +341,11 @@ class TelegramChatAction(BaseAction):
         }
 
         return TelegramChatWithEligibilitySummaryDTO(
-            chat=TelegramChatDTO(
-                id=chat.id,
-                username=chat.username,
-                title=chat.title,
-                description=chat.description,
-                slug=chat.slug,
-                is_forum=chat.is_forum,
-                logo_path=chat.logo_path,
+            chat=TelegramChatDTO.from_object(
+                chat,
                 join_url=chat.invite_link if is_eligible else None,
                 is_member=is_chat_member,
                 is_eligible=is_eligible,
-                insufficient_privileges=chat.insufficient_privileges,
             ),
             rules=[
                 mapping.get(rule.category, RuleEligibilitySummaryDTO).from_internal_dto(
@@ -447,35 +356,85 @@ class TelegramChatAction(BaseAction):
             wallet=eligibility_summary.wallet,
         )
 
-    async def get_with_eligibility_rules(self, slug: str) -> TelegramChatWithRulesDTO:
+
+class TelegramChatManageAction(ManagedChatBaseAction, TelegramChatAction):
+    def __init__(
+        self,
+        db_session: Session,
+        requestor: User,
+        chat_slug: str,
+    ) -> None:
+        super().__init__(db_session, requestor, chat_slug)
+
+    async def refresh(self) -> BaseTelegramChatDTO:
+        """
+        Refreshes a Telegram chat by its slug, and updates the related information.
+
+        This method retrieves a Telegram chat using the provided slug, updates its
+        details by performing a refresh operation, and constructs a new data transfer
+        object (DTO) with the updated chat properties. If the chat is not found, an
+        exception is raised to indicate that the specified Telegram chat does not
+        exist.
+        :return: A data transfer object containing the updated chat properties.
+        :raises TelegramChatNotExists: If no chat is found for the given slug.
+        """
+        chat = await self._refresh(self.chat)
+        return BaseTelegramChatDTO(
+            id=chat.id,
+            username=chat.username,
+            title=chat.title,
+            description=chat.description,
+            slug=chat.slug,
+            is_forum=chat.is_forum,
+            logo_path=chat.logo_path,
+        )
+
+    async def update(self, description: str | None) -> BaseTelegramChatDTO:
+        """
+        Updates the description of a Telegram chat with the specified slug.
+
+        This method retrieves a Telegram chat by its slug, updates its description
+        if the chat exists, and returns a DTO containing the updated chat information.
+        If the chat does not exist, an exception is raised.
+
+        :param description: The new description for the Telegram chat. If None, the
+            description will be cleared.
+        :return: A Data Transfer Object (DTO) representing the updated Telegram chat,
+            containing its unique id, username, title, description, slug, forum flag,
+            and logo path.
+        :raises TelegramChatNotExists: If no chat is found with the given slug.
+        """
+        chat = self.telegram_chat_service.update_description(
+            chat=self.chat,
+            description=description,
+        )
+
+        return BaseTelegramChatDTO(
+            id=chat.id,
+            username=chat.username,
+            title=chat.title,
+            description=chat.description,
+            slug=chat.slug,
+            is_forum=chat.is_forum,
+            logo_path=chat.logo_path,
+        )
+
+    async def get_with_eligibility_rules(self) -> TelegramChatWithRulesDTO:
         """
         This is administrative method to get chat with rules that includes disabled rules
-        :param slug: slug of chat for which data is requested
         :return: DTO with chat and rules
         """
-        try:
-            chat = self.telegram_chat_service.get_by_slug(slug)
-        except NoResultFound:
-            logger.error(f"Chat with slug {slug!r} not found")
-            raise TelegramChatNotExists(f"Chat with slug {slug!r} not found")
         eligibility_rules = self.authorization_action.get_eligibility_rules(
-            chat_id=chat.id,
+            chat_id=self.chat.id,
             enabled_only=False,
         )
 
         return TelegramChatWithRulesDTO(
-            chat=TelegramChatDTO(
-                id=chat.id,
-                username=chat.username,
-                title=chat.title,
-                description=chat.description,
-                slug=chat.slug,
-                is_forum=chat.is_forum,
-                logo_path=chat.logo_path,
-                join_url=chat.invite_link,
+            chat=TelegramChatDTO.from_object(
+                obj=self.chat,
+                join_url=self.chat.invite_link,
                 is_member=False,
                 is_eligible=False,
-                insufficient_privileges=chat.insufficient_privileges,
             ),
             rules=sorted(
                 [
@@ -500,11 +459,5 @@ class TelegramChatAction(BaseAction):
             ),
         )
 
-    async def delete(self, slug: str) -> None:
-        try:
-            chat = self.telegram_chat_service.get_by_slug(slug)
-        except NoResultFound:
-            logger.error(f"Chat with slug {slug!r} not found")
-            raise TelegramChatNotExists(f"Chat with slug {slug!r} not found")
-        self.telegram_chat_service.delete(chat.id)
-        return None
+    async def delete(self) -> None:
+        self.telegram_chat_service.delete(self.chat.id)

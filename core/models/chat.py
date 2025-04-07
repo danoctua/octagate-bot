@@ -196,7 +196,7 @@ class TelegramChatUser(Base):
     )
 
     user = relationship("User", lazy="joined", overlaps="wallet_link")
-    chat = relationship("TelegramChat", lazy="joined")
+    chat = relationship("TelegramChat", lazy="joined", backref="users")
     wallet_link = relationship(
         "TelegramChatUserWallet",
         uselist=False,

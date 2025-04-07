@@ -1,7 +1,7 @@
 from sqlalchemy import func
 from sqlalchemy.exc import NoResultFound
 
-from core.models import TelegramChatUser
+from core.models.chat import TelegramChatUser
 from core.services.base import BaseService
 from core.services.chat import logger
 
@@ -110,6 +110,13 @@ class TelegramChatUserService(BaseService):
             )
             .count()
             > 0
+        )
+
+    def is_chat_admin(self, chat_id: int, user_id: int) -> bool:
+        return self.db_session.query(TelegramChatUser).filter(
+            TelegramChatUser.chat_id == chat_id,
+            TelegramChatUser.user_id == user_id,
+            TelegramChatUser.is_admin.is_(True),
         )
 
     def promote_admin(self, chat_id: int, user_id: int) -> None:

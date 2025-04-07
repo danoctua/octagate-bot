@@ -33,7 +33,7 @@ from core.actions.chat.rule.blockchain import (
     TelegramChatNFTCollectionAction,
     TelegramChatJettonAction,
 )
-from core.actions.chat import TelegramChatAction
+from core.actions.chat import TelegramChatAction, TelegramChatManageAction
 from core.services.chat import TelegramChatService
 
 admin_chat_router = APIRouter(prefix="/chats", tags=["Admin", "Chat management"])
@@ -59,18 +59,17 @@ async def get_chats(
 
 @admin_chat_router.get("/{slug}", description="Get specific chat details")
 async def get_chat(
+    request: Request,
     slug: str,
     db_session: Session = Depends(get_db_session),
 ) -> TelegramChatWithRulesFDO:
-    telegram_chat_action = TelegramChatAction(db_session)
-    try:
-        result = await telegram_chat_action.get_with_eligibility_rules(slug=slug)
-        return TelegramChatWithRulesFDO.from_dto(result)
-    except TelegramChatNotExists:
-        raise HTTPException(
-            detail={"error": {"message": "Chat not found"}},
-            status_code=404,
-        )
+    telegram_chat_action = TelegramChatManageAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    result = await telegram_chat_action.get_with_eligibility_rules()
+    return TelegramChatWithRulesFDO.from_dto(result)
 
 
 @admin_chat_router.post("", deprecated=True)
@@ -108,18 +107,18 @@ async def create_chat(
     description="Refreshes chat details, like logo. Normally not needed and is more like an emergency endpoint.",
 )
 async def refresh_chat(
+    request: Request,
     slug: str,
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatFDO:
-    telegram_chat_action = TelegramChatAction(db_session)
+    action = TelegramChatManageAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     try:
-        result = await telegram_chat_action.refresh(slug=slug)
+        result = await action.refresh()
         return BaseTelegramChatFDO.model_validate(result.model_dump())
-    except TelegramChatNotExists:
-        raise HTTPException(
-            detail={"error": {"message": "Chat not found"}},
-            status_code=404,
-        )
     except TelegramChatNotSufficientPrivileges:
         raise HTTPException(
             detail={
@@ -133,21 +132,18 @@ async def refresh_chat(
 
 @admin_chat_router.put("/{slug}")
 async def update_chat(
+    request: Request,
     slug: str,
     chat: EditChatCPO,
     db_session: Session = Depends(get_db_session),
 ) -> BaseTelegramChatFDO:
-    telegram_chat_action = TelegramChatAction(db_session)
-    try:
-        result = await telegram_chat_action.update(
-            slug=slug, description=chat.description
-        )
-        return BaseTelegramChatFDO.model_validate(result.model_dump())
-    except TelegramChatNotExists:
-        raise HTTPException(
-            detail={"error": {"message": "Chat not found"}},
-            status_code=404,
-        )
+    telegram_chat_action = TelegramChatManageAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    result = await telegram_chat_action.update(description=chat.description)
+    return BaseTelegramChatFDO.model_validate(result.model_dump())
 
 
 @admin_chat_router.delete(
@@ -155,26 +151,30 @@ async def update_chat(
     deprecated=True,
 )
 async def delete_chat(
+    request: Request,
     slug: str,
     db_session: Session = Depends(get_db_session),
 ) -> None:
-    telegram_chat_action = TelegramChatAction(db_session)
-    try:
-        await telegram_chat_action.delete(slug=slug)
-    except TelegramChatNotExists:
-        raise HTTPException(
-            detail={"error": {"message": "Chat not found"}},
-            status_code=404,
-        )
+    telegram_chat_action = TelegramChatManageAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    await telegram_chat_action.delete()
 
 
 @admin_chat_router.get("/{slug}/rules/jettons/{rule_id}", tags=["Rules"])
 async def get_chat_jetton_rule(
+    request: Request,
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
 ) -> ChatEligibilityRuleFDO:
-    telegram_chat_jetton_action = TelegramChatJettonAction(db_session)
+    telegram_chat_jetton_action = TelegramChatJettonAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     return ChatEligibilityRuleFDO.model_validate(
         telegram_chat_jetton_action.read(rule_id=rule_id).model_dump()
     )
@@ -182,13 +182,17 @@ async def get_chat_jetton_rule(
 
 @admin_chat_router.post("/{slug}/rules/jettons", tags=["Rules"])
 async def add_chat_jetton_rule(
+    request: Request,
     slug: str,
     rule: TelegramChatJettonRuleCPO,
     db_session: Session = Depends(get_db_session),
 ) -> ChatEligibilityRuleFDO:
-    telegram_chat_jetton_action = TelegramChatJettonAction(db_session)
+    telegram_chat_jetton_action = TelegramChatJettonAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     chat_jetton_rule = await telegram_chat_jetton_action.create(
-        slug=slug,
         address_raw=rule.address,
         threshold=rule.expected,
     )
@@ -197,12 +201,17 @@ async def add_chat_jetton_rule(
 
 @admin_chat_router.put("/{slug}/rules/jettons/{rule_id}", tags=["Rules"])
 async def update_chat_jetton_rule(
+    request: Request,
     slug: str,
     rule_id: int,
     rule: TelegramChatJettonRuleCPO,
     db_session: Session = Depends(get_db_session),
 ) -> ChatEligibilityRuleFDO:
-    action = TelegramChatJettonAction(db_session)
+    action = TelegramChatJettonAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     chat_jetton_rule = await action.update(
         rule_id=rule_id,
         address_raw=rule.address,
@@ -214,11 +223,16 @@ async def update_chat_jetton_rule(
 
 @admin_chat_router.get("/{slug}/rules/nft-collections/{rule_id}", tags=["Rules"])
 async def get_chat_nft_collection_rule(
+    request: Request,
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
 ) -> NftEligibilityRuleFDO:
-    action = TelegramChatNFTCollectionAction(db_session)
+    action = TelegramChatNFTCollectionAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     return NftEligibilityRuleFDO.model_validate(
         action.read(rule_id=rule_id).model_dump()
     )
@@ -226,13 +240,17 @@ async def get_chat_nft_collection_rule(
 
 @admin_chat_router.post("/{slug}/rules/nft-collections", tags=["Rules"])
 async def add_chat_nft_collection_rule(
+    request: Request,
     slug: str,
     rule: TelegramChatNFTCollectionRuleCPO,
     db_session: Session = Depends(get_db_session),
 ) -> NftEligibilityRuleFDO:
-    action = TelegramChatNFTCollectionAction(db_session)
+    action = TelegramChatNFTCollectionAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     chat_nft_collection_rule = await action.create(
-        slug=slug,
         address_raw=rule.address,
         threshold=rule.expected,
         required_attributes=rule.required_attributes,
@@ -242,12 +260,17 @@ async def add_chat_nft_collection_rule(
 
 @admin_chat_router.put("/{slug}/rules/nft-collections/{rule_id}", tags=["Rules"])
 async def update_chat_nft_collection_rule(
+    request: Request,
     slug: str,
     rule_id: int,
     rule: TelegramChatNFTCollectionRuleCPO,
     db_session: Session = Depends(get_db_session),
 ) -> NftEligibilityRuleFDO:
-    action = TelegramChatNFTCollectionAction(db_session)
+    action = TelegramChatNFTCollectionAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     nft_collection_rule = await action.update(
         rule_id=rule_id,
         address_raw=rule.address,
@@ -260,59 +283,82 @@ async def update_chat_nft_collection_rule(
 
 @admin_chat_router.post("/{slug}/rules/whitelist", tags=["Rules"])
 async def add_chat_whitelist_rule(
+    request: Request,
     slug: str,
     rule: CreateWhitelistRuleCPO,
     db_session: Session = Depends(get_db_session),
 ) -> WhitelistRuleFDO:
-    action = TelegramChatWhitelistAction(db_session)
+    action = TelegramChatWhitelistAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     new_rule = action.create(
-        slug=slug,
         name=rule.name,
         description=rule.description,
     )
-    result = await action.set_content(new_rule.id, rule.users)
+    result = await action.set_content(
+        rule_id=new_rule.id,
+        content=rule.users,
+    )
     return WhitelistRuleFDO.model_validate(result.model_dump())
 
 
 @admin_chat_router.put("/{slug}/rules/whitelist/{rule_id}", tags=["Rules"])
 async def update_chat_whitelist_rule(
+    request: Request,
     slug: str,
     rule_id: int,
     rule: UpdateWhitelistRuleCPO,
     db_session: Session = Depends(get_db_session),
 ) -> WhitelistRuleFDO:
-    action = TelegramChatWhitelistAction(db_session)
+    action = TelegramChatWhitelistAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     action.update(
         rule_id=rule_id,
         name=rule.name,
         description=rule.description,
         is_enabled=rule.is_enabled,
     )
-    result = await action.set_content(rule_id, rule.users)
+    result = await action.set_content(rule_id=rule_id, content=rule.users)
     return WhitelistRuleFDO.model_validate(result.model_dump())
 
 
 @admin_chat_router.get("/{slug}/rules/whitelist/{rule_id}", tags=["Rules"])
 async def get_chat_whitelist_rule(
+    request: Request,
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
 ) -> WhitelistRuleFDO:
-    action = TelegramChatWhitelistAction(db_session)
-    result = action.get(rule_id=rule_id)
+    action = TelegramChatWhitelistAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    result = action.get(
+        rule_id=rule_id,
+    )
     return WhitelistRuleFDO.model_validate(result.model_dump())
 
 
 @admin_chat_router.post("/{slug}/rules/whitelist-external", tags=["Rules"])
 async def add_chat_whitelist_external_source_rule(
+    request: Request,
     slug: str,
     rule: CreateWhitelistRuleExternalCPO,
     db_session: Session = Depends(get_db_session),
 ) -> WhitelistRuleExternalFDO:
-    action = TelegramChatWhitelistExternalSourceAction(db_session)
+    action = TelegramChatWhitelistExternalSourceAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     try:
         new_rule = await action.create(
-            slug=slug,
             name=rule.name,
             description=rule.description,
             external_source_url=str(rule.url),
@@ -328,23 +374,33 @@ async def add_chat_whitelist_external_source_rule(
 
 @admin_chat_router.get("/{slug}/rules/whitelist-external/{rule_id}", tags=["Rules"])
 async def get_chat_whitelist_external_source_rule(
+    request: Request,
     slug: str,
     rule_id: int,
     db_session: Session = Depends(get_db_session),
 ) -> WhitelistRuleExternalFDO:
-    action = TelegramChatWhitelistExternalSourceAction(db_session)
+    action = TelegramChatWhitelistExternalSourceAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     result = action.get(rule_id=rule_id)
     return WhitelistRuleExternalFDO.model_validate(result.model_dump())
 
 
 @admin_chat_router.put("/{slug}/rules/whitelist-external/{rule_id}", tags=["Rules"])
 async def update_chat_whitelist_external_source_rule(
+    request: Request,
     slug: str,
     rule_id: int,
     rule: UpdateWhitelistRuleExternalCPO,
     db_session: Session = Depends(get_db_session),
 ) -> WhitelistRuleExternalFDO:
-    action = TelegramChatWhitelistExternalSourceAction(db_session)
+    action = TelegramChatWhitelistExternalSourceAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
     try:
         await action.update(
             rule_id=rule_id,

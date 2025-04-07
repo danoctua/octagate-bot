@@ -4,10 +4,8 @@ from slugify import slugify
 from sqlalchemy.exc import NoResultFound
 from telethon.tl.types import Channel
 
-from core.models import TelegramChatUser
-from core.models.chat import (
-    TelegramChat,
-)
+from core.models.chat import TelegramChat, TelegramChatUser
+
 from core.services.base import BaseService
 
 logger = logging.getLogger(__name__)

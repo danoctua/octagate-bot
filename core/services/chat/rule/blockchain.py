@@ -37,8 +37,12 @@ class TelegramChatBlockchainRuleBaseService(BaseService, ABC):
         logger.debug(f"Telegram Chat Rule {new_rule!r} created.")
         return new_rule
 
-    def get(self, id_: int) -> TelegramChatRuleType:
-        return self.db_session.query(self.model).filter(self.model.id == id_).one()
+    def get(self, id_: int, chat_id: int) -> TelegramChatRuleType:
+        return (
+            self.db_session.query(self.model)
+            .filter(self.model.id == id_, self.model.chat_id == chat_id)
+            .one()
+        )
 
     def update(
         self,
@@ -63,6 +67,15 @@ class TelegramChatBlockchainRuleBaseService(BaseService, ABC):
 
         query = query.order_by(desc(self.model.is_enabled), self.model.created_at)
         return query.all()
+
+    def delete(self, rule_id: int, chat_id: int) -> None:
+        self.db_session.query(self.model).filter(
+            self.model.id == rule_id, self.model.chat_id == chat_id
+        ).delete(synchronize_session="fetch")
+        self.db_session.commit()
+        logger.debug(
+            f"Telegram Chat Rule {self.model.__name__!r} {rule_id=!r} deleted."
+        )
 
 
 class TelegramChatJettonService(TelegramChatBlockchainRuleBaseService):

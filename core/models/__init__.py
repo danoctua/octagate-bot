@@ -10,7 +10,7 @@ from core.models.chat import (  # noqa
     TelegramChatWhitelistExternalSource,
 )
 from core.models.user import User  # noqa
-from core.models.wallet import UserWallet, JettonWallet  # noqa
+from core.models.wallet import UserWallet, JettonWallet, TelegramChatUserWallet  # noqa
 
 
 # To prevent imports from this module

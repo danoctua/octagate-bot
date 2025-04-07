@@ -21,8 +21,12 @@ class BaseTelegramChatExternalSourceService(
 ):
     model: TelegramChatWhitelistBaseT
 
-    def get(self, rule_id: int) -> TelegramChatWhitelistBaseT:
-        return self.db_session.query(self.model).filter(self.model.id == rule_id).one()
+    def get(self, rule_id: int, chat_id: int) -> TelegramChatWhitelistBaseT:
+        return (
+            self.db_session.query(self.model)
+            .filter(self.model.id == rule_id, self.model.chat_id == chat_id)
+            .one()
+        )
 
     def get_all(
         self, chat_id: int | None = None, enabled_only: bool = True
@@ -43,10 +47,10 @@ class BaseTelegramChatExternalSourceService(
         self.db_session.commit()
         return rule
 
-    def delete(self, rule_id: int) -> None:
-        self.db_session.query(self.model).filter(self.model.id == rule_id).delete(
-            synchronize_session="fetch"
-        )
+    def delete(self, chat_id: int, rule_id: int) -> None:
+        self.db_session.query(self.model).filter(
+            self.model.chat_id == chat_id, self.model.id == rule_id
+        ).delete(synchronize_session="fetch")
         self.db_session.commit()
         logger.debug(f"Telegram Chat External Source {rule_id!r} deleted.")
 
@@ -78,6 +82,7 @@ class TelegramChatExternalSourceService(
 
     def update(
         self,
+        chat_id: int,
         rule_id: int,
         name: str,
         description: str,
@@ -86,6 +91,7 @@ class TelegramChatExternalSourceService(
     ) -> TelegramChatWhitelistExternalSource:
         """
         Warning: This method does not commit the transaction as it could be reverted if the external source is invalid.
+        :param chat_id: the chat id
         :param rule_id: the rule id
         :param name: the name of the external source
         :param description: the description of the external source
@@ -93,7 +99,7 @@ class TelegramChatExternalSourceService(
         :param is_enabled: whether the external source is enabled
         :return: the updated external source
         """
-        source = self.get(rule_id)
+        source = self.get(chat_id=chat_id, rule_id=rule_id)
         source.url = external_source_url
         source.name = name
         source.description = description
@@ -119,9 +125,14 @@ class TelegramChatWhitelistService(
         return new_source
 
     def update(
-        self, rule_id: int, name: str, description: str | None, is_enabled: bool
+        self,
+        chat_id: int,
+        rule_id: int,
+        name: str,
+        description: str | None,
+        is_enabled: bool,
     ) -> TelegramChatWhitelist:
-        source = self.get(rule_id)
+        source = self.get(chat_id=chat_id, rule_id=rule_id)
         source.name = name
         source.description = description
         source.is_enabled = is_enabled
