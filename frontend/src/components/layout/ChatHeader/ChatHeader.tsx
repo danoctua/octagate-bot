@@ -20,12 +20,12 @@ const ChatHeader: FC<PropsWithChildren<{
                 {chat &&
                     <div className={"w-full flex items-center justify-center flex-col gap-2"}>
                         <Avatar
-                            src={getImageUrl(chat?.logoPath)}
-                            acronym={getAcronymFromName(chat?.title)}
+                            src={getImageUrl(chat.logoPath)}
+                            acronym={getAcronymFromName(chat.title)}
                             size={96}
                         />
                         <Title level={"2"} weight={"2"} plain className={"flex items-center gap-2"}>
-                            {chat?.title}
+                            {chat.title}
                         </Title>
                     </div>
                 }
