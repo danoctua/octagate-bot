@@ -11,7 +11,7 @@ from core.models.user import User
 
 logger = logging.getLogger(__name__)
 
-chat_router = APIRouter(prefix="/chats")
+chat_router = APIRouter(prefix="/chats", tags=["Chats"])
 
 
 @chat_router.get("/{slug}")

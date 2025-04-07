@@ -8,7 +8,7 @@ from core.dtos.user import TelegramUserDTO, UserInitDataPO
 from core.services.db import DBService
 from core.services.user import UserService
 
-auth_router = APIRouter(prefix="/auth")
+auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @auth_router.post("/telegram", description="Default authentication method")

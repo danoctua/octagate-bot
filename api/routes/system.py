@@ -6,8 +6,8 @@ from api.pos.common import StatusFDO
 from core.dtos.chat.rules.whitelist import WhitelistRuleCPO
 from core.utils.task import wait_for_task
 
-system_router = APIRouter(prefix="/system")
-system_non_authenticated_router = APIRouter(prefix="/system")
+system_router = APIRouter(prefix="/system", tags=["System"])
+system_non_authenticated_router = APIRouter(prefix="/system", tags=["System", "Test"])
 
 
 @system_router.get("/async-tasks/{task_id}")

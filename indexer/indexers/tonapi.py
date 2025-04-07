@@ -1,16 +1,17 @@
 import asyncio
 import logging
 import time
-from collections.abc import Callable, Awaitable, Generator, AsyncGenerator
+from collections.abc import Callable, Awaitable, AsyncGenerator
 from typing import Any
 
 from pydantic import BaseModel
 from pytonapi import AsyncTonapi
-from pytonapi.exceptions import TONAPIInternalServerError
+from pytonapi.exceptions import TONAPIInternalServerError, TONAPINotFoundError
 from pytonapi.schema.jettons import JettonHolders, JettonsBalances, JettonInfo
 from pytonapi.schema.nft import NftItems, NftCollection
 
 from core.dtos.resource import NftItemMetadataDTO, NftCollectionMetadataDTO
+from core.exceptions.external import ExternalResourceNotFound
 from indexer.settings import wallet_indexer_settings
 
 
@@ -81,7 +82,7 @@ class TonApiService:
 
     async def get_all_jetton_holders(
         self, account_id: str
-    ) -> Generator[JettonHolders, None, None]:
+    ) -> AsyncGenerator[JettonHolders, None, None]:
         """
         Get all jettons' holders.
 
@@ -148,7 +149,10 @@ class TonApiService:
         :param address: Token address
         :return: Token details
         """
-        return await self._tonapi.jettons.get_info(account_id=address)
+        try:
+            return await self._tonapi.jettons.get_info(account_id=address)
+        except TONAPINotFoundError:
+            raise ExternalResourceNotFound(f"Token info about {address!r} not found")
 
     async def get_nft_collection_info(self, address: str) -> NftCollection:
         """
@@ -157,9 +161,14 @@ class TonApiService:
         :param address: NFT address
         :return: NFT details
         """
-        return await self._tonapi.nft.get_collection_by_collection_address(
-            account_id=address
-        )
+        try:
+            return await self._tonapi.nft.get_collection_by_collection_address(
+                account_id=address
+            )
+        except TONAPINotFoundError:
+            raise ExternalResourceNotFound(
+                f"NFT collection info about {address!r} not found"
+            )
 
     async def parse_nft_collection_metadata(
         self, address: str, partial: bool = True

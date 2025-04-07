@@ -1,7 +1,7 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.params import Query
 from sqlalchemy.orm import Session
 
@@ -15,11 +15,14 @@ from api.pos.blockchain import (
 from api.pos.common import StatusFDO
 from core.actions.jetton import JettonAction
 from core.actions.nft_collection import NftCollectionAction
+from core.exceptions.external import ExternalResourceNotFound
 from core.services.jetton import JettonService
 
 logger = logging.getLogger(__name__)
 
-admin_resource_router = APIRouter(prefix="/resources")
+admin_resource_router = APIRouter(
+    prefix="/resources", tags=["Admin", "Resources management"]
+)
 
 
 @admin_resource_router.get("/prefetch/jettons")
@@ -28,8 +31,14 @@ async def fetch_jetton_details(
     db_session: Session = Depends(get_db_session),
 ) -> JettonFDO:
     jetton_action = JettonAction(db_session)
-    jetton_data = await jetton_action.prefetch(address_raw=address_raw)
-    return JettonFDO.model_validate(jetton_data.model_dump())
+    try:
+        jetton_data = await jetton_action.prefetch(address_raw=address_raw)
+        return JettonFDO.model_validate(jetton_data.model_dump())
+    except ExternalResourceNotFound:
+        raise HTTPException(
+            detail={"error": {"message": f"Jetton data not found for {address_raw!r}"}},
+            status_code=404,
+        )
 
 
 @admin_resource_router.get("/prefetch/nft-collections")
@@ -38,8 +47,20 @@ async def fetch_nft_collection_details(
     db_session: Session = Depends(get_db_session),
 ) -> NftCollectionFDO:
     nft_collection_action = NftCollectionAction(db_session)
-    nft_collection_dto = await nft_collection_action.prefetch(address_raw=address_raw)
-    return NftCollectionFDO.model_validate(nft_collection_dto.model_dump())
+    try:
+        nft_collection_dto = await nft_collection_action.prefetch(
+            address_raw=address_raw
+        )
+        return NftCollectionFDO.model_validate(nft_collection_dto.model_dump())
+    except ExternalResourceNotFound:
+        raise HTTPException(
+            detail={
+                "error": {
+                    "message": f"NFT collection data not found for {address_raw!r}"
+                }
+            },
+            status_code=404,
+        )
 
 
 @admin_resource_router.get("/jettons", deprecated=True)

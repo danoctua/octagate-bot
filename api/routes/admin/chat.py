@@ -1,8 +1,7 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
-from starlette.requests import Request
 
 from api.deps import get_db_session
 from api.pos.chat import (
@@ -37,7 +36,7 @@ from core.actions.chat.rule.blockchain import (
 from core.actions.chat import TelegramChatAction
 from core.services.chat import TelegramChatService
 
-admin_chat_router = APIRouter(prefix="/chats")
+admin_chat_router = APIRouter(prefix="/chats", tags=["Admin", "Chat management"])
 logger = logging.getLogger(__name__)
 
 
@@ -169,7 +168,7 @@ async def delete_chat(
         )
 
 
-@admin_chat_router.get("/{slug}/rules/jettons/{rule_id}")
+@admin_chat_router.get("/{slug}/rules/jettons/{rule_id}", tags=["Rules"])
 async def get_chat_jetton_rule(
     slug: str,
     rule_id: int,
@@ -181,7 +180,7 @@ async def get_chat_jetton_rule(
     )
 
 
-@admin_chat_router.post("/{slug}/rules/jettons")
+@admin_chat_router.post("/{slug}/rules/jettons", tags=["Rules"])
 async def add_chat_jetton_rule(
     slug: str,
     rule: TelegramChatJettonRuleCPO,
@@ -196,7 +195,7 @@ async def add_chat_jetton_rule(
     return ChatEligibilityRuleFDO.model_validate(chat_jetton_rule.model_dump())
 
 
-@admin_chat_router.put("/{slug}/rules/jettons/{rule_id}")
+@admin_chat_router.put("/{slug}/rules/jettons/{rule_id}", tags=["Rules"])
 async def update_chat_jetton_rule(
     slug: str,
     rule_id: int,
@@ -213,7 +212,7 @@ async def update_chat_jetton_rule(
     return ChatEligibilityRuleFDO.model_validate(chat_jetton_rule.model_dump())
 
 
-@admin_chat_router.get("/{slug}/rules/nft-collections/{rule_id}")
+@admin_chat_router.get("/{slug}/rules/nft-collections/{rule_id}", tags=["Rules"])
 async def get_chat_nft_collection_rule(
     slug: str,
     rule_id: int,
@@ -225,7 +224,7 @@ async def get_chat_nft_collection_rule(
     )
 
 
-@admin_chat_router.post("/{slug}/rules/nft-collections")
+@admin_chat_router.post("/{slug}/rules/nft-collections", tags=["Rules"])
 async def add_chat_nft_collection_rule(
     slug: str,
     rule: TelegramChatNFTCollectionRuleCPO,
@@ -241,7 +240,7 @@ async def add_chat_nft_collection_rule(
     return NftEligibilityRuleFDO.model_validate(chat_nft_collection_rule.model_dump())
 
 
-@admin_chat_router.put("/{slug}/rules/nft-collections/{rule_id}")
+@admin_chat_router.put("/{slug}/rules/nft-collections/{rule_id}", tags=["Rules"])
 async def update_chat_nft_collection_rule(
     slug: str,
     rule_id: int,
@@ -259,7 +258,7 @@ async def update_chat_nft_collection_rule(
     return NftEligibilityRuleFDO.model_validate(nft_collection_rule.model_dump())
 
 
-@admin_chat_router.post("/{slug}/rules/whitelist")
+@admin_chat_router.post("/{slug}/rules/whitelist", tags=["Rules"])
 async def add_chat_whitelist_rule(
     slug: str,
     rule: CreateWhitelistRuleCPO,
@@ -275,7 +274,7 @@ async def add_chat_whitelist_rule(
     return WhitelistRuleFDO.model_validate(result.model_dump())
 
 
-@admin_chat_router.put("/{slug}/rules/whitelist/{rule_id}")
+@admin_chat_router.put("/{slug}/rules/whitelist/{rule_id}", tags=["Rules"])
 async def update_chat_whitelist_rule(
     slug: str,
     rule_id: int,
@@ -293,7 +292,7 @@ async def update_chat_whitelist_rule(
     return WhitelistRuleFDO.model_validate(result.model_dump())
 
 
-@admin_chat_router.get("/{slug}/rules/whitelist/{rule_id}")
+@admin_chat_router.get("/{slug}/rules/whitelist/{rule_id}", tags=["Rules"])
 async def get_chat_whitelist_rule(
     slug: str,
     rule_id: int,
@@ -304,7 +303,7 @@ async def get_chat_whitelist_rule(
     return WhitelistRuleFDO.model_validate(result.model_dump())
 
 
-@admin_chat_router.post("/{slug}/rules/whitelist-external")
+@admin_chat_router.post("/{slug}/rules/whitelist-external", tags=["Rules"])
 async def add_chat_whitelist_external_source_rule(
     slug: str,
     rule: CreateWhitelistRuleExternalCPO,
@@ -327,7 +326,7 @@ async def add_chat_whitelist_external_source_rule(
     return WhitelistRuleExternalFDO.model_validate(new_rule.model_dump())
 
 
-@admin_chat_router.get("/{slug}/rules/whitelist-external/{rule_id}")
+@admin_chat_router.get("/{slug}/rules/whitelist-external/{rule_id}", tags=["Rules"])
 async def get_chat_whitelist_external_source_rule(
     slug: str,
     rule_id: int,
@@ -338,7 +337,7 @@ async def get_chat_whitelist_external_source_rule(
     return WhitelistRuleExternalFDO.model_validate(result.model_dump())
 
 
-@admin_chat_router.put("/{slug}/rules/whitelist-external/{rule_id}")
+@admin_chat_router.put("/{slug}/rules/whitelist-external/{rule_id}", tags=["Rules"])
 async def update_chat_whitelist_external_source_rule(
     slug: str,
     rule_id: int,

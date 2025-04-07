@@ -18,7 +18,7 @@ from core.exceptions.wallet import (
     UserWalletNotConnectedError,
 )
 
-user_router = APIRouter(prefix="/users")
+user_router = APIRouter(prefix="/users", tags=["User"])
 
 
 @user_router.get("/me")
@@ -32,6 +32,7 @@ async def get_user_data(
     "/wallet",
     name="Connect user wallet to the chat with TON Proof",
     description="Connect a new wallet to the chat by providing TON proof and wallet details.",
+    tags=["Wallet"],
 )
 async def connect_user_wallet(
     request: Request,
@@ -79,6 +80,7 @@ async def connect_user_wallet(
     "/wallet",
     name="Set connected user wallet for the chat",
     description="Allows to set previously connected wallet for the chat.",
+    tags=["Wallet"],
 )
 async def set_user_wallet(
     request: Request,
@@ -114,6 +116,7 @@ async def set_user_wallet(
     "/wallet",
     name="Disconnect user wallet from the chat",
     description="Disconnect wallet from the chat.",
+    tags=["Wallet"],
 )
 async def disconnect_wallet(
     request: Request,
