@@ -221,6 +221,21 @@ async def update_chat_jetton_rule(
     return ChatEligibilityRuleFDO.model_validate(chat_jetton_rule.model_dump())
 
 
+@admin_chat_router.delete("/{slug}/rules/jettons/{rule_id}", tags=["Rules"])
+async def delete_chat_jetton_rule(
+    request: Request,
+    slug: str,
+    rule_id: int,
+    db_session: Session = Depends(get_db_session),
+) -> None:
+    action = TelegramChatJettonAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    await action.delete(rule_id=rule_id)
+
+
 @admin_chat_router.get("/{slug}/rules/nft-collections/{rule_id}", tags=["Rules"])
 async def get_chat_nft_collection_rule(
     request: Request,
@@ -281,6 +296,21 @@ async def update_chat_nft_collection_rule(
     return NftEligibilityRuleFDO.model_validate(nft_collection_rule.model_dump())
 
 
+@admin_chat_router.delete("/{slug}/rules/nft-collections/{rule_id}", tags=["Rules"])
+async def delete_chat_nft_collection_rule(
+    request: Request,
+    slug: str,
+    rule_id: int,
+    db_session: Session = Depends(get_db_session),
+) -> None:
+    action = TelegramChatNFTCollectionAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    await action.delete(rule_id=rule_id)
+
+
 @admin_chat_router.post("/{slug}/rules/whitelist", tags=["Rules"])
 async def add_chat_whitelist_rule(
     request: Request,
@@ -325,6 +355,21 @@ async def update_chat_whitelist_rule(
     )
     result = await action.set_content(rule_id=rule_id, content=rule.users)
     return WhitelistRuleFDO.model_validate(result.model_dump())
+
+
+@admin_chat_router.delete("/{slug}/rules/whitelist/{rule_id}", tags=["Rules"])
+async def delete_chat_whitelist_rule(
+    request: Request,
+    slug: str,
+    rule_id: int,
+    db_session: Session = Depends(get_db_session),
+) -> None:
+    action = TelegramChatWhitelistAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    await action.delete(rule_id=rule_id)
 
 
 @admin_chat_router.get("/{slug}/rules/whitelist/{rule_id}", tags=["Rules"])
@@ -418,3 +463,18 @@ async def update_chat_whitelist_external_source_rule(
 
     result = action.get(rule_id=rule_id)
     return WhitelistRuleExternalFDO.model_validate(result.model_dump())
+
+
+@admin_chat_router.delete("/{slug}/rules/whitelist-external/{rule_id}", tags=["Rules"])
+async def delete_chat_whitelist_external_source_rule(
+    request: Request,
+    slug: str,
+    rule_id: int,
+    db_session: Session = Depends(get_db_session),
+) -> None:
+    action = TelegramChatWhitelistExternalSourceAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    await action.delete(rule_id=rule_id)

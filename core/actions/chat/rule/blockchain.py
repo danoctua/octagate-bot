@@ -97,6 +97,10 @@ class TelegramChatNFTCollectionAction(ManagedChatBaseAction):
         )
         return NftEligibilityRuleDTO.from_nft_collection_rule(rule)
 
+    async def delete(self, rule_id: int) -> None:
+        self.telegram_chat_nft_collection_service.delete(rule_id, chat_id=self.chat.id)
+        logger.info(f"Deleted chat nft collection rule {rule_id!r}")
+
 
 class TelegramChatJettonAction(ManagedChatBaseAction):
     def __init__(self, db_session: Session, requestor: User, chat_slug: str) -> None:

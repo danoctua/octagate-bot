@@ -196,7 +196,7 @@ class TelegramChatWhitelistExternalSourceAction(ManagedChatBaseAction):
         for source in sources:
             await self._refresh_external_source(source, raise_for_error=raise_for_error)
 
-    def delete(self, rule_id: int) -> None:
+    async def delete(self, rule_id: int) -> None:
         self.telegram_chat_external_source_service.delete(
             chat_id=self.chat.id, rule_id=rule_id
         )
@@ -284,7 +284,7 @@ class TelegramChatWhitelistAction(ManagedChatBaseAction):
         logger.info(f"Whitelist {rule_id!r} updated successfully")
         return WhitelistRuleDTO.from_orm(whitelist)
 
-    def delete(self, rule_id: int) -> None:
+    async def delete(self, rule_id: int) -> None:
         self.telegram_chat_whitelist_service.delete(
             chat_id=self.chat.id,
             rule_id=rule_id,
