@@ -46,12 +46,15 @@ class WalletService(BaseService):
         query = self.db_session.query(UserWallet.address).all()
         return (str(address[0]) for address in query)
 
-    def get_user_wallet(self, wallet_address: str) -> UserWallet | None:
-        return (
-            self.db_session.query(UserWallet)
-            .filter(UserWallet.address == wallet_address)
-            .first()
-        )
+    def get_user_wallet(
+        self, wallet_address: str, user_id: int | None = None
+    ) -> UserWallet | None:
+        query = self.db_session.query(UserWallet)
+        query = query.filter(UserWallet.address == wallet_address)
+        if user_id is not None:
+            query = query.filter(UserWallet.user_id == user_id)
+
+        return query.first()
 
     def disconnect_user_wallet(self, user_id: int) -> None:
         self.db_session.query(UserWallet).filter(

@@ -20,3 +20,22 @@ class ConnectWalletRequestCPO(BaseFDO):
         ),
     ]
     wallet_details: WalletDetailsWithProofCPO
+
+
+class SetWalletRequestCPO(BaseFDO):
+    chat_slug: Annotated[
+        str,
+        Field(
+            ...,
+            alias="chatSlug",
+            description="Chat slug for which wallet is being connected",
+        ),
+    ]
+    walletAddress: Annotated[
+        str,
+        Field(
+            ...,
+            alias="walletAddress",
+            description="Wallet address to be set. It should be an address already connected by the user before",
+        ),
+    ]

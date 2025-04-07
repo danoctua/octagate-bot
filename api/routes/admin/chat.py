@@ -2,8 +2,9 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
+from starlette.requests import Request
 
-from api.deps import get_db_session, validate_access_token
+from api.deps import get_db_session
 from api.pos.chat import (
     TelegramChatJettonRuleCPO,
     AddChatCPO,
@@ -34,7 +35,6 @@ from core.actions.chat.rule.blockchain import (
     TelegramChatJettonAction,
 )
 from core.actions.chat import TelegramChatAction
-from core.models.user import User
 from core.services.chat import TelegramChatService
 
 admin_chat_router = APIRouter(prefix="/chats")
@@ -46,14 +46,14 @@ logger = logging.getLogger(__name__)
     description="Get all chats managed by the current user - all chats where user is admin",
 )
 async def get_chats(
+    request: Request,
     db_session: Session = Depends(get_db_session),
-    user: User = Depends(validate_access_token),
 ) -> list[BaseTelegramChatFDO]:
     chat_service = TelegramChatService(db_session)
-    if user.is_admin:
+    if request.state.user.is_admin:
         chats = chat_service.get_all()
     else:
-        chats = chat_service.get_all_managed(user_id=user.id)
+        chats = chat_service.get_all_managed(user_id=request.state.user.id)
 
     return [BaseTelegramChatFDO.from_orm(chat) for chat in chats]
 

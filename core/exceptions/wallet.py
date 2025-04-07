@@ -1,3 +1,7 @@
+class UserWalletNotConnectedError(Exception):
+    pass
+
+
 class UserWalletConnectedError(Exception):
     pass
 

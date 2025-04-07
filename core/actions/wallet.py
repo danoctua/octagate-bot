@@ -23,6 +23,7 @@ from core.services.wallet import (
 from core.exceptions.wallet import (
     UserWalletConnectedError,
     UserWalletConnectedAnotherUserError,
+    UserWalletNotConnectedError,
 )
 from indexer.celery_app import app
 
@@ -148,3 +149,48 @@ class WalletAction(BaseAction):
         redis_service = RedisService()
         redis_service.add_to_set(DISCONNECTED_WALLETS_SET_NAME, str(user_id))
         logger.info(f"User {user_id!r} disconnected wallet from chat {chat.id!r}")
+
+    async def set_wallet(
+        self, user_id: int, chat_slug: str, wallet_address: str
+    ) -> None:
+        """
+        Sets a wallet for a user in a specified chat by connecting the wallet address to the
+        user within the chat.
+
+        This method handles the process of associating a wallet address with a user for a
+        specific Telegram chat. It validates whether the wallet address is already connected
+        to the user. If the specified chat does not exist, it raises an exception. Once the
+        validations pass, the wallet is successfully connected, and a record of the action
+        is logged.
+
+        :param user_id: The unique identifier of the user.
+        :param chat_slug: The unique slug identifier of the chat.
+        :param wallet_address: The wallet address to be set for the user.
+
+        :raises TelegramChatNotExists: If no chat exists with the provided slug identifier.
+        :raises UserWalletNotConnectedError: If the wallet is already connected to the specified chat.
+        """
+        connected_wallet = self.wallet_service.get_user_wallet(
+            wallet_address=wallet_address, user_id=user_id
+        )
+        if not connected_wallet:
+            logger.warning(
+                f"User {user_id!r} tried to connect wallet {wallet_address!r} that wasn't connected by user. Ignoring."
+            )
+            raise UserWalletNotConnectedError(
+                f"Wallet {wallet_address!r} was not connected by user"
+            )
+
+        try:
+            chat = self.telegram_chat_service.get_by_slug(chat_slug)
+        except NoResultFound:
+            raise TelegramChatNotExists(f"Chat {chat_slug!r} not found")
+
+        self.telegram_chat_user_wallet_service.connect(
+            user_id=user_id,
+            chat_id=chat.id,
+            wallet_address=wallet_address,
+        )
+        logger.info(
+            f"User {user_id!r} set wallet {wallet_address!r} for chat {chat.id!r}"
+        )
