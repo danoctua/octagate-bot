@@ -93,7 +93,13 @@ class BaseTelegramChatBlockchainResourceRuleCPO(BaseTelegramChatQuantityRuleCPO)
 
 
 class TelegramChatToncoinRuleCPO(BaseTelegramChatQuantityRuleCPO):
-    ...
+    @field_validator("expected")
+    @classmethod
+    def preprocess_expected(cls, v: float | int) -> float | int:
+        if not v:
+            return v
+
+        return to_nano(v)
 
 
 class TelegramChatJettonRuleCPO(BaseTelegramChatBlockchainResourceRuleCPO):
@@ -117,7 +123,10 @@ class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatBlockchainResourceRuleCPO
 class ChatEligibilityRuleFDO(BaseFDO, ChatEligibilityRuleDTO):
     @field_serializer("expected", return_type=float | int)
     def preprocess_expected(self, v: int) -> float | int:
-        if not v or self.category != EligibilityCheckType.JETTON:
+        if not v or self.category not in (
+            EligibilityCheckType.JETTON,
+            EligibilityCheckType.TONCOIN,
+        ):
             return v
 
         return to_amount(v)
@@ -152,9 +161,13 @@ class TelegramChatWithRulesFDO(BaseFDO):
 
 
 class RuleEligibilitySummaryFDO(BaseFDO, RuleEligibilitySummaryDTO):
+    # TODO it should parse actual the same way as it stores it in nano in the database
     @field_serializer("expected", return_type=float | int)
     def preprocess_expected(self, v: int) -> float | int:
-        if not v or self.category != EligibilityCheckType.JETTON:
+        if not v or self.category not in (
+            EligibilityCheckType.JETTON,
+            EligibilityCheckType.TONCOIN,
+        ):
             return v
 
         return to_amount(v)

@@ -270,7 +270,7 @@ class AuthorizationAction(BaseAction):
                     id=rule.id,
                     category=EligibilityCheckType.TONCOIN,
                     expected=rule.threshold,
-                    title="Toncoin (TON)",
+                    title="TON",
                     actual=user_wallet.balance if user_wallet else 0,
                     is_enabled=rule.is_enabled,
                 )

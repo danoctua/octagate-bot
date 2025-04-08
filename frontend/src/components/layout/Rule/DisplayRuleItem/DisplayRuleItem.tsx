@@ -14,7 +14,7 @@ const DisplayRuleItem = (
     let title = '';
     let subtitle = null;
 
-    if (rule.category === "jetton" || rule.category === "nft_collection") {
+    if (rule.category === "jetton" || rule.category === "nft_collection" || rule.category === "toncoin") {
         title = `Hold ${rule.expected} ${rule.title}`
         if (rule.category === "nft_collection") {
             subtitle = rule.requiredAttributes && rule.requiredAttributes.length > 0 ?

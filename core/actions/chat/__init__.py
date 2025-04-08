@@ -440,6 +440,10 @@ class TelegramChatManageAction(ManagedChatBaseAction, TelegramChatAction):
             rules=sorted(
                 [
                     *(
+                        RuleEligibilitySummaryDTO.from_toncoin_rule(rule)
+                        for rule in eligibility_rules.toncoin
+                    ),
+                    *(
                         RuleEligibilitySummaryDTO.from_jetton_rule(rule)
                         for rule in eligibility_rules.jettons
                     ),

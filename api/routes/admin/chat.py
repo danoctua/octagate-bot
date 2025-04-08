@@ -202,7 +202,7 @@ async def add_chat_toncoin_rule(
     return ChatEligibilityRuleFDO.model_validate(
         telegram_chat_toncoin_action.create(
             threshold=rule.expected,
-        )
+        ).model_dump()
     )
 
 
@@ -224,7 +224,7 @@ async def update_chat_toncoin_rule(
             rule_id=rule_id,
             threshold=rule.expected,
             is_enabled=rule.is_enabled,
-        )
+        ).model_dump()
     )
 
 
