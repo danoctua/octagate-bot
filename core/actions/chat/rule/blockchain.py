@@ -18,10 +18,15 @@ from core.dtos.chat.rules.jetton import (
     UpdateTelegramChatJettonRuleDTO,
 )
 from core.dtos.base import NftItemAttributeDTO
+from core.dtos.chat.rules.toncoin import (
+    CreateTelegramChatToncoinRuleDTO,
+    UpdateTelegramChatToncoinRuleDTO,
+)
 from core.models.user import User
 from core.services.chat.rule.blockchain import (
     TelegramChatNFTCollectionService,
     TelegramChatJettonService,
+    TelegramChatToncoinService,
 )
 
 logger = logging.getLogger(__name__)
@@ -171,3 +176,63 @@ class TelegramChatJettonAction(ManagedChatBaseAction):
     async def delete(self, rule_id: int) -> None:
         self.telegram_chat_jetton_service.delete(rule_id, chat_id=self.chat.id)
         logger.info(f"Deleted chat jetton rule {rule_id!r}")
+
+
+class TelegramChatToncoinAction(ManagedChatBaseAction):
+    def __init__(self, db_session: Session, requestor: User, chat_slug: str) -> None:
+        super().__init__(
+            db_session=db_session, requestor=requestor, chat_slug=chat_slug
+        )
+        self.telegram_chat_toncoin_service = TelegramChatToncoinService(db_session)
+
+    def read(self, rule_id: int) -> ChatEligibilityRuleDTO:
+        try:
+            rule = self.telegram_chat_toncoin_service.get(rule_id, chat_id=self.chat.id)
+        except NoResultFound:
+            raise HTTPException(
+                detail={"error": {"message": "Rule not found"}},
+                status_code=404,
+            )
+        return ChatEligibilityRuleDTO.from_toncoin_rule(rule)
+
+    def create(
+        self,
+        threshold: float | int,
+    ) -> ChatEligibilityRuleDTO:
+        new_rule = self.telegram_chat_toncoin_service.create(
+            CreateTelegramChatToncoinRuleDTO(
+                chat_id=self.chat.id,
+                threshold=threshold,
+                is_enabled=True,
+            )
+        )
+        logger.info(f"Chat {self.chat.id!r} linked to a new TON rule")
+        return ChatEligibilityRuleDTO.from_toncoin_rule(new_rule)
+
+    def update(
+        self,
+        rule_id: int,
+        threshold: int | float,
+        is_enabled: bool,
+    ) -> ChatEligibilityRuleDTO:
+        try:
+            rule = self.telegram_chat_toncoin_service.get(rule_id, chat_id=self.chat.id)
+        except NoResultFound:
+            raise HTTPException(
+                detail={"error": {"message": "Rule not found"}},
+                status_code=404,
+            )
+
+        updated_rule = self.telegram_chat_toncoin_service.update(
+            rule=rule,
+            dto=UpdateTelegramChatToncoinRuleDTO(
+                threshold=threshold,
+                is_enabled=is_enabled,
+            ),
+        )
+        logger.info(f"Updated chat jetton rule {rule_id!r} for TON")
+        return ChatEligibilityRuleDTO.from_toncoin_rule(updated_rule)
+
+    def delete(self, rule_id: int) -> None:
+        self.telegram_chat_toncoin_service.delete(rule_id, chat_id=self.chat.id)
+        logger.info(f"Deleted chat TON rule {rule_id!r}")

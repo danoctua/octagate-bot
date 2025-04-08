@@ -113,10 +113,11 @@ class TelegramChatService(BaseService):
         )
 
     def delete(self, chat_id: int) -> None:
-        chat = self.get(chat_id)
-        self.db_session.delete(chat)
+        self.db_session.query(TelegramChat).filter(TelegramChat.id == chat_id).delete(
+            synchronize_session="fetch"
+        )
         self.db_session.commit()
-        logger.debug(f"Telegram Chat {chat.title!r} deleted.")
+        logger.debug(f"Telegram Chat {chat_id!r} deleted.")
 
     def check_exists(self, chat_id: int) -> bool:
         return (

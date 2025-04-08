@@ -19,6 +19,7 @@ from api.pos.chat import (
     UpdateWhitelistRuleExternalCPO,
     EditChatCPO,
     NftEligibilityRuleFDO,
+    TelegramChatToncoinRuleCPO,
 )
 from core.actions.chat.rule.whitelist import (
     TelegramChatWhitelistAction,
@@ -32,17 +33,19 @@ from core.exceptions.chat import (
 from core.actions.chat.rule.blockchain import (
     TelegramChatNFTCollectionAction,
     TelegramChatJettonAction,
+    TelegramChatToncoinAction,
 )
 from core.actions.chat import TelegramChatAction, TelegramChatManageAction
 from core.services.chat import TelegramChatService
 
-admin_chat_router = APIRouter(prefix="/chats", tags=["Admin", "Chat management"])
+admin_chat_router = APIRouter(prefix="/chats")
 logger = logging.getLogger(__name__)
 
 
 @admin_chat_router.get(
     "",
     description="Get all chats managed by the current user - all chats where user is admin",
+    tags=["Chat management"],
 )
 async def get_chats(
     request: Request,
@@ -57,7 +60,9 @@ async def get_chats(
     return [BaseTelegramChatFDO.from_orm(chat) for chat in chats]
 
 
-@admin_chat_router.get("/{slug}", description="Get specific chat details")
+@admin_chat_router.get(
+    "/{slug}", description="Get specific chat details", tags=["Chat management"]
+)
 async def get_chat(
     request: Request,
     slug: str,
@@ -72,7 +77,7 @@ async def get_chat(
     return TelegramChatWithRulesFDO.from_dto(result)
 
 
-@admin_chat_router.post("", deprecated=True)
+@admin_chat_router.post("", deprecated=True, tags=["Chat management"])
 async def create_chat(
     chat: AddChatCPO,
     db_session: Session = Depends(get_db_session),
@@ -105,6 +110,7 @@ async def create_chat(
 @admin_chat_router.post(
     "/{slug}/refresh",
     description="Refreshes chat details, like logo. Normally not needed and is more like an emergency endpoint.",
+    tags=["Chat management"],
 )
 async def refresh_chat(
     request: Request,
@@ -130,7 +136,7 @@ async def refresh_chat(
         )
 
 
-@admin_chat_router.put("/{slug}")
+@admin_chat_router.put("/{slug}", tags=["Chat management"])
 async def update_chat(
     request: Request,
     slug: str,
@@ -149,6 +155,7 @@ async def update_chat(
 @admin_chat_router.delete(
     "/{slug}",
     deprecated=True,
+    tags=["Chat management"],
 )
 async def delete_chat(
     request: Request,
@@ -161,6 +168,79 @@ async def delete_chat(
         chat_slug=slug,
     )
     await telegram_chat_action.delete()
+
+
+@admin_chat_router.get("/{slug}/rules/toncoin/{rule_id}", tags=["Rules"])
+async def get_chat_toncoin_rule(
+    request: Request,
+    slug: str,
+    rule_id: int,
+    db_session: Session = Depends(get_db_session),
+) -> ChatEligibilityRuleFDO:
+    telegram_chat_toncoin_action = TelegramChatToncoinAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    return ChatEligibilityRuleFDO.model_validate(
+        telegram_chat_toncoin_action.read(rule_id=rule_id).model_dump()
+    )
+
+
+@admin_chat_router.post("/{slug}/rules/toncoin", tags=["Rules"])
+async def add_chat_toncoin_rule(
+    request: Request,
+    slug: str,
+    rule: TelegramChatToncoinRuleCPO,
+    db_session: Session = Depends(get_db_session),
+) -> ChatEligibilityRuleFDO:
+    telegram_chat_toncoin_action = TelegramChatToncoinAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    return ChatEligibilityRuleFDO.model_validate(
+        telegram_chat_toncoin_action.create(
+            threshold=rule.expected,
+        )
+    )
+
+
+@admin_chat_router.put("/{slug}/rules/toncoin/{rule_id}", tags=["Rules"])
+async def update_chat_toncoin_rule(
+    request: Request,
+    slug: str,
+    rule_id: int,
+    rule: TelegramChatToncoinRuleCPO,
+    db_session: Session = Depends(get_db_session),
+) -> ChatEligibilityRuleFDO:
+    telegram_chat_toncoin_action = TelegramChatToncoinAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    return ChatEligibilityRuleFDO.model_validate(
+        telegram_chat_toncoin_action.update(
+            rule_id=rule_id,
+            threshold=rule.expected,
+            is_enabled=rule.is_enabled,
+        )
+    )
+
+
+@admin_chat_router.delete("/{slug}/rules/toncoin/{rule_id}", tags=["Rules"])
+async def delete_chat_toncoin_rule(
+    request: Request,
+    slug: str,
+    rule_id: int,
+    db_session: Session = Depends(get_db_session),
+) -> None:
+    telegram_chat_toncoin_action = TelegramChatToncoinAction(
+        db_session=db_session,
+        requestor=request.state.user,
+        chat_slug=slug,
+    )
+    telegram_chat_toncoin_action.delete(rule_id=rule_id)
 
 
 @admin_chat_router.get("/{slug}/rules/jettons/{rule_id}", tags=["Rules"])

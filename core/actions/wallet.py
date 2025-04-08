@@ -4,15 +4,16 @@ from celery.result import AsyncResult
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.orm import Session
 
+from core.actions.authorization import AuthorizationAction
 from core.dtos.wallet import WalletDetailsWithProofDTO
 from core.actions.base import BaseAction
 from core.constants import (
     DEFAULT_WALLET_TRACK_EXPIRATION,
     CELERY_WALLET_FETCH_QUEUE_NAME,
-    DISCONNECTED_WALLETS_SET_NAME,
 )
 from core.exceptions.chat import TelegramChatNotExists
 from core.services.chat import TelegramChatService
+from core.services.chat.user import TelegramChatUserService
 from core.services.superredis import RedisService
 from core.services.ton import TonProofService
 from core.services.user import UserService
@@ -45,7 +46,7 @@ class WalletAction(BaseAction):
         user_id: int,
         chat_slug: str,
         wallet_details: WalletDetailsWithProofDTO,
-    ) -> str | None:
+    ) -> str:
         """
         Connects a wallet to a user and associates it with a Telegram chat. This method performs
         several checks such as verifying the wallet's Ton proof, ensuring the wallet isn't already
@@ -58,7 +59,7 @@ class WalletAction(BaseAction):
         :param wallet_details: An object containing wallet address and its associated proof for
             verification purposes.
         :return: A string representing the task ID of the asynchronous operation for initial wallet
-            data loading if wallet did not exist in the database before. Otherwise, returns None.
+            data loading on reconnect.
         :raises UserWalletConnectedAnotherUserError: If the wallet is already connected to a different user.
         :raises TelegramChatNotExists: If no Telegram chat exists with the provided slug identifier.
         :raises UserWalletConnectedError: If the wallet is already connected to the specified chat.
@@ -95,18 +96,7 @@ class WalletAction(BaseAction):
                 f"Wallet {wallet_details.wallet_address!r} already connected to chat {chat.id!r}"
             )
 
-        # As user connected wallet, remove it from disconnected wallets set in case it was added before
-        redis_service = RedisService()
-        redis_service.delete_from_set(DISCONNECTED_WALLETS_SET_NAME, str(user_id))
-
-        task_id = None
         if not connected_wallet:
-            # Run initial wallet data loading
-            task_result: AsyncResult = app.send_task(
-                "fetch-wallet-details",
-                args=(wallet_details.wallet_address,),
-                queue=CELERY_WALLET_FETCH_QUEUE_NAME,
-            )
             # Add wallet to tracking
             redis_external_service = RedisService(external=True)
             redis_external_service.set(
@@ -114,12 +104,18 @@ class WalletAction(BaseAction):
                 value="",
                 ex=DEFAULT_WALLET_TRACK_EXPIRATION,
             )
-            task_id = task_result.task_id
+
+        # Run initial wallet data loading
+        task_result: AsyncResult = app.send_task(
+            "fetch-wallet-details",
+            args=(wallet_details.wallet_address,),
+            queue=CELERY_WALLET_FETCH_QUEUE_NAME,
+        )
 
         logger.info(
-            f"User {user_id!r} connected wallet {wallet_details.wallet_address!r}"
+            f"User {user_id!r} linked wallet {wallet_details.wallet_address!r} to the chat {chat.id!r}"
         )
-        return task_id
+        return task_result.task_id
 
     async def disconnect_wallet(self, user_id: int, chat_slug: str) -> None:
         """
@@ -140,14 +136,38 @@ class WalletAction(BaseAction):
         except NoResultFound:
             raise TelegramChatNotExists(f"Chat {chat_slug!r} not found")
 
+        telegram_chat_user_service = TelegramChatUserService(self.db_session)
+        telegram_chat_user = None
+        try:
+            telegram_chat_user = telegram_chat_user_service.get(
+                chat_id=chat.id,
+                user_id=user_id,
+            )
+        except NoResultFound:
+            logger.debug(
+                f"User {user_id!r} is not a chat member for {chat.id!r}. Skipping."
+            )
+
+        if telegram_chat_user:
+            logger.info(
+                f"User {user_id!r} is a chat member for {chat.id!r}. Checking permissions."
+            )
+            authorization_action = AuthorizationAction(db_session=self.db_session)
+            is_eligible = authorization_action.is_user_eligible_chat_member(
+                user_id=user_id, chat_id=chat.id, check_wallet=False
+            )
+            if not is_eligible:
+                logger.info(
+                    f"User {user_id!r} is not eligible for chat {chat.id!r}. Kicking."
+                )
+                await authorization_action.kick_chat_member(telegram_chat_user)
+
         # Remove user wallet mapping
         self.telegram_chat_user_wallet_service.disconnect(
             chat_id=chat.id,
             user_id=user_id,
         )
 
-        redis_service = RedisService()
-        redis_service.add_to_set(DISCONNECTED_WALLETS_SET_NAME, str(user_id))
         logger.info(f"User {user_id!r} disconnected wallet from chat {chat.id!r}")
 
     async def set_wallet(

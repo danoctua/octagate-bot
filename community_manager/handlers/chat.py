@@ -57,6 +57,7 @@ async def handle_chat_action(event: events.ChatAction.Event):
 
         elif event.action_message:
             # To avoid handling multiple events twice (users are added or removed and the action message is sent)
+            # The only message that should be handled is when bot is added to the chat
             logger.debug(
                 f"Chat action message {event!r} is not handled, but was removed."
             )
@@ -77,6 +78,12 @@ async def handle_chat_action(event: events.ChatAction.Event):
                     f"Action made by the bot {event.added_by.id!r}. Already handled."
                 )
                 return
+
+            # elif event.user.is_self:
+            #     logger.info(
+            #         f"Bot was added to chat: {event.chat_id=!r}",
+            #     )
+            #     return
 
             logger.info(
                 f"New chat member: {event.chat_id=!r} {event.user=!r}",

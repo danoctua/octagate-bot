@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import BaseModel
 from pytonapi import AsyncTonapi
 from pytonapi.exceptions import TONAPIInternalServerError, TONAPINotFoundError
+from pytonapi.schema.accounts import Account
 from pytonapi.schema.jettons import JettonHolders, JettonsBalances, JettonInfo
 from pytonapi.schema.nft import NftItems, NftCollection
 
@@ -79,6 +80,12 @@ class TonApiService:
 
             logger.debug("Fetched %s records", total_count)
             current_offset += total_count
+
+    async def get_account_info(
+        self,
+        account_id: str,
+    ) -> Account:
+        return await self._tonapi.accounts.get_info(account_id=account_id)
 
     async def get_all_jetton_holders(
         self, account_id: str

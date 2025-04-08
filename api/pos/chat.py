@@ -69,12 +69,15 @@ class EditChatCPO(BaseFDO):
     description: str | None
 
 
-class BaseTelegramChatRuleCPO(BaseFDO):
+class BaseTelegramChatQuantityRuleCPO(BaseFDO):
+    expected: Annotated[float | int, Field(..., gt=0, description="Expected value")]
+    is_enabled: bool = True
+
+
+class BaseTelegramChatBlockchainResourceRuleCPO(BaseTelegramChatQuantityRuleCPO):
     address: Annotated[
         str, Field(..., description="Raw blockchain address of the item, e.g. 0:...")
     ]
-    expected: Annotated[float | int, Field(..., gt=0, description="Expected value")]
-    is_enabled: bool = True
 
     @field_validator("address")
     @classmethod
@@ -89,7 +92,11 @@ class BaseTelegramChatRuleCPO(BaseFDO):
         return v
 
 
-class TelegramChatJettonRuleCPO(BaseTelegramChatRuleCPO):
+class TelegramChatToncoinRuleCPO(BaseTelegramChatQuantityRuleCPO):
+    ...
+
+
+class TelegramChatJettonRuleCPO(BaseTelegramChatBlockchainResourceRuleCPO):
     @field_validator("expected")
     @classmethod
     def preprocess_expected(cls, v: float | int) -> float | int:
@@ -103,7 +110,7 @@ class NftItemAttributeFDO(BaseFDO, NftItemAttributeDTO):
     ...
 
 
-class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatRuleCPO):
+class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatBlockchainResourceRuleCPO):
     required_attributes: list[NftItemAttributeFDO] | None = None
 
 

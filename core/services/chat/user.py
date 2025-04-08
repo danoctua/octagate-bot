@@ -1,24 +1,31 @@
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import joinedload
 
+from core.models import TelegramChatUserWallet
 from core.models.chat import TelegramChatUser
 from core.services.base import BaseService
 from core.services.chat import logger
 
 
 class TelegramChatUserService(BaseService):
-    def _create(self, chat_id: int, user_id: int, is_admin: bool) -> TelegramChatUser:
+    def _create(
+        self, chat_id: int, user_id: int, is_admin: bool, is_managed: bool
+    ) -> TelegramChatUser:
         chat_user = TelegramChatUser(
             chat_id=chat_id,
             user_id=user_id,
             is_admin=is_admin,
+            is_managed=is_managed,
         )
         self.db_session.add(chat_user)
         logger.debug(f"Telegram Chat User {chat_user!r} created.")
         return chat_user
 
-    def create(self, chat_id: int, user_id: int, is_admin: bool) -> TelegramChatUser:
-        chat_user = self._create(chat_id, user_id, is_admin)
+    def create(
+        self, chat_id: int, user_id: int, is_admin: bool, is_managed: bool
+    ) -> TelegramChatUser:
+        chat_user = self._create(chat_id, user_id, is_admin, is_managed)
         self.db_session.commit()
         return chat_user
 
@@ -32,12 +39,14 @@ class TelegramChatUserService(BaseService):
         )
 
     def get_or_create(
-        self, chat_id: int, user_id: int, is_admin: bool
+        self, chat_id: int, user_id: int, is_admin: bool, is_managed: bool
     ) -> TelegramChatUser:
         try:
             return self.get(chat_id, user_id)
         except NoResultFound:
-            return self.create(chat_id, user_id, is_admin=is_admin)
+            return self.create(
+                chat_id, user_id, is_admin=is_admin, is_managed=is_managed
+            )
 
     def get_members_count(self, chat_id: int) -> int:
         return (
@@ -69,6 +78,29 @@ class TelegramChatUserService(BaseService):
         if user_ids:
             query = query.filter(TelegramChatUser.user_id.in_(user_ids))
 
+        query = query.options(
+            joinedload(TelegramChatUser.wallet_link).options(
+                joinedload(TelegramChatUserWallet.wallet),
+            )
+        )
+
+        return query.all()
+
+    def get_all_by_linked_wallet(self, addresses: list[str]) -> list[TelegramChatUser]:
+        query = self.db_session.query(TelegramChatUser)
+        query = query.join(
+            TelegramChatUserWallet,
+            and_(
+                TelegramChatUser.chat_id == TelegramChatUserWallet.chat_id,
+                TelegramChatUser.user_id == TelegramChatUserWallet.user_id,
+            ),
+        )
+        query = query.options(
+            joinedload(TelegramChatUser.wallet_link).options(
+                joinedload(TelegramChatUserWallet.wallet),
+            )
+        )
+        query = query.filter(TelegramChatUserWallet.address.in_(addresses))
         return query.all()
 
     def find(self, chat_id: int, user_id: int) -> TelegramChatUser | None:
@@ -84,7 +116,7 @@ class TelegramChatUserService(BaseService):
         return chat_user
 
     def create_or_update(
-        self, chat_id: int, user_id: int, is_admin: bool
+        self, chat_id: int, user_id: int, is_admin: bool, is_managed: bool
     ) -> TelegramChatUser:
         try:
             chat_user = self.get(chat_id, user_id)
@@ -100,6 +132,7 @@ class TelegramChatUserService(BaseService):
                 chat_id,
                 user_id,
                 is_admin,
+                is_managed,
             )
 
     def is_chat_member(self, chat_id: int, user_id: int) -> bool:

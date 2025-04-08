@@ -11,7 +11,15 @@ from core.dtos.chat.rules.jetton import (
     CreateTelegramChatJettonRuleDTO,
     UpdateTelegramChatJettonRuleDTO,
 )
-from core.models.chat import TelegramChatJetton, TelegramChatNFTCollection
+from core.dtos.chat.rules.toncoin import (
+    CreateTelegramChatToncoinRuleDTO,
+    UpdateTelegramChatToncoinRuleDTO,
+)
+from core.models.chat import (
+    TelegramChatJetton,
+    TelegramChatNFTCollection,
+    TelegramChatToncoin,
+)
 from core.services.base import BaseService
 
 
@@ -20,10 +28,14 @@ logger = logging.getLogger(__name__)
 
 TelegramChatRuleType = TelegramChatJetton | TelegramChatNFTCollection
 CreateTelegramChatRuleDTOType = (
-    CreateTelegramChatJettonRuleDTO | CreateTelegramChatNFTCollectionRuleDTO
+    CreateTelegramChatJettonRuleDTO
+    | CreateTelegramChatNFTCollectionRuleDTO
+    | CreateTelegramChatToncoinRuleDTO
 )
 UpdateTelegramChatRuleDTOType = (
-    UpdateTelegramChatJettonRuleDTO | UpdateTelegramChatNFTCollectionRuleDTO
+    UpdateTelegramChatJettonRuleDTO
+    | UpdateTelegramChatNFTCollectionRuleDTO
+    | UpdateTelegramChatToncoinRuleDTO
 )
 
 
@@ -84,3 +96,7 @@ class TelegramChatJettonService(TelegramChatBlockchainRuleBaseService):
 
 class TelegramChatNFTCollectionService(TelegramChatBlockchainRuleBaseService):
     model = TelegramChatNFTCollection
+
+
+class TelegramChatToncoinService(TelegramChatBlockchainRuleBaseService):
+    model = TelegramChatToncoin

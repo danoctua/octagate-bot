@@ -3,6 +3,7 @@ from collections.abc import Generator
 
 from pytonapi.schema.jettons import JettonBalance, JettonsBalances
 from sqlalchemy.exc import NoResultFound, IntegrityError
+from sqlalchemy.orm import joinedload
 
 from core.exceptions.wallet import (
     UserWalletConnectedError,
@@ -74,6 +75,21 @@ class WalletService(BaseService):
         ).update({"hide_wallet": True})
         self.db_session.commit()
 
+    def set_balance(self, address_raw: str, balance: int) -> None:
+        """
+        Updates the balance for a specific wallet address using the database session.
+
+        This method queries the `UserWallet` table using the provided wallet address,
+        then updates the balance column with the specified value. It does not return
+        any value but modifies the data in the database.
+
+        :param address_raw: The wallet address whose balance needs to be updated.
+        :param balance: The new balance to be set for the given wallet address in nano
+        """
+        self.db_session.query(UserWallet).filter(
+            UserWallet.address == address_raw,
+        ).update({"balance": balance})
+
 
 class TelegramChatUserWalletService(BaseService):
     def connect(self, user_id: int, chat_id: int, wallet_address: str) -> None:
@@ -93,12 +109,21 @@ class TelegramChatUserWalletService(BaseService):
     def get(self, user_id: int, chat_id: int) -> TelegramChatUserWallet:
         return (
             self.db_session.query(TelegramChatUserWallet)
+            .options(joinedload(TelegramChatUserWallet.wallet))
             .filter(
                 TelegramChatUserWallet.user_id == user_id,
                 TelegramChatUserWallet.chat_id == chat_id,
             )
             .one()
         )
+
+    def get_all(
+        self, addresses: list[str] | None = None
+    ) -> list[TelegramChatUserWallet]:
+        query = self.db_session.query(TelegramChatUserWallet)
+        if addresses:
+            query = query.filter(TelegramChatUserWallet.address.in_(addresses))
+        return query.all()
 
 
 class JettonWalletService(BaseService):

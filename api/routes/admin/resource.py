@@ -20,9 +20,7 @@ from core.services.jetton import JettonService
 
 logger = logging.getLogger(__name__)
 
-admin_resource_router = APIRouter(
-    prefix="/resources", tags=["Admin", "Resources management"]
-)
+admin_resource_router = APIRouter(prefix="/resources", tags=["Resources management"])
 
 
 @admin_resource_router.get("/prefetch/jettons")

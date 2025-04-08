@@ -18,10 +18,10 @@ from core.exceptions.wallet import (
     UserWalletNotConnectedError,
 )
 
-user_router = APIRouter(prefix="/users", tags=["User"])
+user_router = APIRouter(prefix="/users")
 
 
-@user_router.get("/me")
+@user_router.get("/me", tags=["User"])
 async def get_user_data(
     request: Request,
 ) -> UserFDO:

@@ -19,6 +19,8 @@ class NftItemMetadataDTO(BaseNftItemMetadataDTO):
     @classmethod
     def from_nft_item(cls, nft_item: TONNftItem) -> Self:
         return cls(
+            name=nft_item.metadata.get("name"),
+            description=nft_item.metadata.get("description"),
             attributes=[
                 NftItemAttributeDTO(
                     trait_type=trait["trait_type"],
@@ -26,7 +28,7 @@ class NftItemMetadataDTO(BaseNftItemMetadataDTO):
                 )
                 # NFT item could have no attributes
                 for trait in nft_item.metadata.get("attributes", [])
-            ]
+            ],
         )
 
 
@@ -34,18 +36,25 @@ class NftCollectionMetadataDTO(BaseNftCollectionMetadataDTO):
     @classmethod
     def from_items_metadata(cls, items_metadata: list[NftItemMetadataDTO]) -> Self:
         combined = defaultdict(set)
+        attributes_combined = defaultdict(set)
         for item_metadata in items_metadata:
             for attribute in item_metadata.attributes:
-                combined[attribute.trait_type].add(attribute.value)
+                attributes_combined[attribute.trait_type].add(attribute.value)
+                if item_metadata.name:
+                    combined["name"].add(item_metadata.name)
+                if item_metadata.description:
+                    combined["description"].add(item_metadata.description)
 
         return cls(
+            names=list(combined["name"]),
+            descriptions=list(combined["description"]),
             attributes=[
                 NftCollectionAttributeDTO(
                     trait_type=trait_type,
                     values=sorted(values),
                 )
                 for trait_type, values in combined.items()
-            ]
+            ],
         )
 
 

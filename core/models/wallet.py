@@ -26,10 +26,13 @@ class UserWallet(Base):
 
     address = mapped_column(BlockchainAddressRawField, primary_key=True)
     user_id = mapped_column(ForeignKey("user.id"), nullable=False)
+    balance = mapped_column(BIGINT, nullable=True, doc="Balance of the wallet in TONs")
+    # DEPRECATED attribute
+    hide_wallet = mapped_column(Boolean, default=False, nullable=False)
+
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-    hide_wallet = mapped_column(Boolean, default=False, nullable=False)
 
     chat_links = relationship(
         "TelegramChatUserWallet",

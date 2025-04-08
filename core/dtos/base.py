@@ -9,6 +9,8 @@ class NftItemAttributeDTO(BaseModel):
 
 
 class BaseNftItemMetadataDTO(BaseModel):
+    name: str | None = None
+    description: str | None = None
     attributes: list[NftItemAttributeDTO]
 
 
@@ -18,4 +20,6 @@ class NftCollectionAttributeDTO(BaseModel):
 
 
 class BaseNftCollectionMetadataDTO(BaseModel):
+    names: list[str] | None = None
+    descriptions: list[str] | None = None
     attributes: list[NftCollectionAttributeDTO]

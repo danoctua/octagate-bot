@@ -82,6 +82,10 @@ class TelegramChatRuleBase(Base):
     )
 
 
+class TelegramChatToncoin(TelegramChatRuleBase):
+    __tablename__ = "telegram_chat_toncoin"
+
+
 class TelegramChatJetton(TelegramChatRuleBase):
     __tablename__ = "telegram_chat_jetton"
 

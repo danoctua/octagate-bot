@@ -17,7 +17,7 @@ from core.services.db import DBService
 from core.services.jetton import JettonService
 from core.services.nft import NftCollectionService, NftItemService
 from core.services.superredis import RedisService
-from core.services.wallet import JettonWalletService
+from core.services.wallet import JettonWalletService, WalletService
 from indexer.settings import wallet_indexer_settings
 
 logger = logging.getLogger(__name__)
@@ -46,11 +46,20 @@ def fetch_wallet_details(address: str) -> None:
 
     blockchain_service = TonApiService()
 
+    account_info = asyncio.run(blockchain_service.get_account_info(address))
+
     jettons_balances: JettonsBalances = asyncio.run(
         blockchain_service.get_all_jetton_balances(address)
     )
 
     with DBService().db_session() as db_session:
+        wallet_service = WalletService(db_session)
+        wallet_service.set_balance(
+            account_info.address.to_raw(),
+            # It already contains the balance in nano
+            int(str(account_info.balance)),
+        )
+
         jetton_service = JettonService(db_session)
         whitelisted_jettons = jetton_service.get_all(whitelisted_only=False)
 

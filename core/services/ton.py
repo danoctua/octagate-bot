@@ -78,26 +78,3 @@ class TonProofService:
             msg = f"Proof is invalid: {e}"
             logger.error(msg)
             raise ProofValidationError(msg) from e
-
-
-if __name__ == "__main__":
-    # Example proof data
-    proof_data = {
-        "timestamp": 1739397088,
-        "domain": {"lengthBytes": 10, "length_bytes": 10, "value": "github.com"},
-        "signature": "CioZsofAv2r2IfwKCk5ZaMKNTUd/CtTPSv5O6xgPHWBYiGhpcAn55dpt19ZURpBeThEasYrwCuf031BehZtkBA==",
-        "payload": "777373",
-    }
-
-    # Example public key
-    public_key_raw = "d1a4837e70230577c00fc42e88e1158c192e6f26feeaa8e01b4ed425cadab3f4"
-    wallet = "0:11e309f0666214d7e189bc13a1eb73af9c95d2800de276db5d59b728c70e5d47"
-    TonProofService.verify_ton_proof(
-        WalletDetailsWithProofDTO(
-            **{
-                "ton_proof": proof_data,
-                "wallet_address": wallet,
-                "public_key": public_key_raw,
-            }
-        )
-    )

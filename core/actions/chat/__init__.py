@@ -138,6 +138,7 @@ class TelegramChatAction(BaseAction):
                 chat_id=chat_identifier,
                 user_id=user.id,
                 is_admin=hasattr(participant_user.participant, "admin_rights"),
+                is_managed=False,
             )
         logger.info(f"Chat participants loaded for chat {chat_identifier!r}")
 

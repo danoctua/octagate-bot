@@ -7,41 +7,31 @@ from community_manager.entrypoint import init_client
 from community_manager.settings import community_manager_settings
 from core.actions.authorization import AuthorizationAction
 from core.actions.chat import TelegramChatAction
-from core.actions.chat.rule.whitelist import TelegramChatWhitelistExternalSourceAction
+from core.actions.chat.rule.whitelist import (
+    TelegramChatWhitelistExternalSourceContentAction,
+)
 from core.constants import (
     CELERY_SYSTEM_QUEUE_NAME,
     UPDATED_WALLETS_SET_NAME,
-    DISCONNECTED_WALLETS_SET_NAME,
 )
 from core.services.chat.user import TelegramChatUserService
 from core.services.db import DBService
 from core.services.superredis import RedisService
-from core.services.wallet import WalletService
 
 logger = get_task_logger(__name__)
 
 
-async def sanity_chat_checks(
-    wallets: list[str] | None, disconnected_users_ids: list[int] | None
-) -> None:
+async def sanity_chat_checks(wallets: list[str] | None) -> None:
     logger.info(f"Validating chat members for {wallets}")
     with DBService().db_session() as db_session:
-        wallet_service = WalletService(db_session)
-        if wallets:
-            all_wallets = wallet_service.get_all(addresses=wallets)
-            user_ids = {wallet.user_id for wallet in all_wallets}
-        else:
-            user_ids = set()
-
-        if disconnected_users_ids:
-            user_ids |= set(disconnected_users_ids)
-
-        if not user_ids:
-            logger.info("No users to validate. Skipping")
-            return
-
         telegram_chat_user_service = TelegramChatUserService(db_session)
-        chat_members = telegram_chat_user_service.get_all(user_ids=list(user_ids))
+        chat_members = telegram_chat_user_service.get_all_by_linked_wallet(
+            addresses=wallets
+        )
+
+        if not chat_members:
+            logger.info("No chats to validate. Skipping")
+
         telethon_service = init_client()
         authorization_action = AuthorizationAction(
             db_session, telethon_client=telethon_service.client
@@ -65,35 +55,15 @@ def check_chat_members() -> None:
         name=UPDATED_WALLETS_SET_NAME,
         count=community_manager_settings.items_per_task,
     )
-    # Query all of them as most of the disconnected users will not be part of any chat
-    disconnected_users_ids = redis_service.pop_from_set(
-        name=DISCONNECTED_WALLETS_SET_NAME
-    )
-
     if isinstance(wallets, str):
         wallets = [wallets]
 
-    if isinstance(disconnected_users_ids, str):
-        disconnected_users_ids = [disconnected_users_ids]
-    elif not disconnected_users_ids:
-        disconnected_users_ids = []
-
-    disconnected_users_ids = [int(user_id) for user_id in disconnected_users_ids]
-
-    if wallets or disconnected_users_ids:
+    if wallets:
         try:
-            asyncio.run(
-                sanity_chat_checks(
-                    wallets=wallets, disconnected_users_ids=disconnected_users_ids
-                )
-            )
+            asyncio.run(sanity_chat_checks(wallets=wallets))
         except Exception as exc:
             # Add wallets back to the set to retry later
             logger.error(f"Failed to validate chat members: {exc}", exc_info=True)
-            redis_service.add_to_set(
-                DISCONNECTED_WALLETS_SET_NAME,
-                *[str(user_id) for user_id in disconnected_users_ids],
-            )
             redis_service.add_to_set(UPDATED_WALLETS_SET_NAME, *wallets)
     else:
         logger.info("No users to validate. Skipping")
@@ -110,7 +80,7 @@ def refresh_chat_external_sources() -> None:
         return
 
     with DBService().db_session() as db_session:
-        action = TelegramChatWhitelistExternalSourceAction(db_session)
+        action = TelegramChatWhitelistExternalSourceContentAction(db_session)
         # Celery tasks are not async, so we need to run the async function in a blocking way
         asyncio.run(action.refresh_enabled())
         logger.info("Chat external sources refreshed.")

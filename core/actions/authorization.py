@@ -16,7 +16,7 @@ from core.dtos.chat.rules.internal import (
 )
 from core.dtos.user import TelegramUserDTO
 from core.models.user import User
-from core.models.wallet import JettonWallet
+from core.models.wallet import JettonWallet, UserWallet
 from core.models.blockchain import NftItem
 from core.models.chat import (
     TelegramChatUser,
@@ -31,6 +31,7 @@ from core.services.chat.rule.whitelist import (
 from core.services.chat.rule.blockchain import (
     TelegramChatJettonService,
     TelegramChatNFTCollectionService,
+    TelegramChatToncoinService,
 )
 from core.services.chat.user import TelegramChatUserService
 from core.services.nft import NftItemService
@@ -57,6 +58,7 @@ class AuthorizationAction(BaseAction):
         self.telegram_chat_user_wallet_service = TelegramChatUserWalletService(
             db_session
         )
+        self.telegram_chat_toncoin_service = TelegramChatToncoinService(db_session)
         self.telegram_chat_jetton_service = TelegramChatJettonService(db_session)
         self.telegram_chat_nft_collection_service = TelegramChatNFTCollectionService(
             db_session
@@ -70,7 +72,7 @@ class AuthorizationAction(BaseAction):
         self.telethon_service = TelethonService(client=telethon_client)
 
     def is_user_eligible_chat_member(
-        self, user_id: int, chat_id: int
+        self, user_id: int, chat_id: int, check_wallet: bool = True
     ) -> RulesEligibilitySummaryInternalDTO:
         """
         Determines whether a user is eligible to be a chat member based on the eligibility
@@ -82,6 +84,9 @@ class AuthorizationAction(BaseAction):
         :param user_id: The unique identifier of the user.
         :param chat_id: The unique identifier of the chat where eligibility
                         is being evaluated.
+        :param check_wallet: Whether the wallet should be checked
+                        (e.g. if the user disconnects the wallet and eligibility after that action has to be checked)
+                        If set to false, wallet-related rules will be skipped.
         :return: An internal data object summarizing the user's eligibility based
                  on the chat-specific rules.
         """
@@ -90,28 +95,35 @@ class AuthorizationAction(BaseAction):
             chat_id=chat_id, user_id=user.id
         )
         eligibility_rules = self.get_eligibility_rules(chat_id=chat_id)
-        nft_item_service = NftItemService(self.db_session)
 
-        try:
-            user_wallet = self.telegram_chat_user_wallet_service.get(
-                user_id=user.id, chat_id=chat_id
-            )
-            user_nft_items = nft_item_service.get_all(owner_address=user_wallet.address)
-            user_jettons = self.jetton_wallet_service.get_all(
-                owner_address=user_wallet.address
-            )
-        except NoResultFound:
-            user_wallet = None
-            user_nft_items = []
-            user_jettons = []
+        user_wallet: UserWallet | None = None
+        user_nft_items = []
+        user_jettons = []
+
+        if check_wallet:
+            nft_item_service = NftItemService(self.db_session)
+            try:
+                user_wallet: UserWallet = self.telegram_chat_user_wallet_service.get(
+                    user_id=user.id, chat_id=chat_id
+                ).wallet
+                user_nft_items = nft_item_service.get_all(
+                    owner_address=user_wallet.address
+                )
+                user_jettons = self.jetton_wallet_service.get_all(
+                    owner_address=user_wallet.address
+                )
+            except NoResultFound:
+                logger.debug(
+                    f"User {user.id} doesn't have a connected wallet. Skipping."
+                )
 
         eligibility_summary = self.check_chat_member_eligibility(
             eligibility_rules=eligibility_rules,
             user=user,
+            user_wallet=user_wallet,
             user_jettons=user_jettons,
             user_nft_items=user_nft_items,
             chat_member=telegram_chat_user,
-            wallet_address=user_wallet.address if user_wallet else None,
         )
         return eligibility_summary
 
@@ -124,6 +136,9 @@ class AuthorizationAction(BaseAction):
         :param enabled_only: Fetch only enabled rules. Set to False if you request rules for management purposes
         :return: Eligibility rules for the chat
         """
+        all_toncoin_rules = self.telegram_chat_toncoin_service.get_all(
+            chat_id, enabled_only=enabled_only
+        )
         all_jetton_rules = self.telegram_chat_jetton_service.get_all(
             chat_id, enabled_only=enabled_only
         )
@@ -137,6 +152,7 @@ class AuthorizationAction(BaseAction):
             chat_id, enabled_only=enabled_only
         )
         return TelegramChatEligibilityRulesDTO(
+            toncoin=all_toncoin_rules,
             jettons=all_jetton_rules,
             nft_collections=all_nft_collections,
             whitelist_external_sources=all_external_source_rules,
@@ -165,9 +181,10 @@ class AuthorizationAction(BaseAction):
             ] = self.get_eligibility_rules(chat_id=chat_member.chat_id)
 
         nft_item_service = NftItemService(self.db_session)
-        jetton_wallet_service = JettonWalletService(self.db_session)
 
-        unique_wallets = {chat_member.wallet_link for chat_member in chat_members}
+        unique_wallets = {
+            chat_member.wallet_link.address for chat_member in chat_members
+        }
 
         nft_items_per_wallet = defaultdict(list)
         jetton_wallets_per_wallet = defaultdict(list)
@@ -180,7 +197,7 @@ class AuthorizationAction(BaseAction):
             nft_items_per_wallet[wallet] = nft_item_service.get_all(
                 owner_address=wallet.address
             )
-            jetton_wallets_per_wallet[wallet] = jetton_wallet_service.get_all(
+            jetton_wallets_per_wallet[wallet] = self.jetton_wallet_service.get_all(
                 owner_address=wallet.address
             )
 
@@ -191,10 +208,13 @@ class AuthorizationAction(BaseAction):
                     eligibility_summary := self.check_chat_member_eligibility(
                         eligibility_rules=eligibility_rules_per_chat[chat],
                         user=member.user,
+                        user_wallet=member.wallet_link.wallet,
                         user_jettons=jetton_wallets_per_wallet.get(
-                            member.wallet_link, []
+                            member.wallet_link.address, []
                         ),
-                        user_nft_items=nft_items_per_wallet.get(member.wallet_link, []),
+                        user_nft_items=nft_items_per_wallet.get(
+                            member.wallet_link.address, []
+                        ),
                         chat_member=member,
                     )
                 ):
@@ -211,10 +231,10 @@ class AuthorizationAction(BaseAction):
         cls,
         eligibility_rules: TelegramChatEligibilityRulesDTO,
         user: User,
+        user_wallet: UserWallet | None,
         user_jettons: list[JettonWallet],
         user_nft_items: list[NftItem],
         chat_member: TelegramChatUser | None = None,
-        wallet_address: str | None = None,
     ) -> RulesEligibilitySummaryInternalDTO:
         """
         Analyzes a Telegram chat member's eligibility based on a set of predefined rules,
@@ -226,13 +246,13 @@ class AuthorizationAction(BaseAction):
             including requirements for jetton balances, NFT collections, whitelist memberships,
             and other external sources.
         :param user: The Telegram chat user whose eligibility is being evaluated.
+        :param user_wallet: The wallet linked by the user to the requested chat.
         :param user_jettons: A list of user's jetton wallets containing balance and
             related information.
         :param user_nft_items: A list of user's NFT items collected, which are checked
             against required NFT eligibility rules.
         :param chat_member: Optional parameter representing the Telegram chat member.
             Includes attributes such as admin status in the chat.
-        :param wallet_address: An optional wallet address associated with current user and chat.
         :return: A detailed summary encapsulating the carried-out eligibility checks,
             including specific details for each eligibility rule (jetton, NFT, whitelist,
             external source). Also includes information about the user's admin status in
@@ -243,6 +263,20 @@ class AuthorizationAction(BaseAction):
             jetton_wallet.jetton_master_address: jetton_wallet
             for jetton_wallet in user_jettons
         }
+        # Check if the user has the required toncoin balance
+        items.extend(
+            [
+                EligibilitySummaryInternalDTO(
+                    id=rule.id,
+                    category=EligibilityCheckType.TONCOIN,
+                    expected=rule.threshold,
+                    title="Toncoin (TON)",
+                    actual=user_wallet.balance if user_wallet else 0,
+                    is_enabled=rule.is_enabled,
+                )
+                for rule in eligibility_rules.toncoin
+            ]
+        )
         # Check if the user has all required jetton balances
         items.extend(
             [
@@ -317,7 +351,7 @@ class AuthorizationAction(BaseAction):
         return RulesEligibilitySummaryInternalDTO(
             items=items,
             is_admin=bool(chat_member and chat_member.is_admin),
-            wallet=wallet_address,
+            wallet=user_wallet.address if user_wallet else None,
         )
 
     @staticmethod
@@ -332,6 +366,29 @@ class AuthorizationAction(BaseAction):
         """
         return user.telegram_id in rule.content
 
+    async def kick_chat_member(self, chat_member: TelegramChatUser) -> None:
+        if not chat_member.is_managed:
+            logger.warning(
+                f"Attempt to kick non-managed chat member {chat_member.chat_id=} and {chat_member.user_id=}. Skipping."
+            )
+            return
+
+        await self.telethon_service.start()
+        await self.telethon_service.kick_chat_member(
+            chat_id=chat_member.chat_id, telegram_user_id=chat_member.user.telegram_id
+        )
+        if chat_member.user.allows_write_to_pm:
+            await self.telethon_service.send_message(
+                chat_id=chat_member.user.telegram_id,
+                message=f"You were kicked out of the **{chat_member.chat.title}**.",
+            )
+        self.telegram_chat_user_service.delete(
+            chat_id=chat_member.chat_id, user_id=chat_member.user.id
+        )
+        logger.info(
+            f"User {chat_member.user.telegram_id!r} was kicked from chat {chat_member.chat_id!r}"
+        )
+
     async def kick_ineligible_chat_members(
         self,
         chat_members: list[TelegramChatUser],
@@ -341,26 +398,10 @@ class AuthorizationAction(BaseAction):
             logger.info("No ineligible chat members found")
             return
 
-        await self.telethon_service.start()
-
         for member in ineligible_members:
-            await self.telethon_service.kick_chat_member(
-                chat_id=member.chat_id, telegram_user_id=member.user.telegram_id
-            )
-            if member.user.allows_write_to_pm:
-                await self.telethon_service.send_message(
-                    chat_id=member.user.telegram_id,
-                    message=f"You were kicked out of the **{member.chat.title}**.",
-                )
-            self.telegram_chat_user_service.delete(
-                chat_id=member.chat_id, user_id=member.user.id
-            )
-            logger.info(
-                f"User {member.user.telegram_id!r} was kicked from chat {member.chat_id!r}"
-            )
+            await self.kick_chat_member(member)
         else:
             logger.info("No ineligible chat members found")
-        await self.telethon_service.stop()
 
     async def on_chat_member_in(
         self,
@@ -385,6 +426,7 @@ class AuthorizationAction(BaseAction):
                 chat_id=chat_id,
                 user_id=local_user.id,
                 is_admin=False,
+                is_managed=False,
             )
             return
         # If chat is fully controlled by the bot - check the user eligibility
@@ -393,9 +435,7 @@ class AuthorizationAction(BaseAction):
             user_id=local_user.id, chat_id=chat_id
         ):
             self.telegram_chat_user_service.create_or_update(
-                chat_id=chat_id,
-                user_id=local_user.id,
-                is_admin=False,
+                chat_id=chat_id, user_id=local_user.id, is_admin=False, is_managed=True
             )
             logger.debug(
                 f"User {local_user.telegram_id!r} was added to chat {chat_id!r}"
@@ -431,7 +471,8 @@ class AuthorizationAction(BaseAction):
         :param chat_id: Chat ID
         :param user: User that left the chat
         """
-        self.telegram_chat_user_service.delete(chat_id=chat_id, user_id=user.id)
+        local_user = self.user_service.get_or_create(user)
+        self.telegram_chat_user_service.delete(chat_id=chat_id, user_id=local_user.id)
 
     async def on_join_request(
         self,
@@ -477,6 +518,7 @@ class AuthorizationAction(BaseAction):
                 chat_id=chat_id,
                 user_id=local_user.id,
                 is_admin=False,
+                is_managed=True,
             )
             logger.info(
                 f"User {local_user.telegram_id!r} was approved to join chat {chat_id!r}",
