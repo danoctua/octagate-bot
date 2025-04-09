@@ -6,10 +6,14 @@ from urllib.parse import unquote_plus
 
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pytonapi.utils import userfriendly_to_raw
+from pytonapi.utils import userfriendly_to_raw, raw_to_userfriendly
 from sqlalchemy.orm import Session
 from starlette.requests import Request
-from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
+from starlette.status import (
+    HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
+)
 
 from api.pos.auth import InitDataPO
 from core.dtos.user import UserInitDataPO
@@ -96,13 +100,21 @@ def validate_admin_access(
 
 def get_address_raw(address: str) -> str:
     if not address:
-        raise ValueError("Address is required")
+        raise HTTPException(
+            detail="Address is required", status_code=HTTP_404_NOT_FOUND
+        )
 
     if address.startswith(("UQ", "EQ")):
         return userfriendly_to_raw(address)
 
     elif address.startswith("0:"):
-        return address
+        try:
+            # To validate the blockchain address
+            raw_to_userfriendly(address)
+            return address
+        except Exception:
+            pass
 
-    else:
-        raise ValueError(f"Invalid blockchain address: {address}")
+    raise HTTPException(
+        detail=f"Invalid blockchain address: {address}", status_code=HTTP_404_NOT_FOUND
+    )

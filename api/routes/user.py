@@ -47,26 +47,24 @@ async def connect_user_wallet(
             chat_slug=request_data.chat_slug,
             wallet_details=request_data.wallet_details,
         )
-    except UserWalletConnectedError:
-        raise HTTPException(
-            detail={
-                "error": {"message": "Wallet already connected to another account"}
-            },
-            status_code=400,
-        )
-    except UserWalletConnectedAnotherUserError:
-        raise HTTPException(
-            detail={"error": {"message": "User already has a connected wallet"}},
-            status_code=400,
-        )
     except TelegramChatNotExists:
         raise HTTPException(
-            detail={"error": {"message": "Chat not found"}},
+            detail="Chat not found",
             status_code=404,
         )
     except ProofValidationError as e:
         raise HTTPException(
-            detail={"error": {"message": str(e)}},
+            detail=str(e),
+            status_code=400,
+        )
+    except UserWalletConnectedAnotherUserError:
+        raise HTTPException(
+            detail="Wallet already connected to another account",
+            status_code=400,
+        )
+    except UserWalletConnectedError:
+        raise HTTPException(
+            detail="Wallet already connected to chat.",
             status_code=400,
         )
 
@@ -96,12 +94,17 @@ async def set_user_wallet(
         )
     except TelegramChatNotExists:
         raise HTTPException(
-            detail={"error": {"message": "Chat not found"}},
+            detail="Chat not found",
             status_code=404,
         )
     except UserWalletNotConnectedError:
         raise HTTPException(
-            detail={"error": {"message": "User has no connected wallet"}},
+            detail="The requested wallet is not connected",
+            status_code=400,
+        )
+    except UserWalletConnectedError:
+        raise HTTPException(
+            detail="Wallet already connected to chat.",
             status_code=400,
         )
 

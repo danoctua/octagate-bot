@@ -34,7 +34,7 @@ async def fetch_jetton_details(
         return JettonFDO.model_validate(jetton_data.model_dump())
     except ExternalResourceNotFound:
         raise HTTPException(
-            detail={"error": {"message": f"Jetton data not found for {address_raw!r}"}},
+            detail=f"Jetton data not found for {address_raw!r}",
             status_code=404,
         )
 
@@ -52,11 +52,7 @@ async def fetch_nft_collection_details(
         return NftCollectionFDO.model_validate(nft_collection_dto.model_dump())
     except ExternalResourceNotFound:
         raise HTTPException(
-            detail={
-                "error": {
-                    "message": f"NFT collection data not found for {address_raw!r}"
-                }
-            },
+            detail=f"NFT collection data not found for {address_raw!r}",
             status_code=404,
         )
 

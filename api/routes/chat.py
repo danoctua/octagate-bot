@@ -29,6 +29,6 @@ async def get_chat(
         return TelegramChatWithEligibilitySummaryFDO.from_dto(result)
     except TelegramChatNotExists:
         raise HTTPException(
-            detail={"error": {"message": "Chat not found"}},
+            detail="Chat not found",
             status_code=404,
         )

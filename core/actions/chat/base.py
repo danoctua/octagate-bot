@@ -44,7 +44,7 @@ class ManagedChatBaseAction(BaseAction):
         except NoResultFound:
             logger.debug(f"Chat with slug {chat_slug!r} not found")
             raise HTTPException(
-                detail={"error": {"message": "Chat not found"}},
+                detail="Chat not found",
                 status_code=404,
             )
 
@@ -53,7 +53,7 @@ class ManagedChatBaseAction(BaseAction):
                 chat_id=chat.id, user_id=requestor.id
             ):
                 raise HTTPException(
-                    detail={"error": {"message": "Forbidden"}},
+                    detail="Forbidden",
                     status_code=403,
                 )
 

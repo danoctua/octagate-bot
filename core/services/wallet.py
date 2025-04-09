@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class WalletService(BaseService):
-    def connect_user_wallet(self, user_id: int, wallet_address: str) -> None:
+    def connect_user_wallet(self, user_id: int, wallet_address: str) -> UserWallet:
         existing_user_wallet = self.get_user_wallet(wallet_address)
         if existing_user_wallet:
             raise UserWalletConnectedError(
@@ -29,6 +29,7 @@ class WalletService(BaseService):
             new_wallet = UserWallet(user_id=user_id, address=wallet_address)
             self.db_session.add(new_wallet)
             self.db_session.commit()
+            return new_wallet
         except IntegrityError:
             self.db_session.rollback()
             raise UserWalletConnectedAnotherUserError(
@@ -92,12 +93,26 @@ class WalletService(BaseService):
 
 
 class TelegramChatUserWalletService(BaseService):
-    def connect(self, user_id: int, chat_id: int, wallet_address: str) -> None:
+    def has_wallet_connected(self, user_id: int, chat_id: int) -> bool:
+        return (
+            self.db_session.query(TelegramChatUserWallet)
+            .filter(
+                TelegramChatUserWallet.user_id == user_id,
+                TelegramChatUserWallet.chat_id == chat_id,
+            )
+            .count()
+            > 0
+        )
+
+    def connect(
+        self, user_id: int, chat_id: int, wallet_address: str
+    ) -> TelegramChatUserWallet:
         new_link = TelegramChatUserWallet(
             user_id=user_id, chat_id=chat_id, address=wallet_address
         )
         self.db_session.add(new_link)
         self.db_session.commit()
+        return new_link
 
     def disconnect(self, user_id: int, chat_id: int) -> None:
         self.db_session.query(TelegramChatUserWallet).filter(

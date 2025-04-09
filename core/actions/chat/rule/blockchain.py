@@ -3,6 +3,7 @@ import logging
 from fastapi import HTTPException
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
+from starlette.status import HTTP_404_NOT_FOUND
 
 from core.actions.chat.base import ManagedChatBaseAction
 from core.actions.jetton import JettonAction
@@ -49,8 +50,8 @@ class TelegramChatNFTCollectionAction(ManagedChatBaseAction):
             )
         except NoResultFound:
             raise HTTPException(
-                detail={"error": {"message": "Rule not found"}},
-                status_code=404,
+                detail="Rule not found",
+                status_code=HTTP_404_NOT_FOUND,
             )
         return NftEligibilityRuleDTO.from_nft_collection_rule(rule)
 
@@ -88,8 +89,8 @@ class TelegramChatNFTCollectionAction(ManagedChatBaseAction):
             )
         except NoResultFound:
             raise HTTPException(
-                detail={"error": {"message": "Rule not found"}},
-                status_code=404,
+                detail="Rule not found",
+                status_code=HTTP_404_NOT_FOUND,
             )
         rule = self.telegram_chat_nft_collection_service.update(
             rule=rule,
@@ -120,8 +121,8 @@ class TelegramChatJettonAction(ManagedChatBaseAction):
             rule = self.telegram_chat_jetton_service.get(rule_id, chat_id=self.chat.id)
         except NoResultFound:
             raise HTTPException(
-                detail={"error": {"message": "Rule not found"}},
-                status_code=404,
+                detail="Rule not found",
+                status_code=HTTP_404_NOT_FOUND,
             )
         return ChatEligibilityRuleDTO.from_jetton_rule(rule)
 
@@ -154,8 +155,8 @@ class TelegramChatJettonAction(ManagedChatBaseAction):
             rule = self.telegram_chat_jetton_service.get(rule_id, chat_id=self.chat.id)
         except NoResultFound:
             raise HTTPException(
-                detail={"error": {"message": "Rule not found"}},
-                status_code=404,
+                detail="Rule not found",
+                status_code=HTTP_404_NOT_FOUND,
             )
 
         jetton_dto = await self.jetton_action.get_or_create(address_raw)
@@ -190,8 +191,8 @@ class TelegramChatToncoinAction(ManagedChatBaseAction):
             rule = self.telegram_chat_toncoin_service.get(rule_id, chat_id=self.chat.id)
         except NoResultFound:
             raise HTTPException(
-                detail={"error": {"message": "Rule not found"}},
-                status_code=404,
+                detail="Rule not found",
+                status_code=HTTP_404_NOT_FOUND,
             )
         return ChatEligibilityRuleDTO.from_toncoin_rule(rule)
 
@@ -219,8 +220,8 @@ class TelegramChatToncoinAction(ManagedChatBaseAction):
             rule = self.telegram_chat_toncoin_service.get(rule_id, chat_id=self.chat.id)
         except NoResultFound:
             raise HTTPException(
-                detail={"error": {"message": "Rule not found"}},
-                status_code=404,
+                detail="Rule not found",
+                status_code=HTTP_404_NOT_FOUND,
             )
 
         updated_rule = self.telegram_chat_toncoin_service.update(

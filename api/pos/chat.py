@@ -86,7 +86,7 @@ class BaseTelegramChatBlockchainResourceRuleCPO(BaseTelegramChatQuantityRuleCPO)
             # Only to test if the format is valid
             raw_to_userfriendly(v)
         except Exception as e:
-            logger.error(e)
+            logger.warning(f"Invalid blockchain address {e}", exc_info=True)
             raise ValueError("Invalid blockchain address")
 
         return v

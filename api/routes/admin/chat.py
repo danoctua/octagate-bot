@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
+from starlette.status import HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST
 
 from api.deps import get_db_session
 from api.pos.chat import (
@@ -88,22 +89,18 @@ async def create_chat(
         return BaseTelegramChatFDO.model_validate(result.model_dump())
     except TelegramChatAlreadyExists:
         raise HTTPException(
-            detail={"error": {"message": "Chat already exists"}},
-            status_code=409,
+            detail="Chat already exists",
+            status_code=HTTP_409_CONFLICT,
         )
     except TelegramChatNotSufficientPrivileges:
         raise HTTPException(
-            detail={
-                "error": {
-                    "message": "You have to add bot to chat with admin rights to invite users first"
-                }
-            },
-            status_code=400,
+            detail="You have to add bot to chat with admin rights to invite users first",
+            status_code=HTTP_400_BAD_REQUEST,
         )
     except TelegramChatNotExists:
         raise HTTPException(
-            detail={"error": {"message": f"Chat '{chat.chat_identifier}' not found"}},
-            status_code=400,
+            detail=f"Chat '{chat.chat_identifier}' not found",
+            status_code=HTTP_400_BAD_REQUEST,
         )
 
 
@@ -127,12 +124,8 @@ async def refresh_chat(
         return BaseTelegramChatFDO.model_validate(result.model_dump())
     except TelegramChatNotSufficientPrivileges:
         raise HTTPException(
-            detail={
-                "error": {
-                    "message": "You have to add bot to chat with admin rights to invite users first"
-                }
-            },
-            status_code=400,
+            detail="You have to add bot to chat with admin rights to invite users first",
+            status_code=HTTP_400_BAD_REQUEST,
         )
 
 
@@ -491,8 +484,8 @@ async def add_chat_whitelist_external_source_rule(
     except Exception as e:
         logger.error("Failed to create whitelist external source", exc_info=e)
         raise HTTPException(
-            detail={"error": {"message": "Failed to create whitelist external source"}},
-            status_code=400,
+            detail="Failed to create whitelist external source",
+            status_code=HTTP_400_BAD_REQUEST,
         )
     return WhitelistRuleExternalFDO.model_validate(new_rule.model_dump())
 
@@ -537,8 +530,8 @@ async def update_chat_whitelist_external_source_rule(
     except Exception as e:
         logger.error("Failed to update whitelist external source", exc_info=e)
         raise HTTPException(
-            detail={"error": {"message": "Failed to update whitelist external source"}},
-            status_code=400,
+            detail="Failed to update whitelist external source",
+            status_code=HTTP_400_BAD_REQUEST,
         )
 
     result = action.get(rule_id=rule_id)
