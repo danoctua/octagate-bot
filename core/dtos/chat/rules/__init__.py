@@ -5,7 +5,7 @@ from pydantic import BaseModel, computed_field
 
 from core.constants import PROMOTE_JETTON_TEMPLATE, PROMOTE_NFT_COLLECTION_TEMPLATE
 from core.dtos.chat import TelegramChatDTO
-from core.models import (
+from core.models.rule import (
     TelegramChatJetton,
     TelegramChatNFTCollection,
     TelegramChatWhitelistExternalSource,
