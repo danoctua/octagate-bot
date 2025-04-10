@@ -1,7 +1,7 @@
 from pydantic import BaseModel, computed_field
 
-from core.dtos.base import NftItemAttributeDTO
 from core.dtos.chat.rules import EligibilityCheckType
+from core.enums.nft import NftCollectionAsset
 
 
 class EligibilitySummaryInternalDTO(BaseModel):
@@ -10,13 +10,14 @@ class EligibilitySummaryInternalDTO(BaseModel):
     """
 
     id: int
-    category: EligibilityCheckType
+    type: EligibilityCheckType
     title: str
     address_raw: str | None = None  # required for blockchain rules only
     actual: float | int = 0.0
     expected: float | int
     is_enabled: bool
-    required_attributes: list[NftItemAttributeDTO] | None = None
+    asset: NftCollectionAsset | None = None
+    category: str | None = None
 
     @property
     def address(self):
@@ -31,6 +32,7 @@ class EligibilitySummaryInternalDTO(BaseModel):
     def __repr__(self):
         return (
             f"<{self.__class__.__name__} "
+            f"{self.type} "
             f"{self.category=} "
             f"{self.title=} "
             f"{self.address=} "
@@ -49,7 +51,7 @@ class RulesEligibilitySummaryInternalDTO(BaseModel):
     is_admin: bool
 
     def __bool__(self):
-        return any(item.is_eligible for item in self.items)
+        return all(item.is_eligible for item in self.items)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} ({self.items=}) {self.is_admin=}>"

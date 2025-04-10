@@ -4,7 +4,7 @@ from typing import Self
 
 from pydantic import BaseModel
 
-from core.models.chat import TelegramChatWhitelist, TelegramChatWhitelistExternalSource
+from core.models import TelegramChatWhitelistExternalSource, TelegramChatWhitelist
 
 
 class WhitelistRuleItemsDifferenceDTO(BaseModel):

@@ -11,7 +11,7 @@ from core.dtos.chat.rules.whitelist import (
     WhitelistRuleDTO,
     WhitelistRuleExternalDTO,
 )
-from core.models.chat import TelegramChatWhitelistExternalSource
+from core.models.rule import TelegramChatWhitelistExternalSource
 from core.models.user import User
 from core.services.chat.rule.whitelist import (
     TelegramChatExternalSourceService,

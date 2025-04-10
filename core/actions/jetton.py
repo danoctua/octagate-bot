@@ -104,9 +104,10 @@ class JettonAction(BaseAction):
             logo_path = download_media(
                 jetton_logo, subdirectory=JETTON_LOGO_SUB_PATH, name=address_raw
             )
-            await self.cdn_service.upload_file(
-                file_path=logo_path, object_name=logo_path.name
-            )
+            if logo_path:
+                await self.cdn_service.upload_file(
+                    file_path=logo_path, object_name=logo_path.name
+                )
 
         return jetton_info, logo_path
 

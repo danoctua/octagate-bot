@@ -45,7 +45,7 @@ def download_media(
     name: str,
     subdirectory: str | Path | None = None,
     default_extension: str = ".webp",
-) -> Path:
+) -> Path | None:
     """
     Download media from URL.
 
@@ -54,11 +54,16 @@ def download_media(
     :param subdirectory: Subdirectory to save the file in.
     :param default_extension: Default extension to use if the extension cannot be guessed.
 
-    :return: Path to the downloaded file.
+    :return: Path to the downloaded file if file was downloaded successfully, None otherwise.
     """
     root_path = STATIC_PATH / (subdirectory or "")
 
-    response = client.get(url)
+    try:
+        response = client.get(url)
+    except:  # noqa: E722
+        logger.exception("Unable to download media")
+        return None
+
     file_name = f"{name}.{guess_file_extension(response) or default_extension}"
     full_path = root_path / file_name
     with open(full_path, "wb") as file:

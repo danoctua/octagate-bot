@@ -16,7 +16,9 @@ class RuleEligibilitySummaryDTO(ChatEligibilityRuleDTO):
     def from_internal_dto(cls, internal_dto: EligibilitySummaryInternalDTO) -> Self:
         return cls(
             id=internal_dto.id,
+            type=internal_dto.type,
             category=internal_dto.category,
+            asset=internal_dto.asset,
             title=internal_dto.title,
             expected=internal_dto.expected,
             photo_url=None,

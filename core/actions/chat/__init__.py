@@ -370,7 +370,7 @@ class TelegramChatAction(BaseAction):
                 is_eligible=is_eligible,
             ),
             rules=[
-                mapping.get(rule.category, RuleEligibilitySummaryDTO).from_internal_dto(
+                mapping.get(rule.type, RuleEligibilitySummaryDTO).from_internal_dto(
                     rule
                 )
                 for rule in eligibility_summary.items
@@ -481,7 +481,7 @@ class TelegramChatManageAction(ManagedChatBaseAction, TelegramChatAction):
                         for rule in eligibility_rules.whitelist_external_sources
                     ),
                 ],
-                key=lambda rule: (not rule.is_enabled, rule.category.value, rule.title),
+                key=lambda rule: (not rule.is_enabled, rule.type.value, rule.title),
             ),
         )
 

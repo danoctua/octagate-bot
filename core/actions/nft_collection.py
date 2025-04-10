@@ -108,9 +108,10 @@ class NftCollectionAction(BaseAction):
             logo_path = download_media(
                 download_url, name=address_raw, subdirectory=NFT_LOGO_SUB_PATH
             )
-            await self.cdn_service.upload_file(
-                file_path=logo_path, object_name=logo_path.name
-            )
+            if logo_path:
+                await self.cdn_service.upload_file(
+                    file_path=logo_path, object_name=logo_path.name
+                )
 
         return nft_collection_data, logo_path
 

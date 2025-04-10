@@ -15,11 +15,8 @@ from core.dtos.chat.rules.toncoin import (
     CreateTelegramChatToncoinRuleDTO,
     UpdateTelegramChatToncoinRuleDTO,
 )
-from core.models.chat import (
-    TelegramChatJetton,
-    TelegramChatNFTCollection,
-    TelegramChatToncoin,
-)
+from core.models import TelegramChatJetton, TelegramChatNFTCollection
+from core.models.rule import TelegramChatToncoin
 from core.services.base import BaseService
 
 

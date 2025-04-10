@@ -12,9 +12,11 @@ from api.pos.blockchain import (
     JettonFDO,
     NftCollectionFDO,
 )
-from api.pos.common import StatusFDO
+from api.pos.common import StatusFDO, CategoriesFDO
 from core.actions.jetton import JettonAction
 from core.actions.nft_collection import NftCollectionAction
+from core.enums.jetton import CurrencyCategory
+from core.enums.nft import ASSET_TO_CATEGORY_TYPE_MAPPING
 from core.exceptions.external import ExternalResourceNotFound
 from core.services.jetton import JettonService
 
@@ -55,6 +57,20 @@ async def fetch_nft_collection_details(
             detail=f"NFT collection data not found for {address_raw!r}",
             status_code=404,
         )
+
+
+@admin_resource_router.get("/categories/nft-collections")
+async def get_nft_collection_categories() -> list[CategoriesFDO]:
+    return [
+        CategoriesFDO(asset=asset.value, categories=list(categories_enum))
+        for asset, categories_enum in ASSET_TO_CATEGORY_TYPE_MAPPING.items()
+    ]
+
+
+@admin_resource_router.get("/categories/jettons")
+@admin_resource_router.get("/categories/toncoin")
+async def get_currency_categories() -> list[CategoriesFDO]:
+    return [CategoriesFDO(asset="Currency", categories=list(CurrencyCategory))]
 
 
 @admin_resource_router.get("/jettons", deprecated=True)

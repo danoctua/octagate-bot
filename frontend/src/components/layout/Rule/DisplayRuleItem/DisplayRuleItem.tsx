@@ -14,12 +14,10 @@ const DisplayRuleItem = (
     let title = '';
     let subtitle = null;
 
-    if (rule.category === "jetton" || rule.category === "nft_collection" || rule.category === "toncoin") {
+    if (["jetton", "nft_collection", "toncoin"].includes(rule.type)) {
         title = `Hold ${rule.expected} ${rule.title}`
-        if (rule.category === "nft_collection") {
-            subtitle = rule.requiredAttributes && rule.requiredAttributes.length > 0 ?
-                rule.requiredAttributes.map(attribute => `${attribute.traitType}: ${attribute.value}`).join(", ") :
-                null
+        if (rule.category) {
+            subtitle = rule.category
         }
     } else {
         title = rule.title

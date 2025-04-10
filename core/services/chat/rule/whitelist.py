@@ -3,7 +3,7 @@ from typing import TypeVar, Generic
 
 from sqlalchemy import desc
 
-from core.models.chat import TelegramChatWhitelistExternalSource, TelegramChatWhitelist
+from core.models import TelegramChatWhitelistExternalSource, TelegramChatWhitelist
 from core.services.base import BaseService
 
 

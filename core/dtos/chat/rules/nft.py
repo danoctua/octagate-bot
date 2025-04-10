@@ -1,16 +1,17 @@
 from pydantic import BaseModel
 
 from core.dtos.chat.rules import EligibilityCheckType, ChatEligibilityRuleDTO
-from core.dtos.base import NftItemAttributeDTO
 from core.dtos.chat.rules.internal import EligibilitySummaryInternalDTO
-from core.models.chat import TelegramChatNFTCollection
+from core.models.rule import TelegramChatNFTCollection
+from core.enums.nft import NftCollectionAsset, NftCollectionCategoryType
 
 
 class BaseTelegramChatNFTCollectionRuleDTO(BaseModel):
-    address: str
+    address: str | None
     threshold: int
     is_enabled: bool
-    required_attributes: list[NftItemAttributeDTO] | None
+    category: NftCollectionCategoryType | None
+    asset: NftCollectionAsset | None
 
 
 class CreateTelegramChatNFTCollectionRuleDTO(BaseTelegramChatNFTCollectionRuleDTO):
@@ -22,27 +23,20 @@ class UpdateTelegramChatNFTCollectionRuleDTO(BaseTelegramChatNFTCollectionRuleDT
 
 
 class NftEligibilityRuleDTO(ChatEligibilityRuleDTO):
-    required_attributes: list[NftItemAttributeDTO] | None
+    asset: NftCollectionAsset | None
 
     @classmethod
     def from_nft_collection_rule(cls, nft_collection_rule: TelegramChatNFTCollection):
         return cls(
             id=nft_collection_rule.id,
-            category=EligibilityCheckType.NFT_COLLECTION,
+            type=EligibilityCheckType.NFT_COLLECTION,
             title=nft_collection_rule.nft_collection.name,
             expected=nft_collection_rule.threshold,
             photo_url=nft_collection_rule.nft_collection.logo_path,
-            blockchain_address=(nft_collection_rule.nft_collection.address),
+            blockchain_address=nft_collection_rule.nft_collection.address,
             is_enabled=nft_collection_rule.is_enabled,
-            required_attributes=[
-                NftItemAttributeDTO(
-                    trait_type=attribute.trait_type,
-                    value=attribute.value,
-                )
-                for attribute in nft_collection_rule.required_attributes
-            ]
-            if nft_collection_rule.required_attributes
-            else None,
+            asset=NftCollectionAsset.from_string(nft_collection_rule.asset),
+            category=nft_collection_rule.category,
         )
 
 
@@ -54,13 +48,14 @@ class NftRuleEligibilitySummaryDTO(NftEligibilityRuleDTO):
     def from_internal_dto(cls, internal_dto: EligibilitySummaryInternalDTO):
         return cls(
             id=internal_dto.id,
+            type=internal_dto.type,
+            asset=internal_dto.asset,
             category=internal_dto.category,
             title=internal_dto.title,
             expected=internal_dto.expected,
             photo_url=None,
             blockchain_address=internal_dto.address,
             is_enabled=internal_dto.is_enabled,
-            required_attributes=internal_dto.required_attributes,
             actual=internal_dto.actual,
             is_eligible=internal_dto.is_eligible,  # type: ignore
         )

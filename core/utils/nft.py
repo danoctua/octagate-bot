@@ -1,5 +1,11 @@
-from core.models.chat import TelegramChatNFTCollection
+import logging
+
+from core.mappings import CATEGORY_TO_METHOD_MAPPING
+from core.models.rule import TelegramChatNFTCollection
 from core.models.blockchain import NftItem
+
+
+logger = logging.getLogger(__name__)
 
 
 def find_relevant_nft_items(
@@ -8,20 +14,19 @@ def find_relevant_nft_items(
     """
     Find relevant NFT items for the rule
     """
-    relevant_nft_items = []
-    for nft_item in nft_items:
-        if nft_item.collection_address == rule.address:
-            if rule.required_attributes:
-                # Iterate over attributes of the NFT item and check if all the required attributes are present
-                if not all(
-                    any(
-                        attribute.trait_type == nft_item_attribute.trait_type
-                        and attribute.value == nft_item_attribute.value
-                        for nft_item_attribute in rule.required_attributes
-                    )
-                    for attribute in nft_item.blockchain_metadata.attributes
-                ):
-                    continue
+    # Means - custom rules should be applied
+    if rule.asset:
+        custom_logic_method = CATEGORY_TO_METHOD_MAPPING.get(rule.category)
+        # If there is a custom logic method - use it to determine whether the valid rule is applied
+        if custom_logic_method:
+            return custom_logic_method(nft_items)
 
-            relevant_nft_items.append(nft_item)
-    return relevant_nft_items
+        else:
+            logger.error(
+                f"No custom logic method found for category {rule.category}. Ignoring rule"
+            )
+            return []
+
+    print("No asset, but: ", rule.address, [i.collection_address for i in nft_items])
+
+    return list(filter(lambda item: item.collection_address == rule.address, nft_items))

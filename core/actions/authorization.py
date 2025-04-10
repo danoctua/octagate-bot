@@ -15,14 +15,14 @@ from core.dtos.chat.rules.internal import (
     RulesEligibilitySummaryInternalDTO,
 )
 from core.dtos.user import TelegramUserDTO
+from core.enums.nft import NftCollectionAsset
 from core.models.user import User
 from core.models.wallet import JettonWallet, UserWallet
 from core.models.blockchain import NftItem
 from core.models.chat import (
     TelegramChatUser,
-    TelegramChatWhitelistExternalSource,
-    TelegramChatWhitelist,
 )
+from core.models.rule import TelegramChatWhitelistExternalSource, TelegramChatWhitelist
 from core.services.chat import TelegramChatService
 from core.services.chat.rule.whitelist import (
     TelegramChatExternalSourceService,
@@ -182,7 +182,7 @@ class AuthorizationAction(BaseAction):
 
         nft_item_service = NftItemService(self.db_session)
 
-        unique_wallets = {
+        unique_wallets: set[str] = {
             chat_member.wallet_link.address for chat_member in chat_members
         }
 
@@ -195,10 +195,10 @@ class AuthorizationAction(BaseAction):
                 continue
 
             nft_items_per_wallet[wallet] = nft_item_service.get_all(
-                owner_address=wallet.address
+                owner_address=wallet
             )
             jetton_wallets_per_wallet[wallet] = self.jetton_wallet_service.get_all(
-                owner_address=wallet.address
+                owner_address=wallet
             )
 
         ineligible_members = []
@@ -268,7 +268,8 @@ class AuthorizationAction(BaseAction):
             [
                 EligibilitySummaryInternalDTO(
                     id=rule.id,
-                    category=EligibilityCheckType.TONCOIN,
+                    type=EligibilityCheckType.TONCOIN,
+                    category=rule.category,
                     expected=rule.threshold,
                     title="TON",
                     actual=user_wallet.balance if user_wallet else 0,
@@ -281,71 +282,71 @@ class AuthorizationAction(BaseAction):
         items.extend(
             [
                 EligibilitySummaryInternalDTO(
-                    id=jetton.id,
-                    category=EligibilityCheckType.JETTON,
-                    expected=jetton.threshold,
-                    title=jetton.jetton.name,
-                    address_raw=jetton.address,
+                    id=rule.id,
+                    type=EligibilityCheckType.JETTON,
+                    category=rule.category,
+                    expected=rule.threshold,
+                    title=rule.jetton.name,
+                    address_raw=rule.address,
                     actual=(
                         user_jetton_wallet.balance
                         if (
                             user_jetton_wallet := user_jettons_by_master_address.get(
-                                jetton.address
+                                rule.address
                             )
                         )
                         else 0
                     ),
-                    is_enabled=jetton.is_enabled,
+                    is_enabled=rule.is_enabled,
                 )
-                for jetton in eligibility_rules.jettons
+                for rule in eligibility_rules.jettons
             ]
         )
         # Check if the user has all required NFT items
         items.extend(
             [
                 EligibilitySummaryInternalDTO(
-                    id=nft_collection.id,
-                    category=EligibilityCheckType.NFT_COLLECTION,
-                    expected=nft_collection.threshold,
-                    title=nft_collection.nft_collection.name,
-                    address_raw=nft_collection.address,
+                    id=rule.id,
+                    type=EligibilityCheckType.NFT_COLLECTION,
+                    category=rule.category,
+                    asset=NftCollectionAsset.from_string(rule.asset),
+                    expected=rule.threshold,
+                    title=rule.nft_collection.name,
+                    address_raw=rule.address,
                     actual=(
                         len(
-                            find_relevant_nft_items(
-                                rule=nft_collection, nft_items=user_nft_items
-                            )
+                            find_relevant_nft_items(rule=rule, nft_items=user_nft_items)
                         )
                     ),
-                    is_enabled=nft_collection.is_enabled,
-                    required_attributes=nft_collection.required_attributes,
+                    is_enabled=rule.is_enabled,
                 )
-                for nft_collection in eligibility_rules.nft_collections
+                for rule in eligibility_rules.nft_collections
             ]
         )
         items.extend(
             [
                 EligibilitySummaryInternalDTO(
-                    id=external_source.id,
-                    category=EligibilityCheckType.EXTERNAL_SOURCE,
+                    id=rule.id,
+                    type=EligibilityCheckType.EXTERNAL_SOURCE,
                     expected=1,
-                    title=external_source.name,
-                    actual=cls.is_whitelisted(user=user, rule=external_source),
-                    is_enabled=external_source.is_enabled,
+                    title=rule.name,
+                    actual=cls.is_whitelisted(user=user, rule=rule),
+                    is_enabled=rule.is_enabled,
                 )
-                for external_source in eligibility_rules.whitelist_external_sources
+                for rule in eligibility_rules.whitelist_external_sources
             ]
         )
         items.extend(
             [
                 EligibilitySummaryInternalDTO(
-                    id=whitelist_group.id,
-                    category=EligibilityCheckType.WHITELIST,
+                    id=rule.id,
+                    type=EligibilityCheckType.WHITELIST,
                     expected=1,
-                    title=whitelist_group.name,
-                    actual=cls.is_whitelisted(user=user, rule=whitelist_group),
-                    is_enabled=whitelist_group.is_enabled,
+                    title=rule.name,
+                    actual=cls.is_whitelisted(user=user, rule=rule),
+                    is_enabled=rule.is_enabled,
                 )
-                for whitelist_group in eligibility_rules.whitelist_sources
+                for rule in eligibility_rules.whitelist_sources
             ]
         )
         return RulesEligibilitySummaryInternalDTO(

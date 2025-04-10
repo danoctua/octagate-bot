@@ -24,7 +24,8 @@ export interface IChat extends IBaseChat {
 
 export interface IRule {
     id: number,
-    category: string,
+    type: string,
+    category: string | null,
     title: string,
     blockchainAddress: string,
     promoteUrl: string,
@@ -57,7 +58,7 @@ export interface INftMetadataInput extends INftMetadata {
 
 
 export interface INftCollectionRule extends IRule {
-    requiredAttributes: INftMetadata[],
+    asset: string | null,
 }
 
 export interface IExternalWhitelistRule extends IWhitelistRule {
