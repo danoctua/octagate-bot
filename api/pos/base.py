@@ -7,3 +7,7 @@ class BaseFDO(BaseModel):
         alias_generator=to_camel,
         populate_by_name=True,
     )
+
+
+class BaseExceptionFDO(BaseModel):
+    detail: str

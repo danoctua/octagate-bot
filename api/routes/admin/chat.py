@@ -2,9 +2,10 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
-from starlette.status import HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST
+from starlette.status import HTTP_409_CONFLICT, HTTP_400_BAD_REQUEST, HTTP_200_OK
 
 from api.deps import get_db_session
+from api.pos.base import BaseExceptionFDO
 from api.pos.chat import (
     TelegramChatJettonRuleCPO,
     AddChatCPO,
@@ -37,7 +38,6 @@ from core.actions.chat.rule.blockchain import (
     TelegramChatToncoinAction,
 )
 from core.actions.chat import TelegramChatAction, TelegramChatManageAction
-from core.services.chat import TelegramChatService
 
 admin_chat_router = APIRouter(prefix="/chats")
 logger = logging.getLogger(__name__)
@@ -52,13 +52,9 @@ async def get_chats(
     request: Request,
     db_session: Session = Depends(get_db_session),
 ) -> list[BaseTelegramChatFDO]:
-    chat_service = TelegramChatService(db_session)
-    if request.state.user.is_admin:
-        chats = chat_service.get_all()
-    else:
-        chats = chat_service.get_all_managed(user_id=request.state.user.id)
-
-    return [BaseTelegramChatFDO.from_orm(chat) for chat in chats]
+    action = TelegramChatAction(db_session)
+    chats = action.get_all(requestor=request.state.user)
+    return [BaseTelegramChatFDO.model_validate(chat.model_dump()) for chat in chats]
 
 
 @admin_chat_router.get(
@@ -108,6 +104,13 @@ async def create_chat(
     "/{slug}/refresh",
     description="Refreshes chat details, like logo. Normally not needed and is more like an emergency endpoint.",
     tags=["Chat management"],
+    responses={
+        HTTP_200_OK: {"model": BaseTelegramChatFDO},
+        HTTP_400_BAD_REQUEST: {
+            "description": "Occurs when bot has no valid permissions to manage the requested chat",
+            "model": BaseExceptionFDO,
+        },
+    },
 )
 async def refresh_chat(
     request: Request,

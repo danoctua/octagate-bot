@@ -56,6 +56,27 @@ class TelegramChatAction(BaseAction):
         self.telethon_service = TelethonService(client=telethon_client)
         self.cdn_service = CDNService()
 
+    def get_all(self, requestor: User) -> list[BaseTelegramChatDTO]:
+        """
+        Fetches all Telegram chats accessible to the requesting user.
+
+        If the requestor has administrative privileges, the method retrieves all
+        Telegram chats. If the requestor does not have administrative privileges,
+        only the chats managed by the requestor are retrieved. The data is then
+        converted to a list of BaseTelegramChatDTO objects.
+
+        :param requestor: The user making the request.
+
+        :return: A list of BaseTelegramChatDTO objects representing the chats
+            accessible to the requestor.
+        """
+        if requestor.is_admin:
+            chats = self.telegram_chat_service.get_all()
+        else:
+            chats = self.telegram_chat_service.get_all_managed(user_id=requestor.id)
+
+        return [BaseTelegramChatDTO.from_orm(chat) for chat in chats]
+
     async def _get_chat_data(
         self,
         chat_identifier: str | int,

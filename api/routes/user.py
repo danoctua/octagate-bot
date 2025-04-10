@@ -5,8 +5,10 @@ from fastapi.exceptions import HTTPException
 from fastapi.params import Query
 from sqlalchemy.orm import Session
 from starlette.requests import Request
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_200_OK
 
 from api.deps import get_db_session
+from api.pos.base import BaseExceptionFDO
 from api.pos.user import UserFDO, UpdateUserWalletFDO
 from api.pos.wallet import ConnectWalletRequestCPO, SetWalletRequestCPO
 from core.actions.wallet import WalletAction
@@ -33,6 +35,17 @@ async def get_user_data(
     name="Connect user wallet to the chat with TON Proof",
     description="Connect a new wallet to the chat by providing TON proof and wallet details.",
     tags=["Wallet"],
+    responses={
+        HTTP_200_OK: {"model": UpdateUserWalletFDO},
+        HTTP_400_BAD_REQUEST: {
+            "description": (
+                "Occurs when wallet is already connected to the chat, "
+                "the requested wallet is already connected to another account "
+                "or the requested chat is not found"
+            ),
+            "model": BaseExceptionFDO,
+        },
+    },
 )
 async def connect_user_wallet(
     request: Request,
@@ -50,22 +63,22 @@ async def connect_user_wallet(
     except TelegramChatNotExists:
         raise HTTPException(
             detail="Chat not found",
-            status_code=404,
+            status_code=HTTP_400_BAD_REQUEST,
         )
     except ProofValidationError as e:
         raise HTTPException(
             detail=str(e),
-            status_code=400,
+            status_code=HTTP_400_BAD_REQUEST,
         )
     except UserWalletConnectedAnotherUserError:
         raise HTTPException(
             detail="Wallet already connected to another account",
-            status_code=400,
+            status_code=HTTP_400_BAD_REQUEST,
         )
     except UserWalletConnectedError:
         raise HTTPException(
             detail="Wallet already connected to chat.",
-            status_code=400,
+            status_code=HTTP_400_BAD_REQUEST,
         )
 
     return UpdateUserWalletFDO(
@@ -79,6 +92,17 @@ async def connect_user_wallet(
     name="Set connected user wallet for the chat",
     description="Allows to set previously connected wallet for the chat.",
     tags=["Wallet"],
+    responses={
+        HTTP_200_OK: {"model": UpdateUserWalletFDO},
+        HTTP_400_BAD_REQUEST: {
+            "description": (
+                "Occurs when wallet is already connected to the chat, "
+                "the requested wallet is not connected to the requestor "
+                "or the requested chat is not found"
+            ),
+            "model": BaseExceptionFDO,
+        },
+    },
 )
 async def set_user_wallet(
     request: Request,
@@ -95,17 +119,17 @@ async def set_user_wallet(
     except TelegramChatNotExists:
         raise HTTPException(
             detail="Chat not found",
-            status_code=404,
+            status_code=HTTP_400_BAD_REQUEST,
         )
     except UserWalletNotConnectedError:
         raise HTTPException(
             detail="The requested wallet is not connected",
-            status_code=400,
+            status_code=HTTP_400_BAD_REQUEST,
         )
     except UserWalletConnectedError:
         raise HTTPException(
             detail="Wallet already connected to chat.",
-            status_code=400,
+            status_code=HTTP_400_BAD_REQUEST,
         )
 
     return UpdateUserWalletFDO(
@@ -120,6 +144,13 @@ async def set_user_wallet(
     name="Disconnect user wallet from the chat",
     description="Disconnect wallet from the chat.",
     tags=["Wallet"],
+    responses={
+        HTTP_200_OK: {"model": UserFDO},
+        HTTP_400_BAD_REQUEST: {
+            "description": "Chat not found",
+            "model": BaseExceptionFDO,
+        },
+    },
 )
 async def disconnect_wallet(
     request: Request,
@@ -134,7 +165,13 @@ async def disconnect_wallet(
     db_session: Session = Depends(get_db_session),
 ) -> UserFDO:
     wallet_action = WalletAction(db_session)
-    await wallet_action.disconnect_wallet(
-        user_id=request.state.user.id, chat_slug=chat_slug
-    )
+    try:
+        await wallet_action.disconnect_wallet(
+            user_id=request.state.user.id, chat_slug=chat_slug
+        )
+    except TelegramChatNotExists:
+        raise HTTPException(
+            detail="Chat not found",
+            status_code=HTTP_400_BAD_REQUEST,
+        )
     return UserFDO.from_orm(request.state.user)
