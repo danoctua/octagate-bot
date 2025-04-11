@@ -1,5 +1,6 @@
 import dataclasses
 import enum
+from typing import Self
 
 from pydantic import BaseModel, computed_field
 
@@ -10,6 +11,7 @@ from core.models.rule import (
     TelegramChatNFTCollection,
     TelegramChatWhitelistExternalSource,
     TelegramChatWhitelist,
+    TelegramChatPremium,
 )
 from core.models.rule import TelegramChatToncoin
 from core.enums.nft import NftCollectionAsset
@@ -21,6 +23,7 @@ class EligibilityCheckType(enum.Enum):
     NFT_COLLECTION = "nft_collection"
     EXTERNAL_SOURCE = "external_source"
     WHITELIST = "whitelist"
+    PREMIUM = "premium"
 
 
 @dataclasses.dataclass
@@ -28,6 +31,7 @@ class TelegramChatEligibilityRulesDTO:
     toncoin: list[TelegramChatToncoin]
     jettons: list[TelegramChatJetton]
     nft_collections: list[TelegramChatNFTCollection]
+    premium: list[TelegramChatPremium]
     whitelist_external_sources: list[TelegramChatWhitelistExternalSource]
     whitelist_sources: list[TelegramChatWhitelist]
 
@@ -59,7 +63,7 @@ class ChatEligibilityRuleDTO(BaseModel):
         return None
 
     @classmethod
-    def from_toncoin_rule(cls, rule: TelegramChatToncoin):
+    def from_toncoin_rule(cls, rule: TelegramChatToncoin) -> Self:
         return cls(
             id=rule.id,
             type=EligibilityCheckType.TONCOIN,
@@ -71,7 +75,7 @@ class ChatEligibilityRuleDTO(BaseModel):
         )
 
     @classmethod
-    def from_jetton_rule(cls, jetton_rule: TelegramChatJetton):
+    def from_jetton_rule(cls, jetton_rule: TelegramChatJetton) -> Self:
         return cls(
             id=jetton_rule.id,
             type=EligibilityCheckType.JETTON,
@@ -86,7 +90,7 @@ class ChatEligibilityRuleDTO(BaseModel):
     @classmethod
     def from_whitelist_external_rule(
         cls, external_rule: TelegramChatWhitelistExternalSource
-    ):
+    ) -> Self:
         return cls(
             id=external_rule.id,
             type=EligibilityCheckType.EXTERNAL_SOURCE,
@@ -98,7 +102,7 @@ class ChatEligibilityRuleDTO(BaseModel):
         )
 
     @classmethod
-    def from_whitelist_rule(cls, whitelist_rule: TelegramChatWhitelist):
+    def from_whitelist_rule(cls, whitelist_rule: TelegramChatWhitelist) -> Self:
         return cls(
             id=whitelist_rule.id,
             type=EligibilityCheckType.WHITELIST,
@@ -107,6 +111,18 @@ class ChatEligibilityRuleDTO(BaseModel):
             photo_url=None,
             blockchain_address=None,
             is_enabled=whitelist_rule.is_enabled,
+        )
+
+    @classmethod
+    def from_premium_rule(cls, rule: TelegramChatPremium) -> Self:
+        return cls(
+            id=rule.id,
+            type=EligibilityCheckType.PREMIUM,
+            title="Telegram Premium",
+            expected=1,
+            photo_url=None,
+            blockchain_address=None,
+            is_enabled=rule.is_enabled,
         )
 
 

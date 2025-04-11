@@ -231,4 +231,5 @@ async def handle_chat_participant_update(
                 chat_id=chat_id,
                 user_id=target_user_entity.id,
                 is_admin=bool(getattr(event.new_participant, "admin_rights", None)),
+                is_managed=False,
             )

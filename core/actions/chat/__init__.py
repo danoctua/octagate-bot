@@ -480,6 +480,10 @@ class TelegramChatManageAction(ManagedChatBaseAction, TelegramChatAction):
                         RuleEligibilitySummaryDTO.from_whitelist_external_rule(rule)
                         for rule in eligibility_rules.whitelist_external_sources
                     ),
+                    *(
+                        RuleEligibilitySummaryDTO.from_premium_rule(rule)
+                        for rule in eligibility_rules.premium
+                    ),
                 ],
                 key=lambda rule: (not rule.is_enabled, rule.type.value, rule.title),
             ),

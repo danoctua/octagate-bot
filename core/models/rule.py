@@ -16,6 +16,19 @@ from sqlalchemy.orm import mapped_column, relationship
 from core.db import Base
 
 
+class TelegramChatPremium(Base):
+    __tablename__ = "telegram_chat_premium"
+
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    chat_id = mapped_column(
+        ForeignKey("telegram_chat.id", ondelete="CASCADE"), nullable=False
+    )
+    is_enabled = mapped_column(Boolean, nullable=False, default=False)
+    created_at = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
 class TelegramChatRuleBase(Base):
     __abstract__ = True
 

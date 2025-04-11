@@ -198,6 +198,10 @@ class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatBlockchainResourceRuleCPO
         return self
 
 
+class TelegramChatPremiumRuleCPO(BaseFDO):
+    is_enabled: bool
+
+
 class ChatEligibilityRuleFDO(BaseFDO, ChatEligibilityRuleDTO):
     @field_serializer("expected", return_type=float | int)
     def preprocess_expected(self, v: int) -> float | int:

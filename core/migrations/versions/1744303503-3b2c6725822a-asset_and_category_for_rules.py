@@ -20,6 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def migrate_data():
     op.execute(sa.text("""UPDATE telegram_chat_jetton SET category = 'Balance'"""))
+    op.execute(sa.text("""UPDATE telegram_chat_toncoin SET category = 'Balance'"""))
 
 
 def upgrade() -> None:

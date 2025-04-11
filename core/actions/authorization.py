@@ -24,6 +24,7 @@ from core.models.chat import (
 )
 from core.models.rule import TelegramChatWhitelistExternalSource, TelegramChatWhitelist
 from core.services.chat import TelegramChatService
+from core.services.chat.rule.premium import TelegramChatPremiumService
 from core.services.chat.rule.whitelist import (
     TelegramChatExternalSourceService,
     TelegramChatWhitelistService,
@@ -69,6 +70,7 @@ class AuthorizationAction(BaseAction):
         self.telegram_chat_whitelist_group_service = TelegramChatWhitelistService(
             db_session
         )
+        self.telegram_chat_premium_service = TelegramChatPremiumService(db_session)
         self.telethon_service = TelethonService(client=telethon_client)
 
     def is_user_eligible_chat_member(
@@ -151,12 +153,16 @@ class AuthorizationAction(BaseAction):
         all_whitelist_groups = self.telegram_chat_whitelist_group_service.get_all(
             chat_id, enabled_only=enabled_only
         )
+        all_premium_rules = self.telegram_chat_premium_service.get_all(
+            chat_id, enabled_only=enabled_only
+        )
         return TelegramChatEligibilityRulesDTO(
             toncoin=all_toncoin_rules,
             jettons=all_jetton_rules,
             nft_collections=all_nft_collections,
             whitelist_external_sources=all_external_source_rules,
             whitelist_sources=all_whitelist_groups,
+            premium=all_premium_rules,
         )
 
     def get_ineligible_chat_members(
@@ -350,6 +356,19 @@ class AuthorizationAction(BaseAction):
                     is_enabled=rule.is_enabled,
                 )
                 for rule in eligibility_rules.whitelist_sources
+            ]
+        )
+        items.extend(
+            [
+                EligibilitySummaryInternalDTO(
+                    id=rule.id,
+                    type=EligibilityCheckType.PREMIUM,
+                    expected=1,
+                    title="Telegram Premium",
+                    actual=user.is_premium,
+                    is_enabled=rule.is_enabled,
+                )
+                for rule in eligibility_rules.premium
             ]
         )
         return RulesEligibilitySummaryInternalDTO(
