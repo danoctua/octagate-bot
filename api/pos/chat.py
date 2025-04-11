@@ -158,15 +158,15 @@ class TelegramChatNFTCollectionRuleCPO(BaseTelegramChatBlockchainResourceRuleCPO
     @model_validator(mode="after")
     def validate_address_and_asset(self) -> Self:
         """
-        Validates the instance to ensure that at least one of `address` or `asset`
-        is provided. This validation is performed after the model instance is
-        constructed or initialized. If both attributes are `None`, a `ValueError`
-        is raised.
+        Validates the mutually exclusive condition of the `address` and `asset` attributes.
 
-        :raises ValueError: If both `address` and `asset` are not provided.
+        Ensures that either the `address` or the `asset` attribute is specified, but not both.
+        Raises a ValueError if the condition is violated.
+
+        :raises ValueError: If both `address` and `asset` are specified or if neither is specified
         """
-        if self.address is None and self.asset is None:
-            raise ValueError("Address or asset must be specified")
+        if (self.address is None) == (self.asset is None):
+            raise ValueError("Either address or asset must be specified, but not both")
 
         return self
 

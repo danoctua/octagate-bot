@@ -94,8 +94,8 @@ class TelegramChatNFTCollectionAction(ManagedChatBaseAction):
             if address := NFT_ASSET_TO_ADDRESS_MAPPING.get(asset):
                 return address
 
-        if address_raw:
-            # Explicit address provided - ignore whatever else
+        elif address_raw:
+            # If no asset selected and explicit address provided - use that address
             return address_raw
 
         return None
