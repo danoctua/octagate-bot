@@ -311,7 +311,10 @@ class AuthorizationAction(BaseAction):
                     category=rule.category,
                     asset=NftCollectionAsset.from_string(rule.asset),
                     expected=rule.threshold,
-                    title=rule.nft_collection.name,
+                    title=(
+                        rule.asset
+                        or (rule.nft_collection.name if rule.nft_collection else None)
+                    ),
                     address_raw=rule.address,
                     actual=(
                         len(

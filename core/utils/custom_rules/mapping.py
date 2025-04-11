@@ -1,5 +1,6 @@
 from collections.abc import Callable
 
+from core.utils.custom_rules.telegram_gifts import handle_telegram_gifts_type_category
 from core.utils.custom_rules.telegram_numbers import (
     handle_telegram_numbers_length_category,
 )
@@ -8,6 +9,7 @@ from core.enums.nft import (
     NftCollectionCategoryType,
     TelegramUsernameCategory,
     TonDnsCategory,
+    TelegramGiftsCategory,
 )
 from core.models.blockchain import NftItem
 from core.utils.custom_rules.telegram_usernames import (
@@ -59,4 +61,17 @@ CATEGORY_TO_METHOD_MAPPING: dict[
     TonDnsCategory.LETTERS_9: handle_ton_dns_length_category(target_length=9),
     TonDnsCategory.LETTERS_10: handle_ton_dns_length_category(target_length=10),
     TonDnsCategory.LETTERS_11: handle_ton_dns_length_category(target_length=128),
+    # Gifts
+    TelegramGiftsCategory.PLUSH_PEPES: handle_telegram_gifts_type_category(
+        TelegramGiftsCategory.PLUSH_PEPES
+    ),
+    TelegramGiftsCategory.DUROVS_CAPS: handle_telegram_gifts_type_category(
+        TelegramGiftsCategory.DUROVS_CAPS
+    ),
+    TelegramGiftsCategory.SWISS_WATCHES: handle_telegram_gifts_type_category(
+        TelegramGiftsCategory.SWISS_WATCHES
+    ),
+    TelegramGiftsCategory.EVIL_EYES: handle_telegram_gifts_type_category(
+        TelegramGiftsCategory.EVIL_EYES
+    ),
 }

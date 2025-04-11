@@ -3,7 +3,7 @@ import logging
 from fastapi import HTTPException
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
-from starlette.status import HTTP_404_NOT_FOUND
+from starlette.status import HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
 
 from core.actions.chat.base import ManagedChatBaseAction
 from core.actions.jetton import JettonAction
@@ -24,7 +24,10 @@ from core.dtos.chat.rules.toncoin import (
 )
 from core.enums.jetton import CurrencyCategory
 from core.enums.nft import NftCollectionAsset, NftCollectionCategoryType
-from core.utils.custom_rules.addresses import NFT_ASSET_TO_ADDRESS_MAPPING
+from core.utils.custom_rules.addresses import (
+    NFT_ASSET_TO_ADDRESS_MAPPING,
+    NFT_CATEGORY_TO_ADDRESS_MAPPING,
+)
 from core.models.user import User
 from core.services.chat.rule.blockchain import (
     TelegramChatNFTCollectionService,
@@ -59,27 +62,41 @@ class TelegramChatNFTCollectionAction(ManagedChatBaseAction):
 
     @staticmethod
     def _resolve_collection_address(
-        address_raw: str, asset: NftCollectionAsset | None
+        address_raw: str,
+        asset: NftCollectionAsset | None,
+        category: NftCollectionCategoryType | None,
     ) -> str | None:
         """
-        Resolves and returns the collection address for a given raw address or asset.
-        If a raw address is provided, it takes precedence and is returned as the result.
-        If no raw address is provided, the function attempts to resolve the address
-        using the provided `NftCollectionAsset` and a predefined mapping. If neither
-        a raw address nor an asset is provided or resolvable, the function returns
-        None.
+        Resolves the collection address based on the provided parameters. The resolution
+        is determined in the following order of priority:
+        1. If the `category` is provided, it attempts to resolve the address using the
+           `NFT_CATEGORY_TO_ADDRESS_MAPPING`.
+        2. If the `asset` is provided, it attempts to resolve the address using the
+           `NFT_ASSET_TO_ADDRESS_MAPPING`.
+        3. If `address_raw` is provided, it will use the raw address directly.
 
-        :param address_raw: The raw address string to be resolved, if available.
-        :param asset: The NFT collection asset used to resolve the address when
-            a raw address is not provided.
-        :return: The resolved collection address as a string or None if no valid
-            address could be resolved.
+        If none of the above options yields an address, `None` will be returned.
+
+        :param address_raw: The raw address string explicitly provided.
+        :param asset: The asset type for the NFT collection, used to map to a specific
+            address.
+        :param category: The category type for the NFT collection, used to map to a
+            specific address.
+        :return: The resolved collection address or None if no valid resolution is found.
         """
-        if address_raw:
-            return address_raw
+        if category:
+            # If there is a mapping by category which is the lowest level - return that address
+            if address := NFT_CATEGORY_TO_ADDRESS_MAPPING.get(category):
+                return address
 
         if asset:
-            return NFT_ASSET_TO_ADDRESS_MAPPING.get(asset)
+            # If there is a mapping by asset type - return that address
+            if address := NFT_ASSET_TO_ADDRESS_MAPPING.get(asset):
+                return address
+
+        if address_raw:
+            # Explicit address provided - ignore whatever else
+            return address_raw
 
         return None
 
@@ -90,9 +107,18 @@ class TelegramChatNFTCollectionAction(ManagedChatBaseAction):
         category: NftCollectionCategoryType | None,
         threshold: int,
     ) -> NftEligibilityRuleDTO:
-        address = self._resolve_collection_address(address_raw, asset)
-        if address:
-            await self.nft_collection_action.get_or_create(address)
+        address = self._resolve_collection_address(address_raw, asset, category)
+
+        if not address:
+            logger.error(
+                f"Can't resolve address of the NFT collection for the provided details: {asset=}, {address_raw=}, {category=}"
+            )
+            raise HTTPException(
+                detail="Can't resolve address of the NFT collection",
+                status_code=HTTP_400_BAD_REQUEST,
+            )
+
+        await self.nft_collection_action.get_or_create(address)
 
         new_rule = self.telegram_chat_nft_collection_service.create(
             CreateTelegramChatNFTCollectionRuleDTO(
@@ -128,9 +154,18 @@ class TelegramChatNFTCollectionAction(ManagedChatBaseAction):
                 status_code=HTTP_404_NOT_FOUND,
             )
 
-        address = self._resolve_collection_address(address_raw, asset)
-        if address:
-            await self.nft_collection_action.get_or_create(address)
+        address = self._resolve_collection_address(address_raw, asset, category)
+
+        if not address:
+            logger.error(
+                f"Can't resolve address of the NFT collection for the provided details: {asset=}, {address_raw=}, {category=}"
+            )
+            raise HTTPException(
+                detail="Can't resolve address of the NFT collection",
+                status_code=HTTP_400_BAD_REQUEST,
+            )
+
+        await self.nft_collection_action.get_or_create(address)
 
         rule = self.telegram_chat_nft_collection_service.update(
             rule=rule,

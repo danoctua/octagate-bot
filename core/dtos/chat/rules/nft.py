@@ -30,10 +30,23 @@ class NftEligibilityRuleDTO(ChatEligibilityRuleDTO):
         return cls(
             id=nft_collection_rule.id,
             type=EligibilityCheckType.NFT_COLLECTION,
-            title=nft_collection_rule.nft_collection.name,
+            title=nft_collection_rule.asset
+            or (
+                nft_collection_rule.nft_collection.name
+                if nft_collection_rule.nft_collection
+                else None
+            ),
             expected=nft_collection_rule.threshold,
-            photo_url=nft_collection_rule.nft_collection.logo_path,
-            blockchain_address=nft_collection_rule.nft_collection.address,
+            photo_url=(
+                nft_collection_rule.nft_collection.logo_path
+                if nft_collection_rule.nft_collection
+                else None
+            ),
+            blockchain_address=(
+                nft_collection_rule.nft_collection.address
+                if nft_collection_rule.nft_collection
+                else None
+            ),
             is_enabled=nft_collection_rule.is_enabled,
             asset=NftCollectionAsset.from_string(nft_collection_rule.asset),
             category=nft_collection_rule.category,
