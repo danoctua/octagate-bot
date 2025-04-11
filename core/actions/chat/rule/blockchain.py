@@ -24,7 +24,7 @@ from core.dtos.chat.rules.toncoin import (
 )
 from core.enums.jetton import CurrencyCategory
 from core.enums.nft import NftCollectionAsset, NftCollectionCategoryType
-from core.mappings.nft import NFT_ASSET_TO_ADDRESS_MAPPING
+from core.utils.custom_rules.addresses import NFT_ASSET_TO_ADDRESS_MAPPING
 from core.models.user import User
 from core.services.chat.rule.blockchain import (
     TelegramChatNFTCollectionService,

@@ -1,8 +1,8 @@
 import logging
 
-from core.mappings import CATEGORY_TO_METHOD_MAPPING
 from core.models.rule import TelegramChatNFTCollection
 from core.models.blockchain import NftItem
+from core.utils.custom_rules.mapping import CATEGORY_TO_METHOD_MAPPING
 
 
 logger = logging.getLogger(__name__)

@@ -13,7 +13,7 @@ make sure to do the following steps:
 1. Find an appropriate enum in the `core/enums/nft.py`
 2. Add a new category
 3. Create a new method in `core/utils/custom_rules` that will handle your custom logic
-4. Add a new mapping to your method into the `CATEGORY_TO_METHOD_MAPPING` (`core/mappings/__init__.py`)
+4. Add a new mapping to your method into the `CATEGORY_TO_METHOD_MAPPING` (`core/utils/custom_rules/mapping.py`)
 
 Each method used in the custom rules should accept a list of NFT items and return a list of valid NFT items according to the logic.
 

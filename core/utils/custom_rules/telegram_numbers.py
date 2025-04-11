@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 from core.enums.nft import NftCollectionAsset
-from core.mappings.nft import NFT_ASSET_TO_ADDRESS_MAPPING
+from core.utils.custom_rules.addresses import NFT_ASSET_TO_ADDRESS_MAPPING
 from core.models.blockchain import NftItem
 
 
