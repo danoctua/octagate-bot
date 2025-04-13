@@ -190,7 +190,15 @@ services:
     command: ["pnpm", "start"]
     volumes:
       - ./config/.env:/app/.env
-      - ./core/static:/app/public/dynamic:ro
+    networks:
+      - internal
+
+  frontend-vite:
+    image: ghcr.io/danoctua/octagate-frontend-vite:latest
+    pull_policy: always
+    container_name: "octagate-frontend-vite"
+    ports:
+      - "3001:4173"
     networks:
       - internal
 

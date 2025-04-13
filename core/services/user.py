@@ -7,6 +7,13 @@ from core.services.base import BaseService
 
 
 class UserService(BaseService):
+    def get_all(self, telegram_ids: list[int] | None = None) -> list[User]:
+        query = self.db_session.query(User)
+        if telegram_ids:
+            query = query.filter(User.telegram_id.in_(telegram_ids))
+
+        return query.all()
+
     def get_by_telegram_id(self, telegram_id: int) -> User:
         return (
             self.db_session.query(User)
