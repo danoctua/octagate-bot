@@ -1,0 +1,25 @@
+@import url('@fontsource/inter/index.css');
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.root-block {
+    background: var(--tgui--secondary_bg_color);
+}
+
+footer.error h6 {
+    color: var(--tgui--destructive_text_color)
+}
+
+.cell-thin {
+    > div:nth-child(2) {
+        padding-top: 10px;
+        padding-bottom: 10px;
+        gap: 0;
+    }
+}

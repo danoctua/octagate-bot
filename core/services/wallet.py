@@ -2,36 +2,39 @@ import logging
 from collections.abc import Generator
 
 from pytonapi.schema.jettons import JettonBalance, JettonsBalances
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
+from sqlalchemy.orm import joinedload
 
+from core.exceptions.wallet import (
+    UserWalletConnectedError,
+    UserWalletConnectedAnotherUserError,
+)
 from core.models.blockchain import Jetton
-from core.models.wallet import UserWallet, JettonWallet
+from core.models.wallet import UserWallet, JettonWallet, TelegramChatUserWallet
 from core.services.base import BaseService
 
 
 logger = logging.getLogger(__name__)
 
 
-class UserWalletExistError(Exception):
-    pass
-
-
 class WalletService(BaseService):
-    def connect_user_wallet(self, user_id: int, wallet_address: str) -> None:
+    def connect_user_wallet(self, user_id: int, wallet_address: str) -> UserWallet:
         existing_user_wallet = self.get_user_wallet(wallet_address)
         if existing_user_wallet:
-            logger.warning(
-                "User %s is trying to connect already connected wallet %s",
-                user_id,
-                wallet_address,
-            )
-            raise UserWalletExistError(
+            raise UserWalletConnectedError(
                 f"User {user_id} is trying to connect already connected wallet {wallet_address}"
             )
 
-        new_wallet = UserWallet(user_id=user_id, address=wallet_address)
-        self.db_session.add(new_wallet)
-        self.db_session.commit()
+        try:
+            new_wallet = UserWallet(user_id=user_id, address=wallet_address)
+            self.db_session.add(new_wallet)
+            self.db_session.commit()
+            return new_wallet
+        except IntegrityError:
+            self.db_session.rollback()
+            raise UserWalletConnectedAnotherUserError(
+                f"User {user_id} already has a connected wallet {wallet_address}"
+            )
 
     def get_all(self, addresses: list[str] | None = None) -> list[UserWallet]:
         query = self.db_session.query(UserWallet)
@@ -45,12 +48,15 @@ class WalletService(BaseService):
         query = self.db_session.query(UserWallet.address).all()
         return (str(address[0]) for address in query)
 
-    def get_user_wallet(self, wallet_address: str) -> UserWallet | None:
-        return (
-            self.db_session.query(UserWallet)
-            .filter(UserWallet.address == wallet_address)
-            .first()
-        )
+    def get_user_wallet(
+        self, wallet_address: str, user_id: int | None = None
+    ) -> UserWallet | None:
+        query = self.db_session.query(UserWallet)
+        query = query.filter(UserWallet.address == wallet_address)
+        if user_id is not None:
+            query = query.filter(UserWallet.user_id == user_id)
+
+        return query.first()
 
     def disconnect_user_wallet(self, user_id: int) -> None:
         self.db_session.query(UserWallet).filter(
@@ -69,6 +75,70 @@ class WalletService(BaseService):
             UserWallet.user_id == user_id,
         ).update({"hide_wallet": True})
         self.db_session.commit()
+
+    def set_balance(self, address_raw: str, balance: int) -> None:
+        """
+        Updates the balance for a specific wallet address using the database session.
+
+        This method queries the `UserWallet` table using the provided wallet address,
+        then updates the balance column with the specified value. It does not return
+        any value but modifies the data in the database.
+
+        :param address_raw: The wallet address whose balance needs to be updated.
+        :param balance: The new balance to be set for the given wallet address in nano
+        """
+        self.db_session.query(UserWallet).filter(
+            UserWallet.address == address_raw,
+        ).update({"balance": balance})
+
+
+class TelegramChatUserWalletService(BaseService):
+    def has_wallet_connected(self, user_id: int, chat_id: int) -> bool:
+        return (
+            self.db_session.query(TelegramChatUserWallet)
+            .filter(
+                TelegramChatUserWallet.user_id == user_id,
+                TelegramChatUserWallet.chat_id == chat_id,
+            )
+            .count()
+            > 0
+        )
+
+    def connect(
+        self, user_id: int, chat_id: int, wallet_address: str
+    ) -> TelegramChatUserWallet:
+        new_link = TelegramChatUserWallet(
+            user_id=user_id, chat_id=chat_id, address=wallet_address
+        )
+        self.db_session.add(new_link)
+        self.db_session.commit()
+        return new_link
+
+    def disconnect(self, user_id: int, chat_id: int) -> None:
+        self.db_session.query(TelegramChatUserWallet).filter(
+            TelegramChatUserWallet.user_id == user_id,
+            TelegramChatUserWallet.chat_id == chat_id,
+        ).delete(synchronize_session=False)
+        self.db_session.commit()
+
+    def get(self, user_id: int, chat_id: int) -> TelegramChatUserWallet:
+        return (
+            self.db_session.query(TelegramChatUserWallet)
+            .options(joinedload(TelegramChatUserWallet.wallet))
+            .filter(
+                TelegramChatUserWallet.user_id == user_id,
+                TelegramChatUserWallet.chat_id == chat_id,
+            )
+            .one()
+        )
+
+    def get_all(
+        self, addresses: list[str] | None = None
+    ) -> list[TelegramChatUserWallet]:
+        query = self.db_session.query(TelegramChatUserWallet)
+        if addresses:
+            query = query.filter(TelegramChatUserWallet.address.in_(addresses))
+        return query.all()
 
 
 class JettonWalletService(BaseService):

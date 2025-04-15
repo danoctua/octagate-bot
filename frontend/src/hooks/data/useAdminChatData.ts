@@ -1,0 +1,84 @@
+import {useCallback, useEffect, useState} from "react";
+import {deleteChat, fetchAdminChatData, refreshChat, updateChat} from "@/services";
+import {IChat, IChatConfiguration} from "@/interfaces";
+
+
+const useAdminChatData = (slug: string | undefined,) => {
+    const [chat, setChat] = useState<IChatConfiguration | null>(null);
+    const [isChatDataLoading, setIsChatDataLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+
+    const fetchChatData = useCallback(async () => {
+        if (!slug) {
+            return;
+        }
+        setIsChatDataLoading(true);
+        return await fetchAdminChatData(slug).then((chatData: IChatConfiguration) => {
+            console.debug("Fetching chat data", chatData);
+            setChat(chatData);
+            return chatData;
+        }).catch((error) => {
+            setError(error);
+        }).finally(() => {
+            setIsChatDataLoading(false);
+        });
+    }, [slug])
+
+    const updateChatData = useCallback(async (description: string) => {
+        if (!slug || !chat) {
+            return;
+        }
+        return await updateChat(slug, description).then((chatData: IChat) => {
+            return chatData;
+        })
+    }, [slug, chat])
+
+        const refreshChatData = useCallback(async () => {
+        if (!slug || !chat) {
+            return;
+        }
+        setIsChatDataLoading(true);
+        return await refreshChat(slug).then(
+            (chatData: IChat) => {
+                console.debug("Refreshing chat data", chatData);
+                setChat({...chat, chat: chatData});
+                return chatData;
+            }
+        ).finally(() => {
+            setIsChatDataLoading(false);
+        });
+    }, [chat, slug])
+
+    const removeChat = useCallback(async () => {
+        if (!slug) {
+            return;
+        }
+        setIsChatDataLoading(true);
+        return await deleteChat(slug).then(
+            _ => {
+                console.debug("Chat removed");
+            }
+        ).finally(() => {
+            setIsChatDataLoading(false);
+        });
+    }, [slug])
+
+    useEffect(() => {
+        if (error) {
+            console.error("Error fetching chats:", error);
+            throw error;
+        }
+    }, [error]);
+
+    return {
+        chat,
+        fetchChatData,
+        updateChatData,
+        refreshChatData,
+        removeChat,
+        isChatDataLoading,
+        setIsChatDataLoading
+    };
+}
+
+export default useAdminChatData;

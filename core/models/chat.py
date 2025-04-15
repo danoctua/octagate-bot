@@ -1,4 +1,11 @@
-from sqlalchemy import BigInteger, String, DateTime, func, Boolean, ForeignKey
+from sqlalchemy import (
+    BigInteger,
+    String,
+    DateTime,
+    func,
+    Boolean,
+    ForeignKey,
+)
 from sqlalchemy.orm import mapped_column, relationship
 
 from core.db import Base
@@ -10,6 +17,8 @@ class TelegramChat(Base):
     id = mapped_column(BigInteger, primary_key=True)
     username = mapped_column(String(255), nullable=True)
     title = mapped_column(String(255), nullable=False)
+    description = mapped_column(String(255), nullable=True)
+    slug = mapped_column(String(255), nullable=False, unique=True)
     is_forum = mapped_column(Boolean, nullable=False, default=False)
     logo_path = mapped_column(String(55), nullable=True)
     invite_link = mapped_column(
@@ -17,82 +26,36 @@ class TelegramChat(Base):
         nullable=True,
         doc="Invite link to the chat. If empty, the chat will not be accessible.",
     )
+    insufficient_privileges = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        doc="Whether the chat has insufficient privileges to be managed by Octagate.",
+    )
+    is_full_control = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        doc=(
+            "Whether the bot should fully control the chat,"
+            " e.g. joined outside of the current invite link, previously joined."
+        ),
+    )
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    whitelist_external_sources = relationship(
+        "TelegramChatWhitelistExternalSource",
+        backref="chat",
+        cascade="all, delete-orphan",
+    )
+    whitelist_sources = relationship(
+        "TelegramChatWhitelist",
+        backref="chat",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<TelegramChat(id={self.id}, title={self.title})>"
-
-
-class TelegramChatJetton(Base):
-    __tablename__ = "telegram_chat_jetton"
-
-    jetton_address = mapped_column(
-        ForeignKey("jetton.address", ondelete="CASCADE"), primary_key=True
-    )
-    chat_id = mapped_column(
-        ForeignKey("telegram_chat.id", ondelete="CASCADE"), primary_key=True
-    )
-    threshold = mapped_column(
-        BigInteger, nullable=False, doc="Minimum amount of jettons to hold in nano"
-    )
-    whale_threshold = mapped_column(
-        BigInteger,
-        nullable=True,
-        doc="Minimum amount of jettons to hold in nano to be considered a whale",
-    )
-    whale_label_template = mapped_column(
-        String(25),
-        nullable=True,
-        doc="Label to be assigned to the user if they are a whale",
-    )
-    is_enabled = mapped_column(Boolean, nullable=False, default=True)
-    created_at = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-
-    jetton = relationship(
-        "Jetton",
-        back_populates="telegram_chat_jettons",
-        lazy="joined",
-    )
-
-    def __repr__(self):
-        return f"<TelegramChatJetton(jetton_address={self.jetton_address}, chat_id={self.chat_id})>"
-
-
-class TelegramChatNFTCollection(Base):
-    __tablename__ = "telegram_chat_nft_collection"
-
-    collection_address = mapped_column(
-        ForeignKey("nft_collection.address", ondelete="CASCADE"), primary_key=True
-    )
-    chat_id = mapped_column(
-        ForeignKey("telegram_chat.id", ondelete="CASCADE"), primary_key=True
-    )
-    is_enabled = mapped_column(Boolean, nullable=False, default=True)
-    created_at = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-
-    nft_collection = relationship(
-        "NFTCollection",
-        back_populates="telegram_chat_nft_collections",
-        lazy="joined",
-    )
-
-    def __repr__(self):
-        return f"<TelegramChatNFTCollection(collection_address={self.collection_address}, chat_id={self.chat_id})>"
-
-
-# class TelegramChatExternalSource(Base):
-#     TODO add external source support (e.g. get list of IDs to allow to join the chat)
-#     __tablename__ = "telegram_chat_external_source"
-#
-#     chat_id = mapped_column(ForeignKey("telegram_chat.id"), primary_key=True)
-#     is_enabled = mapped_column(Boolean, nullable=False, default=True)
-#     created_at = mapped_column(
-#         DateTime(timezone=True), server_default=func.now(), nullable=False
-#     )
 
 
 class TelegramChatUser(Base):
@@ -108,18 +71,26 @@ class TelegramChatUser(Base):
         default=False,
         doc="Whether the user is an admin in the chat",
     )
-    is_whale_admin = mapped_column(
+    is_managed = mapped_column(
         Boolean,
         nullable=False,
         default=False,
-        doc="Whether the user is an admin in the chat that was promoted as a whale from the bot",
+        doc="If user is managed by bot, meaning that join request was approved by bot and should be if eligibility status changed, etc.",
     )
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    user = relationship("User", lazy="joined")
-    chat = relationship("TelegramChat", lazy="joined")
+    user = relationship("User", lazy="joined", overlaps="wallet_link")
+    chat = relationship("TelegramChat", lazy="joined", backref="users")
+    wallet_link = relationship(
+        "TelegramChatUserWallet",
+        uselist=False,
+        back_populates="user_chat",
+        primaryjoin="and_(foreign(TelegramChatUser.user_id) == TelegramChatUserWallet.user_id, foreign(TelegramChatUser.chat_id) == TelegramChatUserWallet.chat_id)",
+        lazy="joined",
+        viewonly=True,
+    )
 
     def __repr__(self):
         return f"<TelegramChatUser(user_id={self.user_id}, chat_id={self.chat_id})>"

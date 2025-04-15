@@ -23,13 +23,20 @@ class User(Base):
     created_at = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    allows_write_to_pm = mapped_column(Boolean, nullable=False, default=True)
 
-    wallet = relationship(
+    # TODO refactor to wallets and remove access to this from any eligibility-checking logic
+    wallets = relationship(
         "UserWallet",
-        uselist=False,
+        uselist=True,
         backref="user",
         lazy="joined",
         primaryjoin="User.id == UserWallet.user_id",
+    )
+    wallet_links = relationship(
+        "TelegramChatUserWallet",
+        uselist=True,
+        back_populates="user",
     )
 
     @property

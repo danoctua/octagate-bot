@@ -9,3 +9,7 @@ celery==5.4.0
 alembic==1.14.1
 pydantic-settings==2.7.1
 pytonapi==0.4.3
+python-slugify==8.0.4
+gql[httpx]==3.6.0b4
+sentry-sdk[fastapi]==2.24.1
+aioboto3==14.1.0

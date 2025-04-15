@@ -33,12 +33,11 @@ class CoreSettings(BaseSettings):
 
     default_language: str = "en"
 
-    tc_manifest_url: str
-
     model_config = SettingsConfigDict(
         case_sensitive=False,
         validate_default=True,
     )
+    redis_task_status_expiration: int = 300
 
     _blacklisted_wallets: list[str] | None = None
 
@@ -51,6 +50,16 @@ class CoreSettings(BaseSettings):
             self._blacklisted_wallets = f.read().splitlines()
 
         return self._blacklisted_wallets
+
+    beat_schedule_filename: str = "/tmp/celerybeat-schedule"
+
+    env: str = "development"
+
+    cdn_access_key: str
+    cdn_secret_key: str
+    cdn_endpoint: str
+    cdn_region: str = "auto"
+    cdn_bucket_name: str
 
 
 core_settings = CoreSettings()

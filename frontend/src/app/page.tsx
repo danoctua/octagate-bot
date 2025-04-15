@@ -1,0 +1,224 @@
+'use client';
+
+import {
+    Cell,
+    Info,
+    Placeholder,
+    Section,
+    Spinner,
+    Text,
+} from '@telegram-apps/telegram-ui';
+
+import {Page} from '@/components/layout/Page';
+
+import useAuthAndFetchUser from "@/hooks/data/useAuthAndFetchUser";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {mainButton, openLink, secondaryButton, useLaunchParams} from '@telegram-apps/sdk-react';
+import {Check} from "lucide-react";
+import useTonConnect from '@/hooks/useTonConnect';
+import {Address} from "@ton/core";
+import useChatData from '@/hooks/data/useChatData';
+import Image from "next/image";
+import {disconnectUserWallet, fetchTaskStatus, updateUserWallet} from "@/services";
+import ConnectedWalletCell from "@/components/layout/ConnectedWalletCell/ConnectedWalletCell";
+import ChatHeader from "@/components/layout/ChatHeader/ChatHeader";
+import FixedBottomSection, {
+    ButtonStateProps,
+    FixedBottomButton
+} from "@/components/ui/FixedBottomSection/FixedBottomSection";
+import useMainButtonState from "@/hooks/useMainButtonState";
+import {useClientOnce} from "@/hooks/useClientOnce";
+import DisplayRuleItem from "@/components/layout/Rule/DisplayRuleItem/DisplayRuleItem";
+import {hapticFeedback} from "@telegram-apps/sdk";
+
+export default function Home() {
+    const {user, setUser, isUserDataLoading} = useAuthAndFetchUser();
+    const [asyncTaskId, setAsyncTaskId] = useState<string | null>(null);
+    const launchParams = useLaunchParams();
+    const {connectWallet, disconnectWallet, tonConnectUI} = useTonConnect();
+    const {chat, fetchChatData, isChatDataLoading} = useChatData(launchParams.startParam);
+    const onWalletConnectListenerAdded = useRef(false)
+
+    const connectWalletAndRefresh = useCallback(async () => {
+        if (!chat) return;
+
+        await connectWallet();
+        const handleConnectionCompleted = async (): Promise<void> => {
+            if (!tonConnectUI.wallet) {
+                return;
+            }
+
+            await updateUserWallet(
+                chat.chat.slug,
+                tonConnectUI.wallet.account.address,
+                (tonConnectUI.wallet.connectItems?.tonProof as any)?.proof,
+                tonConnectUI.wallet.account.publicKey
+            ).then((data) => {
+                setUser(data.user);
+                if (data.taskId) {
+                    setAsyncTaskId(data.taskId);
+                } else {
+                    fetchChatData().then(
+                        () => {
+                            if (hapticFeedback.notificationOccurred.isAvailable()) {
+                                hapticFeedback.notificationOccurred('success');
+                            }
+                        }
+                    )
+                }
+            }).catch((error) => {
+                if (hapticFeedback.notificationOccurred.isAvailable()) {
+                    hapticFeedback.notificationOccurred('error');
+                }
+                tonConnectUI.disconnect();
+                throw error;
+            })
+        };
+
+        if (!onWalletConnectListenerAdded.current) {
+            window.addEventListener("ton-connect-connection-completed", handleConnectionCompleted, {once: true});
+            onWalletConnectListenerAdded.current = true;
+        }
+
+        return () => {
+            window.removeEventListener("ton-connect-connection-completed", handleConnectionCompleted);
+            onWalletConnectListenerAdded.current = false;
+        };
+    }, [chat, connectWallet, setUser, tonConnectUI]);
+
+    useClientOnce(() => {
+        mainButton.mount();
+        mainButton.setParams({isVisible: false});
+        mainButton.unmount()
+        secondaryButton.mount();
+        secondaryButton.setParams({isVisible: false});
+        secondaryButton.unmount()
+    })
+
+    const mainButtonState: ButtonStateProps | undefined = useMainButtonState(
+        isUserDataLoading,
+        isChatDataLoading,
+        launchParams.startParam,
+        chat,
+        connectWalletAndRefresh,
+        fetchChatData
+    )
+
+    const disconnectWalletAndRefresh = useCallback(async () => {
+        await disconnectWallet();
+        if (chat) {
+            await disconnectUserWallet(chat.chat.slug).then((data) => {
+                console.debug("Setting user on wallet disconnect", data);
+                setUser(data);
+            });
+            await fetchChatData();
+        }
+    }, [chat, disconnectWallet, fetchChatData, setUser]);
+
+    useEffect(() => {
+        if (!asyncTaskId) {
+            return;
+        }
+        fetchTaskStatus(asyncTaskId).then(() => {
+            setAsyncTaskId(null);
+            fetchChatData().then(
+                () => {
+                    if (hapticFeedback.notificationOccurred.isAvailable()) {
+                        hapticFeedback.notificationOccurred('success');
+                    }
+                }
+            );
+        });
+    }, [asyncTaskId, fetchChatData]);
+
+
+    useEffect(() => {
+        if (!user || chat) {
+            return;
+        }
+        fetchChatData().then();
+    }, [chat, fetchChatData, user]);
+
+    const parsedWalletAddress = useMemo(() => {
+        if (!chat || !chat.wallet) return null;
+        return Address.parse(chat.wallet).toString({bounceable: false})
+    }, [chat]);
+
+    if (!launchParams.startParam) {
+        return <Page>
+            <div className={"flex flex-1 justify-center items-center"}>
+                <Placeholder
+                    description="Please, try again, we don't have chats gallery yet"
+                    header="You got lost"
+                >
+                    <Image
+                        alt="Lost bananas"
+                        src="/telegram.gif"
+                        width={150}
+                        height={150}
+                    />
+                </Placeholder>
+            </div>
+        </Page>;
+    }
+
+    if (!user || !chat) {
+        return <></>;
+    }
+
+    const blockchainRules = [
+        <Cell
+            key={"wallet"}
+            readOnly
+            after={
+                isUserDataLoading ?
+                    <Spinner size="s"/> :
+                    parsedWalletAddress ?
+                        <Check style={{color: "var(--tg-theme-accent-text-color)"}}/> :
+                        <Text style={{color: "var(--tg-theme-subtitle-text-color)"}}>
+                            Not yet
+                        </Text>
+            }
+        >
+            Connect wallet
+        </Cell>,
+        ...chat.rules.map((rule, index) => (
+            <DisplayRuleItem
+                key={`blockchain-rule-${index}`}
+                rule={rule}
+                readOnly
+                onClick={() => {
+                    rule.promoteUrl && openLink(rule.promoteUrl)
+                }}
+            />
+        ))
+    ];
+
+    return (
+        <Page
+            increasedBottomSpace
+            back={false}
+            fixedBottom={mainButtonState &&
+                <FixedBottomSection
+                    button={<FixedBottomButton {...mainButtonState}/>}
+                >
+                    {parsedWalletAddress &&
+                        <ConnectedWalletCell
+                            walletAddress={parsedWalletAddress}
+                            disconnectWallet={disconnectWalletAndRefresh}
+                        />
+                    }
+                </FixedBottomSection>
+            }
+        >
+            <ChatHeader chat={chat.chat}>
+                {chat.chat.description &&
+                    <Info type={"avatarStack"}>{chat.chat.description}</Info>
+                }
+            </ChatHeader>
+            <Section>
+                {blockchainRules}
+            </Section>
+        </Page>
+    );
+}

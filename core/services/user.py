@@ -1,6 +1,5 @@
-from typing import Iterable
-
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import joinedload
 
 from core.dtos.user import TelegramUserDTO
 from core.models.user import User
@@ -8,9 +7,19 @@ from core.services.base import BaseService
 
 
 class UserService(BaseService):
+    def get_all(self, telegram_ids: list[int] | None = None) -> list[User]:
+        query = self.db_session.query(User)
+        if telegram_ids:
+            query = query.filter(User.telegram_id.in_(telegram_ids))
+
+        return query.all()
+
     def get_by_telegram_id(self, telegram_id: int) -> User:
         return (
             self.db_session.query(User)
+            .options(
+                joinedload(User.wallets),
+            )
             .filter(
                 User.telegram_id == telegram_id,
             )
@@ -20,28 +29,14 @@ class UserService(BaseService):
     def get(self, user_id: int) -> User:
         return (
             self.db_session.query(User)
+            .options(
+                joinedload(User.wallets),
+            )
             .filter(
                 User.id == user_id,
             )
             .one()
         )
-
-    def get_all(self, telegram_ids: Iterable[int] | None = None) -> list[type[User]]:
-        query = self.db_session.query(User)
-        if telegram_ids:
-            query = query.filter(User.telegram_id.in_(telegram_ids))
-
-        return query.all()
-
-    def get_all_prefetched(
-        self,
-        telegram_ids: Iterable[int] | None = None,
-    ) -> list[User]:
-        query = self.db_session.query(User)
-        if telegram_ids:
-            query = query.filter(User.telegram_id.in_(telegram_ids))
-
-        return query.all()
 
     def create(self, telegram_user: TelegramUserDTO) -> User:
         new_user = User(
@@ -51,6 +46,7 @@ class UserService(BaseService):
             username=telegram_user.username,
             is_premium=telegram_user.is_premium,
             language=telegram_user.language_code,
+            allows_write_to_pm=telegram_user.allow_write_to_pm,
         )
         self.db_session.add(new_user)
         self.db_session.commit()
@@ -62,6 +58,8 @@ class UserService(BaseService):
         user.last_name = telegram_user.last_name
         user.username = telegram_user.username
         user.is_premium = bool(telegram_user.is_premium)
+        user.allows_write_to_pm = telegram_user.allow_write_to_pm
+        # TODO add photo_url
         self.db_session.add(user)
         self.db_session.commit()
         return user

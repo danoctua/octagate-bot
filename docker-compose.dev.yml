@@ -1,0 +1,66 @@
+x-python-service:
+  &x-python-service
+  user: "1000:1000"
+  depends_on:
+    redis:
+      condition: service_healthy
+    mysql:
+      condition: service_healthy
+  networks:
+    - internal
+
+
+services:
+  api:
+    <<: *x-python-service
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+      target: api
+    image: octagate-api
+    env_file:
+      - ./api/config/.env
+      - ./core/config/.env
+      - ./config/.env
+    container_name: "octagate-api"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app/api
+      - ./core:/app/core
+    command: [ "uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--reload" ]
+
+  nginx:
+    image: "nginx:stable"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certs:/etc/nginx/certs
+    networks:
+      - internal
+    depends_on:
+      - api
+      - frontend
+
+  frontend:
+    image: "octagate-frontend"
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+      target: development
+    container_name: "octagate-frontend"
+    env_file:
+      - ./config/.env
+    ports:
+      - "3000:3000"
+    command: ["pnpm", "run", "dev"]
+    volumes:
+      - ./frontend/src:/app/src
+      - ./core/static:/app/public/dynamic:ro
+      - ./config/.env:/app/.env
+      - ./certs:/tmp/certs
+    networks:
+      - internal

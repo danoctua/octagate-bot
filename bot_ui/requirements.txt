@@ -1,4 +1,0 @@
-python-telegram-bot[rate-limiter]~=21.10
-python-telegram-bot[webhooks]~=21.10
-pytonconnect==0.3.2
-qrcode==7.4.2

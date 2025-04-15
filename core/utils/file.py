@@ -1,5 +1,6 @@
 import logging
 import re
+from pathlib import Path
 
 from httpx import Client, Response
 from pytonapi.schema.nft import ImagePreview
@@ -42,9 +43,9 @@ def guess_file_extension(response: Response) -> str | None:
 def download_media(
     url: str,
     name: str,
-    subdirectory: str | None = None,
+    subdirectory: str | Path | None = None,
     default_extension: str = ".webp",
-) -> str:
+) -> Path | None:
     """
     Download media from URL.
 
@@ -53,16 +54,22 @@ def download_media(
     :param subdirectory: Subdirectory to save the file in.
     :param default_extension: Default extension to use if the extension cannot be guessed.
 
-    :return: Name of the downloaded file.
+    :return: Path to the downloaded file if file was downloaded successfully, None otherwise.
     """
     root_path = STATIC_PATH / (subdirectory or "")
 
-    response = client.get(url)
+    try:
+        response = client.get(url)
+    except:  # noqa: E722
+        logger.exception("Unable to download media")
+        return None
+
     file_name = f"{name}.{guess_file_extension(response) or default_extension}"
-    with open(root_path / file_name, "wb") as file:
+    full_path = root_path / file_name
+    with open(full_path, "wb") as file:
         file.write(response.content)
 
-    return file_name
+    return full_path
 
 
 def pick_best_preview(previews: list[ImagePreview]) -> ImagePreview:
@@ -78,3 +85,20 @@ def pick_best_preview(previews: list[ImagePreview]) -> ImagePreview:
     except (TypeError, ValueError):
         logger.warning("Could not pick the best preview. Returning the last one")
         return previews[-1]
+
+
+def clean_old_versions(
+    path: Path,
+    prefix: str,
+    current_file: str,
+) -> None:
+    """
+    Clean old versions of files in a path
+
+    :param path: Path to the directory containing the files.
+    :param prefix: Prefix of the files to clean.
+    :param current_file: Current file name.
+    """
+    for file in path.glob(f"{prefix}*"):
+        if file.name != current_file:
+            file.unlink()

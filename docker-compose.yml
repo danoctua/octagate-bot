@@ -1,6 +1,5 @@
 x-python-service:
   &x-python-service
-  user: "1000:1000"
   depends_on:
     redis:
       condition: service_healthy
@@ -11,50 +10,33 @@ x-python-service:
 
 
 services:
-  telegram-bot:
-    <<: *x-python-service
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: telegram-bot
-    env_file:
-      - bot_ui/config/.env
-      - core/config/.env
-    ports:
-      - "433:433"
-    volumes:
-      - ./bot_ui:/app/bot_ui
-      - ./core:/app/core
-      - /etc/letsencrypt:/etc/certbot:ro
-    command: ["python3", "bot_ui/__init__.py"]
-
   transaction-lookup:
     build:
       context: transaction-lookup
       dockerfile: build/Dockerfile.worker
     env_file:
-      - transaction-lookup/.env
+      - ./transaction-lookup/.env
     depends_on:
       redis:
         condition: service_healthy
     networks:
       - internal
 
-  wallet-indexer:
+  indexer:
     <<: *x-python-service
     build:
       context: .
-      dockerfile: Dockerfile
-      target: wallet-indexer
-    image: wallet-indexer
+      dockerfile: backend.Dockerfile
+      target: indexer
+    image: octagate-indexer
     env_file:
-      - wallet_indexer/config/.env
-      - core/config/.env
+      - indexer/config/.env
+      - ./core/config/.env
     restart: on-failure
     command: [
       "celery",
       "-A",
-      "wallet_indexer.celery_app:app",
+      "indexer.celery_app:app",
       "worker",
       "-Q",
       "wallet-fetch-queue",
@@ -64,19 +46,19 @@ services:
       - WORKER_CONCURRENCY=8
     volumes:
       - ./core:/app/core
-      - ./wallet_indexer:/app/wallet_indexer
+      - ./indexer:/app/indexer
 
   load-noticed-wallets:
     <<: *x-python-service
-    image: wallet-indexer
+    image: octagate-indexer
     env_file:
-      - wallet_indexer/config/.env
-      - core/config/.env
+      - indexer/config/.env
+      - ./core/config/.env
     restart: on-failure
     command: [
       "celery",
       "-A",
-      "wallet_indexer.celery_app:app",
+      "indexer.celery_app:app",
       "worker",
       "-Q",
       "noticed-wallets-upload-queue",
@@ -87,17 +69,18 @@ services:
       - LOAD_WALLETS=1
     volumes:
       - ./core:/app/core
-      - ./wallet_indexer:/app/wallet_indexer
+      - ./indexer:/app/indexer
 
-  community-manager:
+  community-manager-tasks:
     <<: *x-python-service
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: backend.Dockerfile
       target: community-manager
+    image: octagate-community-manager
     env_file:
-      - community_manager/config/.env
-      - core/config/.env
+      - ./community_manager/config/.env
+      - ./core/config/.env
     command: [
       "celery",
       "-A",
@@ -110,6 +93,59 @@ services:
     volumes:
       - ./community_manager:/app/community_manager
       - ./core:/app/core
+      - community-manager-tasks-session:/app/data
+
+  community-manager:
+    <<: *x-python-service
+    image: octagate-community-manager
+    env_file:
+      - ./community_manager/config/.env
+      - ./core/config/.env
+    command: ["python3", "community_manager/entrypoint.py"]
+    volumes:
+      - ./community_manager:/app/community_manager
+      - ./core:/app/core
+      - community-manager-session:/app/data
+
+  scheduler:
+    <<: *x-python-service
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+      target: scheduler
+    image: octagate-scheduler
+    env_file:
+      - ./community_manager/config/.env
+      - ./core/config/.env
+    command: [
+      "celery",
+      "-A",
+      "scheduler.celery_app:app",
+      "beat",
+      "--loglevel=info"
+    ]
+    volumes:
+      - ./scheduler:/app/scheduler
+      - ./community_manager:/app/community_manager
+      - ./core:/app/core
+
+  api:
+    <<: *x-python-service
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+      target: api
+    image: octagate-api
+    env_file:
+      - ./api/config/.env
+      - ./core/config/.env
+      - ./config/.env
+    container_name: "octagate-api"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./core/static:/app/core/static
+    command: ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
 
   redis:
     image: "redis:7.2.4-alpine"
@@ -117,6 +153,7 @@ services:
       - "6380:6379"
     volumes:
       - volume-queue:/data
+    container_name: "octagate-redis"
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
@@ -133,6 +170,7 @@ services:
       - core/config/.env
     volumes:
       - volume-data:/var/lib/mysql
+    container_name: "octagate-mysql"
     healthcheck:
       test: [ "CMD-SHELL", "mysqladmin ping -hlocalhost -uroot -p${MYSQL_ROOT_PASSWORD}" ]
       interval: 5s
@@ -141,9 +179,34 @@ services:
     networks:
       - internal
 
+  frontend:
+    image: ghcr.io/danoctua/octagate-frontend:latest
+    pull_policy: always
+    container_name: "octagate-frontend"
+    env_file:
+      - ./config/.env
+    ports:
+      - "3000:3000"
+    command: ["pnpm", "start"]
+    volumes:
+      - ./config/.env:/app/.env
+    networks:
+      - internal
+
+  frontend-vite:
+    image: ghcr.io/danoctua/octagate-frontend-vite:latest
+    pull_policy: always
+    container_name: "octagate-frontend-vite"
+    ports:
+      - "3001:4173"
+    networks:
+      - internal
+
 volumes:
   volume-data:
   volume-queue:
+  community-manager-session:
+  community-manager-tasks-session:
 
 
 networks:
