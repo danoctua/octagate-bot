@@ -1,7 +1,8 @@
 import logging
+from collections.abc import Callable
 from typing import AsyncGenerator
 
-from telethon import TelegramClient
+from telethon import TelegramClient, Button
 from telethon.tl.functions.messages import ExportChatInviteRequest
 from telethon.tl.types import User as TelethonUser, Channel, ChatInviteExported
 
@@ -91,3 +92,19 @@ class TelethonService:
         chat = await self.get_chat(chat_id)
         user = await self.get_user(telegram_user_id)
         await self.client.kick_participant(chat, user)
+
+    async def send_message(
+        self,
+        chat_id: int,
+        text: str,
+        buttons: list[Button],
+        link_preview: bool = True,
+        parse_mode: str | Callable[[str, int], str] | None = None,
+    ) -> None:
+        await self.client.send_message(
+            entity=chat_id,
+            message=text,
+            buttons=buttons,
+            link_preview=link_preview,
+            parse_mode=parse_mode,
+        )

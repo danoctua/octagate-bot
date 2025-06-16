@@ -61,7 +61,7 @@ services:
       "--loglevel=info"
     ]
     environment:
-      - WORKER_CONCURRENCY=8
+      - WORKER_CONCURRENCY=1
     volumes:
       - ./core:/app/core
       - ./wallet_indexer:/app/wallet_indexer
