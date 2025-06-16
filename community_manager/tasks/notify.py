@@ -57,6 +57,6 @@ def notify_migration_single(telegram_user_id: int) -> None:
 def notify_migration_all() -> None:
     with DBService().db_session() as db_session:
         user_service = UserService(db_session)
-        users = user_service.get_all()[:10]
+        users = user_service.get_all()
         for user in users:
             notify_migration_single.apply_async(args=(user.telegram_id,))
