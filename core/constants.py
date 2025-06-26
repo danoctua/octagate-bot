@@ -47,7 +47,7 @@ DEFAULT_AVATAR_PATH = DEFAULTS_PATH / "avatar.webp"
 MIGRATION_TO_ACCESS_TEXT = """Hey ANON\!
 
 We\'ve migrated to a new tool that controls the access to the chat and here is the direct link for 8 Club:
-https://t\.me/access\_app\_bot?startapp\=ch\_8\-club\.
+https://t\.me/access\_app\_bot/open?startapp\=ch\_8\-club\.
 
 More about the tool: https://t\.me/tools\_community/192942/192945\.
 
@@ -55,5 +55,5 @@ Even if you're already in the chat, please, make sure to **connect your wallet t
 
 8 club members 🎱
 """
-MIRATION_TO_ACCESS_BUTTON_URL = "https://t.me/access_app_bot?startapp=ch_8-club"
+MIRATION_TO_ACCESS_BUTTON_URL = "https://t.me/access_app_bot/open?startapp=ch_8-club"
 MIGRATION_TO_ACCESS_BUTTON_TEXT = "8 club [at] Access"
